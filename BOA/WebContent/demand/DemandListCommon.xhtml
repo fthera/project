@@ -1,0 +1,443 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <div style="overflow-x: auto;">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="demandListError" />
+      <ui:param name="globalOnly" value="true" />
+    </ui:include>
+
+    <h:form id="DemandList_actionForm">
+      <a4j:commandButton id="resetFilter" value="#{msg.resetFilters}"
+        execute="@this"
+        action="#{searchDemandController.doResetFilters}"
+        render="Table,dsTop,dsBottom,counts">
+      </a4j:commandButton>
+      <br />
+      <fieldset class="fieldset-auto-width">
+        <legend align="top">
+          <h:outputText id="actiontitle"
+            value="#{searchDemandController.actionTitle}" />
+        </legend>
+        <h:panelGrid columns="2" cellspacing="10">
+          <h:panelGroup
+            rendered="#{not searchDemandController.oneUserDemands}">
+            <a4j:commandButton id="createpc"
+              value="#{msg.createPCsFromDemandsButtonEx}"
+              oncomplete="#{rich:component('ExternalPCCreation')}.show();return false;"
+              type="submit" execute="@this"
+              disabled="#{searchDemandController.nbOfSelectedDemands le 0}">
+            </a4j:commandButton>
+            <boa:tooltip target="createpc"
+              value="#{msg.createPCsFromDemandsButtonExToolTip}" />
+          </h:panelGroup>
+          <h:panelGroup>
+            <a4j:commandButton id="createpcinternal"
+              value="#{msg.createPCsFromDemandsButtonIn}"
+              oncomplete="#{rich:component('InternalPCCreation')}.show();return false;"
+              type="submit" execute="@this"
+              disabled="#{searchDemandController.nbOfSelectedDemands le 0}">
+            </a4j:commandButton>
+            <boa:tooltip target="createpcinternal"
+              value="#{msg.createPCsFromDemandsButtoninToolTip}" />
+          </h:panelGroup>
+        </h:panelGrid>
+      </fieldset>
+      <h:panelGroup id="tablePurchases">
+        <rich:dataTable var="file"
+          rendered="#{searchDemandController.ioExcelPurchases.size() > 0}"
+          value="#{searchDemandController.ioExcelPurchases}">
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="#{msg.filename}" />
+            </f:facet>
+            <h:outputText value="#{file.fileName}" />
+          </rich:column>
+
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="Actions" />
+            </f:facet>
+            <a4j:commandLink id="removeFile"
+              action="#{searchDemandController.removeExcelPurchaseFile}"
+              render="tablePurchases" execute="@this">
+              <h:graphicImage value="/resources/images/icons/delete.gif"
+                style="border:0" />
+              <f:setPropertyActionListener value="#{file}"
+                target="#{searchDemandController.selectedIOExcelPurchase}" />
+            </a4j:commandLink>
+            <boa:tooltip target="removeFile" value="#{msg.delete}" />
+          </rich:column>
+
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="#{msg.downloadPurchaseFile}" />
+            </f:facet>
+            <h:commandButton value="#{msg.download}"
+              action="#{searchDemandController.doDownloadExcelPurchaseFile}">
+              <f:setPropertyActionListener value="#{file}"
+                target="#{searchDemandController.selectedIOExcelPurchase}" />
+            </h:commandButton>
+          </rich:column>
+
+          <f:facet name="footer">
+            <h:outputText
+              value="#{msg.importedFileCount} : #{searchDemandController.ioExcelPurchases.size()}" />
+          </f:facet>
+
+        </rich:dataTable>
+      </h:panelGroup>
+    </h:form>
+
+    <h:form id="DemandList_form">
+      <h:panelGrid columns="1" cellspacing="5">
+        <h:outputText id="counts" styleClass="bigText"
+          value="#{msg.countFilteredDemand} : #{searchDemandController.countFilteredDemand}" />
+      </h:panelGrid>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsTop" for="Table" maxPages="10"
+          fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+      <div class="scroll-div" style="max-height: 65%; max-height: 65vh;">
+        <rich:dataTable id="Table"
+          value="#{searchDemandController.searchDemand}" var="lDemand"
+          rows="30"
+          onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+          onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+          rowClasses="evenRow, oddRow">
+
+          <f:facet name="header">#{msg.Demands}</f:facet>
+
+          <rich:column>
+            <f:facet name="header">
+            </f:facet>
+            <h:selectBooleanCheckbox
+              value="#{searchDemandController.selections[lDemand.id]}"
+              immediate="true">
+              <a4j:ajax event="click"
+                render="actiontitle, createpcinternal, createpc, ExternalPCCreation, InternalPCCreation" />
+            </h:selectBooleanCheckbox>
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.demandNumber}"
+            filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.demandNumber}" />
+                <br />
+                <h:inputText id="demandNumber"
+                  value="#{searchDemandController.filterValues['demandNumber']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputLink id="infoDemandCmd"
+              value="${request.contextPath}/demand/DemandManagement.faces">
+              <h:outputText value="#{lDemand.demandNumber}" />
+              <f:param name="id" value="#{lDemand.id}" />
+              <f:param name="mode" value="READ" />
+            </h:outputLink>
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.status.toString()}"
+            filterType="custom"
+            filter="#{searchDemandController.statusFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.demandStatus}" />
+                <br />
+                <p:selectCheckboxMenu id="status" widgetVar="statusWidget"
+                  value="#{searchDemandController.filterStatus}"
+                  label="#{searchDemandController.demandStatusFiltered ? msg.activeFilter : msg.noFilter}"
+                  styleClass="#{searchDemandController.demandStatusFiltered ? 'checkboxmenured' : 'checkboxmenu'}"
+                  converter="demandStatusConverter"
+                  filter="true" filterMatchMode="startsWith">
+                  <f:selectItems value="#{searchDemandController.statusValues}" />
+                  <a4j:ajax event="change"
+                    render="dsTop,dsBottom,counts" />
+                  <p:ajax event="change" oncomplete="PF('statusWidget').show()"
+                    update="Table" />
+                  <a4j:ajax event="toggleSelect"
+                    render="dsTop,dsBottom,counts" />
+                  <p:ajax event="toggleSelect" oncomplete="PF('statusWidget').show()"
+                    update="Table" />
+                </p:selectCheckboxMenu>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{lDemand.status.toString()}" />
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.issuer}" filterType="custom"
+            filter="#{searchDemandController.demandFilter}"
+            rendered="#{not searchDemandController.oneUserDemands}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.issuer}" />
+                <br />
+                <h:inputText id="issuer"
+                  value="#{searchDemandController.filterValues['issuer']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tIssuer"
+              value="#{lDemand.issuer.loginDetails}" />
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.needDate}" filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.needDate}" />
+                <br />
+                <h:inputText id="needDate"
+                  value="#{searchDemandController.filterValues['needDate']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tNeedDate" value="#{lDemand.needDate}">
+              <f:convertDateTime
+                pattern="#{searchDemandController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.closureDate}"
+            filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.closureDate}" />
+                <br />
+                <h:inputText id="closureDate"
+                  value="#{searchDemandController.filterValues['closureDate']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tClosureDate"
+              value="#{lDemand.closureDate}">
+              <f:convertDateTime
+                pattern="#{searchDemandController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+          <rich:column filterType="custom"
+            sortBy="#{lDemand.productTypePC.localeValue}"
+            filter="#{searchDemandController.productTypeFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.ProductType}" />
+                <br />
+                <p:selectCheckboxMenu id="productTypePC" widgetVar="productTypePCWidget"
+                  value="#{searchDemandController.filterProductType}"
+                  label="#{searchDemandController.productTypeFiltered ? msg.activeFilter : msg.noFilter}"
+                  styleClass="#{searchDemandController.productTypeFiltered ? 'checkboxmenured' : 'checkboxmenu'}"
+                  converter="idConverter"
+                  filter="true" filterMatchMode="startsWith">
+                  <f:selectItems value="#{searchDemandController.productTypes}" />
+                  <a4j:ajax event="change"
+                    render="dsTop,dsBottom,counts" />
+                  <p:ajax event="change" oncomplete="PF('productTypePCWidget').show()"
+                    update="Table" />
+                  <a4j:ajax event="toggleSelect"
+                    render="dsTop,dsBottom,counts" />
+                  <p:ajax event="toggleSelect" oncomplete="PF('productTypePCWidget').show()"
+                    update="Table" />
+                </p:selectCheckboxMenu>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tProductTypePC"
+              value="#{lDemand.productTypePC.localeValue}" />
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.typePC}" filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.type}" />
+                <br />
+                <h:inputText id="typePC"
+                  value="#{searchDemandController.filterValues['typePC']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tTypePC" value="#{lDemand.typePC}" />
+          </rich:column>
+
+          <rich:column filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.operatingSystem}" />
+                <br />
+                <h:inputText id="operatingSystem"
+                  value="#{searchDemandController.filterValues['operatingSystem']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tOperatingSystem"
+              value="#{lDemand.softwaresString}" />
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.location.locationName}"
+            filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.location}" />
+                <br />
+                <h:inputText id="location"
+                  value="#{searchDemandController.filterValues['locationName']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{lDemand.location.locationName}" />
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.PCToReplace.airbusSN}"
+            filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.PCToReplace}" />
+                <br />
+                <h:inputText id="pcToReplace"
+                  value="#{searchDemandController.filterValues['pcToReplace']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputLink
+              value="${request.contextPath}/itemManagement/PCManagement.faces">
+              <h:outputText value="#{lDemand.PCToReplace.airbusSN}" />
+              <f:param name="id" value="#{lDemand.PCToReplace.id}" />
+              <f:param name="mode" value="READ" />
+            </h:outputLink>
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.PCToReplace.typeArticle}"
+            filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.typePCToReplace}" />
+                <br />
+                <h:inputText id="typePCToReplace"
+                  value="#{searchDemandController.filterValues['typePCToReplace']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tTypePCToReplace"
+              value="#{lDemand.PCToReplace.typeArticle}" />
+          </rich:column>
+
+          <rich:column sortBy="#{lDemand.allocatedPC.airbusSN}"
+            filterType="custom"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.allocatedPC}" />
+                <br />
+                <h:inputText id="pcAllocated"
+                  value="#{searchDemandController.filterValues['allocatedPC']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputLink
+              value="${request.contextPath}/itemManagement/PCManagement.faces">
+              <h:outputText value="#{lDemand.allocatedPC.airbusSN}" />
+              <f:param name="id" value="#{lDemand.allocatedPC.id}" />
+              <f:param name="mode" value="READ" />
+            </h:outputLink>
+          </rich:column>
+
+          <rich:column filterType="custom"
+            sortBy="#{lDemand.allocatedPC.availabilityDate}"
+            filter="#{searchDemandController.demandFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.availabilityDate}" />
+                <br />
+                <h:inputText id="availabilityDate"
+                  value="#{searchDemandController.filterValues['availabilityDate']}">
+                  <a4j:ajax event="keyup"
+                    render="Table@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText id="tAvailabilityDate"
+              value="#{lDemand.allocatedPC.availabilityDate}">
+              <f:convertDateTime
+                pattern="#{searchDemandController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+          <f:facet name="footer">
+            <h:outputText
+              value="#{(empty searchDemandController.searchDemand? msg.noDemand:'')}" />
+          </f:facet>
+
+        </rich:dataTable>
+      </div>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsBottom" for="Table" maxPages="10"
+          fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+    </h:form>
+
+    <ui:include src="/includes/confirmation.xhtml">
+      <ui:param name="confirmationId" value="InternalPCCreation" />
+      <ui:param name="controller" value="#{searchDemandController}" />
+      <ui:param name="method" value="doCreatePCsInternalPurchase" />
+      <ui:param name="confirmationTitle"
+        value="#{msg.createPCConfirmTitle}" />
+      <ui:param name="confirmationText"
+        value="#{searchDemandController.PCCreationMsg}" />
+      <ui:param name="render" value="Table,tablePurchases" />
+    </ui:include>
+
+    <ui:include src="/includes/confirmation.xhtml">
+      <ui:param name="confirmationId" value="ExternalPCCreation" />
+      <ui:param name="controller" value="#{searchDemandController}" />
+      <ui:param name="method" value="doCreatePCsExternalPurchase" />
+      <ui:param name="confirmationTitle"
+        value="#{msg.createPCConfirmTitle}" />
+      <ui:param name="confirmationText"
+        value="#{searchDemandController.PCCreationMsg}" />
+      <ui:param name="validateButtonId" value="Validatebutton2" />
+      <ui:param name="cancelButtonId" value="CancelButton2" />
+      <ui:param name="render" value="Table,tablePurchases" />
+    </ui:include>
+  </div>
+</ui:composition>

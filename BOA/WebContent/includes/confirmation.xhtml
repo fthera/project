@@ -1,0 +1,87 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Usage of this modal -->
+  <!--
+    confirmationId        = the id of the modal
+    confirmationTitle	  = [optional] the title of the window
+    confirmationText      = the text to display
+    displayWarningText    = [optional] boolean indicating if the warning text should be
+                              displayed or not
+    warningText           = [optional] the text to display as warning
+    controller            = the controller to be used
+    method                = the method name of the controller to be called as
+                              validate button action
+    render              = [optional] the render attribute for validate button
+    validateButtonId      = [optional] the validate button id
+    cancelButtonId        = [optional] the cancel button id
+    showHistoryComment    = [optional] boolean indicating that a history comment can be provided
+  
+    Remark:
+    - This modal contains its own form and must be included outside the form of
+        the page including it.
+  -->
+  <c:if test="#{empty confirmationTitle}">
+    <c:set var="confirmationTitle" value="Confirmation" />
+  </c:if>
+
+  <c:if test="#{empty displayWarningText}">
+    <c:set var="displayWarningText" value="false" />
+  </c:if>
+
+  <c:if test="#{empty validateButtonId}">
+    <c:set var="validateButtonId" value="validateButton" />
+  </c:if>
+
+  <c:if test="#{empty cancelButtonId}">
+    <c:set var="cancelButtonId" value="cancelButton" />
+  </c:if>
+
+  <c:if test="#{empty showHistoryComment}">
+    <c:set var="showHistoryComment" value="false" />
+  </c:if>
+
+  <h:form id="#{confirmationId}Form">
+    <rich:popupPanel id="#{confirmationId}" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="header">
+        <h:outputText value="#{confirmationTitle}" />
+      </f:facet>
+
+      <rich:panel style="min-width:300">
+        <h:graphicImage
+          url="/resources/images/icons/messagebox_warning.png"
+          styleClass="pic" />
+        <h:outputText value="#{confirmationText}" />
+        <br />
+        <h:outputText value="#{warningText}"
+          rendered="#{displayWarningText}" styleClass="warning" />
+        <br />
+
+        <h:panelGrid columns="2" cellpadding="10"
+          columnClasses="top,top" rendered="#{showHistoryComment}">
+          <h:outputLabel value="#{msg.historyComment}" />
+          <h:inputTextarea rows="4" cols="30"
+            value="#{controller.historyComment}" />
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="#{validateButtonId}"
+            value="#{msg.validate}" action="#{controller[method]}"
+            oncomplete="#{rich:component(confirmationId)}.hide();
+                        if (#{facesContext.maximumSeverity!=null}) javascript:window.scrollTo(0,0);
+                        patchModal();"
+            render="#{render}" />
+          <a4j:commandButton id="#{cancelButtonId}" execute="@this"
+            value="#{msg.cancel}"
+            onclick="#{rich:component(confirmationId)}.hide();return false;" />
+        </h:panelGrid>
+      </rich:panel>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

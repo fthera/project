@@ -1,0 +1,97 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns:cc="http://java.sun.com/jsf/composite"
+  xmlns:a4j="http://richfaces.org/a4j" lang="#{localeCtrl.locale}">
+
+<!-- Usage of this component -->
+<!--
+  beanProperty       = the inputText binding bean property
+  controller         = the managed bean controller on which to find
+                         updateFunction and suggestionFunction methods
+  updateFunction     = the name of the function to update the view following
+                         the value change
+  suggestionFunction = the name of the function returning a list of objects
+                         satisfying the inputText filled value
+  id                 = the id of the inputText, also used to create the
+                         suggestionBox id
+  render           = the components id to be re-rendered following the
+                         updateFunction call
+  minChars           = [optional] the minimum number of characters to display
+                         the suggestion list
+  displayButton      = [optional] indicates if the button deploying the
+                         suggestion list should be displayed
+  withCategory       = [optional] indicates if there is two columns instead
+                         of only one
+  toolTip            = [optional] the tooltip to add on the input value
+  rendered           = [optional] indicates if the component shall be rendered
+                         or not
+  renderedCategory   = [optional] indicates if the category column of
+                         suggestion list should be displayed
+  
+  Remark:
+  - In order to display one column, the suggestionFunction shall return a list
+      of Strings.
+  - In order to display two columns, the first one containing a special text
+      written in italic, the suggestionFunction shall return a list of
+      structures containing at least two String attributes named 'category'
+      and 'value'. Moreover, the withCategory attribute shall be "true".
+-->
+
+<cc:interface>
+  <cc:attribute name="beanProperty" required="true" />
+  <cc:attribute name="updateFunction" required="true"
+    method-signature="void action(javax.faces.event.AjaxBehaviorEvent)" />
+  <cc:attribute name="suggestionFunction" required="true"
+    method-signature="java.util.List suggestion(javax.faces.context.FacesContext, javax.faces.component.UIComponent, java.lang.String)" />
+  <cc:attribute name="id" required="true" />
+  <cc:attribute name="render" default="" />
+  <cc:attribute name="minChars" default="2" />
+  <cc:attribute name="withCategory" default="false" />
+  <cc:attribute name="displayButton" default="false" />
+  <cc:attribute name="rendered" default="true" />
+  <cc:attribute name="renderedCategory" default="true" />
+  <cc:attribute name="toolTip" default="" />
+</cc:interface>
+
+<cc:implementation>
+  <h:panelGroup id="#{cc.attrs.id}">
+    <rich:autocomplete id="#{cc.attrs.id}ac"
+      minChars="#{cc.attrs.minChars}" value="#{cc.attrs.beanProperty}"
+      var="currentSuggest"
+      fetchValue="#{cc.attrs.withCategory ? currentSuggest.value : currentSuggest}"
+      autocompleteMethod="#{cc.attrs.suggestionFunction}"
+      showButton="#{cc.attrs.displayButton}"
+      rendered="#{cc.attrs.rendered}">
+
+      <h:column rendered="#{not cc.attrs.withCategory}">
+        <h:outputText value="#{currentSuggest}"/>
+      </h:column>
+
+      <h:column rendered="#{cc.attrs.withCategory}">
+        <h:outputText value="#{currentSuggest.category}  "
+          style="font-style:italic"
+          rendered="#{cc.attrs.renderedCategory}">
+        </h:outputText>
+      </h:column>
+      <h:column rendered="#{cc.attrs.withCategory}">
+        <h:outputText value="#{currentSuggest.value}" />
+      </h:column>
+
+      <a4j:ajax event="change" render="#{cc.attrs.render}"
+        listener="#{cc.attrs.updateFunction}" />
+      <a4j:ajax event="selectitem" render="#{cc.attrs.render}"
+        listener="#{cc.attrs.updateFunction}" />
+    </rich:autocomplete>
+
+    <rich:tooltip id="#{cc.attrs.id}tt"
+      target="#{cc.attrs.id}ac" value="#{cc.attrs.toolTip}"
+      styleclass="tooltip" showDelay="750" followMouse="false"
+      direction="bottomRight" rendered="#{not empty cc.attrs.toolTip}" />
+
+  </h:panelGroup>
+</cc:implementation>
+</html>

@@ -1,0 +1,42 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('LocationCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('LocationCRUD','CRUD_Read')}">
+      <f:facet name="header">#{msg.buildingManagementTitle}
+			</f:facet>
+      <style type="text/css">
+.pcolumn {
+  vertical-align: top;
+}
+</style>
+      <rich:tabPanel switchType="client">
+        <rich:tab id="buildingTab" header="#{msg.buildingList}">
+
+          <ui:include src="/admin/BuildingForm.xhtml"></ui:include>
+          <ui:include src="/admin/UpdatePlaceModal.xhtml"></ui:include>
+          <ui:include src="/admin/ExportBuildingsModal.xhtml"></ui:include>
+
+        </rich:tab>
+
+        <rich:tab id="externalEntityTab"
+          header="#{msg.externalEntityList}">
+          <ui:include src="/admin/ExternalEntityForm.xhtml" />
+          <ui:include src="/admin/UpdateExternalEntityModal.xhtml" />
+
+        </rich:tab>
+      </rich:tabPanel>
+    </rich:panel>
+
+  </ui:define>
+</ui:composition>

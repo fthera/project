@@ -1,0 +1,694 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{demandController.createMode ? logInController.isAuthorized('DemandCRUD','CRUD_Create') : (demandController.updateMode ? (logInController.isAuthorized('DemandCRUD','CRUD_Update') || logInController.userLogged == demandController.demand.issuer) : logInController.isAuthorized('DemandCRUD','CRUD_Read'))}" />
+    <c:set var="isKnowId" value="#{demandController.demand != null}" />
+
+    <h:outputText rendered="#{not isAuthorized}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <h:outputText value="#{msg.unknownId}" rendered="#{not isKnowId}"
+      styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized and isKnowId}">
+      <f:facet name="header">#{demandController.title}</f:facet>
+
+      <h:form id="DemandForm">
+
+        <c:set var="readonly" value="#{demandController.readOnly}" />
+        <c:set var="updateOrCreate"
+          value="#{demandController.updateMode or demandController.createMode}" />
+
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="demandManagementError" />
+          <ui:param name="globalOnly" value="true" />
+        </ui:include>
+
+        <c:if test="#{demandController.actionsAvailable}">
+          <div style="width: 80%">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.businessActions}" />
+              </legend>
+              <h:panelGrid columns="6">
+                <a4j:commandButton id="updateDemandButton"
+                  value="#{msg.modify}"
+                  action="#{demandController.goToUpdatePage}"
+                  rendered="#{logInController.isAuthorized('DemandCRUD','CRUD_Update') || logInController.userLogged == demandController.demand.issuer}" />
+                <a4j:commandButton id="confirmButton"
+                  value="#{msg.confirm}"
+                  oncomplete="#{rich:component('confirmationConfirmDemand')}.show();return false;"
+                  disabled="#{!demandController.confirmationAvailable}"
+                  rendered="#{logInController.isAuthorized('DemandConfirm')}" />
+                <a4j:commandButton id="allocateDemandButton"
+                  value="#{msg.allocate}"
+                  action="#{demandController.goToAllocationPage}"
+                  disabled="#{!demandController.allocationAvailable}"
+                  rendered="#{logInController.isAuthorized('DemandAllocate')}" />
+                <a4j:commandButton id="makeAvailableButton"
+                  value="#{msg.makeAvailable}"
+                  oncomplete="#{rich:component('confirmationMakeAvailableDemand')}.show();return false;"
+                  disabled="#{!demandController.makingAvailableAvailable}"
+                  rendered="#{logInController.isAuthorized('DemandMakeAvailable')}" />
+                <a4j:commandButton id="closeButton" value="#{msg.close}"
+                  rendered="#{logInController.isAuthorized('DemandClose') || logInController.userLogged == demandController.demand.issuer}"
+                  oncomplete="#{rich:component('confirmationCloseDemand')}.show();return false;"
+                  disabled="#{!demandController.closureAvailable}" />
+                <a4j:commandButton id="cancelDemandButton"
+                  value="#{msg.cancel}"
+                  rendered="#{logInController.isAuthorized('DemandCancel') || logInController.userLogged == demandController.demand.issuer}"
+                  oncomplete="#{rich:component('confirmationCancelDemand')}.show();return false;"
+                  disabled="#{!demandController.cancellationAvailable}" />
+              </h:panelGrid>
+            </fieldset>
+          </div>
+        </c:if>
+
+        <div style="width: 80%">
+          <h:panelGroup rendered="#{updateOrCreate}">
+            <h:outputText value="#{msg.requiredFields}"
+              style="color:red" />
+          </h:panelGroup>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+
+            <h:panelGrid columns="6" style="width:100%"
+              columnClasses="alignright,alignleft,alignright,alignleft,alignright,alignleft">
+
+              <h:outputLabel for="demandNumber"
+                value="#{msg.demandNumber}" styleClass="labelName" />
+              <h:inputText id="demandNumber" styleClass="input20"
+                readonly="true" disabled="true"
+                value="#{demandController.demand.demandNumber}" />
+
+              <h:outputLabel for="demandStatus"
+                value="#{msg.demandStatus}" styleClass="labelName" />
+              <h:inputText id="demandStatus" styleClass="input20"
+                readonly="true" disabled="true"
+                value="#{demandController.demand.status}" />
+
+              <h:outputLabel for="requestNumber"
+                value="#{msg.requestNumber}" styleClass="labelname" />
+              <h:panelGroup>
+                <h:inputText id="requestNumber" styleClass="input20"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.requestNumber}">
+                  <f:validateLength
+                    maximum="#{DBConstants.demandRequestnumberLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="requestNumber" />
+              </h:panelGroup>
+
+              <h:outputLabel for="issuer" value="#{msg.issuer}"
+                styleClass="labelName" />
+              <c:if test="#{demandController.createMode}">
+                <h:inputText id="issuer" styleClass="input50"
+                  readonly="true" disabled="true"
+                  value="#{logInController.userLogged.loginDetails}" />
+              </c:if>
+              <c:if test="#{!demandController.createMode}">
+                <h:inputText id="issuer" styleClass="input50"
+                  readonly="true" disabled="true"
+                  value="#{demandController.demand.issuer.loginDetails}" />
+              </c:if>
+
+              <h:panelGroup>
+                <h:outputLabel for="needDate" value="#{msg.needDate}"
+                  styleClass="labelName" />
+                <c:if test="#{updateOrCreate}">
+                  <span style="color: red;">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup>
+                <rich:calendar id="needDate"
+                  value="#{demandController.demand.needDate}"
+                  locale="#{localeCtrl.locale}" popup="true"
+                  enableManualInput="true" disabled="#{readonly}"
+                  required="#{updateOrCreate}"
+                  requiredMessage="#{msg.valueRequiredMsg}"
+                  datePattern="#{demandController.getDateFormat()}"
+                  showApplyButton="true" />
+                <rich:message for="needDate" />
+              </h:panelGroup>
+
+              <c:if test="#{demandController.demand.ended}">
+                <h:outputLabel for="closureDate"
+                  value="#{msg.closureDate}" styleClass="labelname" />
+                <h:inputText id="closureDate" styleClass="input20"
+                  readonly="true"
+                  value="#{demandController.demand.closureDate}">
+                  <f:convertDateTime
+                    pattern="#{demandController.getDateFormat()}"
+                    timeZone="Europe/Paris" />
+                </h:inputText>
+              </c:if>
+              <c:if test="#{! demandController.demand.ended}">
+                <h:outputLabel value="" />
+                <h:outputLabel value="" />
+              </c:if>
+
+              <h:panelGroup>
+                <h:outputLabel for="owner" value="#{msg.Owner}"
+                  styleClass="labelname" />
+                <c:if test="#{updateOrCreate}">
+                  <span style="color: red;">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup>
+                <h:inputText id="owner" styleClass="input50"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.owner}"
+                  required="#{updateOrCreate}"
+                  requiredMessage="#{msg.valueRequiredMsg}">
+                  <f:validateLength
+                    maximum="#{DBConstants.demandOwnerLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="owner" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel for="ownerSiglum"
+                  value="#{msg.OwnerSiglum}" styleClass="labelname" />
+                <c:if test="#{updateOrCreate}">
+                  <span style="color: red;">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup>
+                <h:inputText id="ownerSiglum" styleClass="input20"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.ownerSiglum}"
+                  required="#{updateOrCreate}"
+                  requiredMessage="#{msg.valueRequiredMsg}">
+                  <f:validateLength
+                    maximum="#{DBConstants.demandOwnersiglumLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="ownerSiglum" />
+              </h:panelGroup>
+
+            </h:panelGrid>
+          </fieldset>
+
+        </div>
+
+        <c:if
+          test="#{demandController.demand.PCToReplace != null or demandController.demand.allocatedPC != null}">
+          <div style="width: 80%">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.linkedPC}" />
+              </legend>
+
+              <!-- necessary for jsf load richt faces css style on this page  -->
+              <rich:dataTable />
+              <table class="rf-dt" style="width: 100%">
+                <thead class="rf-dt-thd">
+                  <tr class="rf-dt-shdr">
+                    <th class="rf-dt-shdr-c"></th>
+                    <th class="rf-dt-shdr-c">#{msg.AirbusSN}</th>
+                    <th class="rf-dt-shdr-c">#{msg.ManufacturerSN}</th>
+                    <th class="rf-dt-shdr-c">#{msg.ProductType}</th>
+                    <th class="rf-dt-shdr-c">#{msg.TypeArticle}</th>
+                    <th class="rf-dt-shdr-c">#{msg.operatingSystem}</th>
+                    <th class="rf-dt-shdr-c">#{msg.availabilityDate}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <h:panelGroup
+                    rendered="#{demandController.demand.PCToReplace != null}">
+                    <tr class="rf-dt-r">
+                      <td class="rf-dt-c">
+                        <h:outputLabel value="#{msg.PCToReplace}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLink id="linkToPCToReplace2"
+                          value="${request.contextPath}/itemManagement/PCManagement.faces">
+                          <h:outputText
+                            value="#{demandController.demand.PCToReplace.airbusSN}" />
+                          <f:param name="id"
+                            value="#{demandController.demand.PCToReplace.id}" />
+                          <f:param name="mode" value="READ" />
+                        </h:outputLink>
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.PCToReplace.manufacturerSN}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.PCToReplace.productType.localeValue}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.PCToReplace.typeArticle}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.PCToReplace.operatingSystemsNames}" />
+                      </td>
+                      <td class="rf-dt-c" />
+                    </tr>
+                  </h:panelGroup>
+
+                  <h:panelGroup
+                    rendered="#{demandController.demand.allocatedPC != null}">
+                    <tr class="rf-dt-row">
+                      <td class="rf-dt-c">
+                        <h:outputLabel value="#{msg.allocatedPC}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLink id="linkToAllocatedPC2"
+                          value="${request.contextPath}/itemManagement/PCManagement.faces">
+                          <h:outputText
+                            value="#{demandController.demand.allocatedPC.airbusSN}" />
+                          <f:param name="id"
+                            value="#{demandController.demand.allocatedPC.id}" />
+                          <f:param name="mode" value="READ" />
+                        </h:outputLink>
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.allocatedPC.manufacturerSN}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.allocatedPC.productType.localeValue}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.allocatedPC.typeArticle}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.allocatedPC.operatingSystemsNames}" />
+                      </td>
+                      <td class="rf-dt-c">
+                        <h:outputLabel
+                          value="#{demandController.demand.allocatedPC.availabilityDate}">
+                          <f:convertDateTime
+                            pattern="#{demandController.getDateFormat()}"
+                            timeZone="Europe/Paris" />
+                        </h:outputLabel>
+                      </td>
+                    </tr>
+                  </h:panelGroup>
+                </tbody>
+              </table>
+            </fieldset>
+          </div>
+        </c:if>
+
+        <div style="width: 80%">
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.PCNeeds}" />
+            </legend>
+
+            <h:panelGrid columns="4" style="width:60%"
+              columnClasses="alignright,alignleft,alignright,alignleft">
+
+              <h:panelGroup>
+                <h:outputLabel for="ProductTypePC"
+                  value="#{msg.ProductType} " styleClass="labelname">
+                </h:outputLabel>
+                <c:if test="#{updateOrCreate}">
+                  <span style="color: red;">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup>
+                <rich:select id="ProductTypePC" mode="client"
+                  value="#{demandController.demandProductTypePCId}"
+                  disabled="#{readonly}" required="#{updateOrCreate}"
+                  requiredMessage="#{msg.valueRequiredMsg}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems
+                    value="#{demandController.productTypes}" />
+                </rich:select>
+                <rich:message for="ProductTypePC" />
+              </h:panelGroup>
+
+              <h:outputLabel for="plugNumber" value="#{msg.socket}"
+                styleClass="labelname" />
+              <h:panelGroup>
+                <h:inputText id="plugNumber" styleClass="input20"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.plugNumber}">
+                  <f:validateLength
+                    maximum="#{DBConstants.demandPlugnumberLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="plugNumber" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel for="typePC" value="#{msg.type} "
+                  styleClass="labelname">
+                </h:outputLabel>
+                <c:if test="#{updateOrCreate}">
+                  <span style="color: red;">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup>
+                <rich:select id="typePC" mode="client"
+                  value="#{demandController.demandTypePCId}"
+                  disabled="#{readonly}" required="#{updateOrCreate}"
+                  requiredMessage="#{msg.valueRequiredMsg}"
+                  defaultLabel="#{msg.selectType}">
+                  <f:selectItem itemLabel="#{msg.selectType}" />
+                  <f:selectItems value="#{demandController.types}" />
+                </rich:select>
+                <rich:message for="typePC" />
+              </h:panelGroup>
+
+              <h:panelGroup></h:panelGroup>
+              <h:panelGroup></h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel for="AllocationPC"
+                  value="#{msg.businessAlloc} " styleClass="labelname">
+                </h:outputLabel>
+                <c:if test="#{updateOrCreate}">
+                  <span style="color: red;">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup>
+                <rich:select id="AllocationPC" mode="client"
+                  value="#{demandController.allocationId}"
+                  disabled="#{readonly}" required="#{updateOrCreate}"
+                  requiredMessage="#{msg.valueRequiredMsg}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems value="#{demandController.allocations}" />
+                </rich:select>
+                <rich:message for="AllocationPC" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel for="UsagePC"
+                  value="#{msg.businessUsage} " styleClass="labelname">
+                </h:outputLabel>
+                <c:if test="#{updateOrCreate}">
+                  <span style="color: red;">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup>
+                <rich:select id="UsagePC" mode="client"
+                  value="#{demandController.usageId}"
+                  disabled="#{readonly}" required="#{updateOrCreate}"
+                  requiredMessage="#{msg.valueRequiredMsg}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems value="#{demandController.usages}" />
+                </rich:select>
+                <rich:message for="UsagePC" />
+              </h:panelGroup>
+            </h:panelGrid>
+
+            <h:panelGroup>
+              <ui:include src="/software/InstalledSoftware.xhtml">
+                <ui:param name="softwares"
+                  value="#{demandController.softwares}" />
+                <ui:param name="modifiable" value="#{updateOrCreate}" />
+                <ui:param name="actionRemove"
+                  value="#{demandController}" />
+                <ui:param name="method" value="removeSoftware" />
+                <ui:param name="target"
+                  value="#{demandController.software}" />
+                <ui:param name="OSonly" value="true" />
+                <ui:param name="required" value="#{updateOrCreate}" />
+              </ui:include>
+            </h:panelGroup>
+
+            <h:panelGrid columns="2" style="width:100%"
+              columnClasses="alignright pcnt10,alignleft">
+              <h:outputLabel for="features" value="#{msg.features} "
+                styleClass="labelname" />
+              <h:panelGroup>
+                <h:inputText id="features" styleClass="input80"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.features}">
+                  <f:validateLength
+                    maximum="#{DBConstants.demandFeaturesLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="features" />
+              </h:panelGroup>
+            </h:panelGrid>
+
+            <ui:include src="/localization/container.xhtml">
+              <ui:param name="readonly" value="#{readonly}" />
+            </ui:include>
+
+            <ui:include src="/localization/location.xhtml">
+              <ui:param name="readonly" value="#{readonly}" />
+            </ui:include>
+
+            <h:panelGrid columns="2" style="width:100%"
+              columnClasses="alignright pcnt10,alignleft">
+              <h:outputLabel for="additionalInformation"
+                value="#{msg.additionalInformation} "
+                styleClass="labelname" />
+              <h:panelGroup>
+                <h:inputTextarea id="additionalInformation" cols="80"
+                  readonly="#{readonly}" rows="4"
+                  value="#{demandController.demand.additionalInformation}">
+                  <f:validateLength
+                    maximum="#{DBConstants.demandAdditionalinformationLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputTextarea>
+                <rich:message for="additionalInformation" />
+              </h:panelGroup>
+            </h:panelGrid>
+
+          </fieldset>
+
+        </div>
+
+        <div style="width: 80%">
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.context}" />
+            </legend>
+
+            <h:panelGrid columns="6" style="width:100%"
+              columnClasses="alignright pcnt10,alignleft,alignright,alignleft,alignright,alignleft">
+
+              <h:outputLabel for="department" value="#{msg.department}"
+                styleClass="labelName" />
+              <h:panelGroup>
+                <h:inputText id="department" styleClass="input20"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.department}">
+                  <a4j:ajax event="blur" execute="@this" />
+                  <f:validateLength
+                    maximum="#{DBConstants.demandDepartmentLength}" />
+                </h:inputText>
+                <rich:message for="department" />
+              </h:panelGroup>
+
+              <h:outputLabel for="program" value="#{msg.program}"
+                styleClass="labelName" />
+              <h:panelGroup>
+                <h:inputText id="program" styleClass="input40"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.program}">
+                  <a4j:ajax event="blur" execute="@this" />
+                  <f:validateLength
+                    maximum="#{DBConstants.demandProgramLength}" />
+                </h:inputText>
+                <rich:message for="program" />
+              </h:panelGroup>
+
+              <h:outputLabel for="project" value="#{msg.project}"
+                styleClass="labelName" />
+              <h:panelGroup>
+                <h:inputText id="project" styleClass="input40"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.project}">
+                  <a4j:ajax event="blur" execute="@this" />
+                  <f:validateLength
+                    maximum="#{DBConstants.demandProjectLength}" />
+                </h:inputText>
+                <rich:message for="project" />
+              </h:panelGroup>
+
+              <h:outputLabel for="budget" value="#{msg.budget}"
+                styleClass="labelName" />
+              <h:panelGroup>
+                <h:inputText id="budget" styleClass="input20"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.budget}">
+                  <a4j:ajax event="blur" execute="@this" />
+                  <f:validateLength
+                    maximum="#{DBConstants.demandBudgetLength}" />
+                </h:inputText>
+                <rich:message for="budget" />
+              </h:panelGroup>
+
+              <h:outputLabel for="contact" value="#{msg.contact}"
+                styleClass="labelName" />
+              <h:panelGroup>
+                <h:inputText id="contact" styleClass="input40"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.contact}">
+                  <a4j:ajax event="blur" execute="@this" />
+                  <f:validateLength
+                    maximum="#{DBConstants.demandContactLength}" />
+                </h:inputText>
+                <rich:message for="contact" />
+              </h:panelGroup>
+
+            </h:panelGrid>
+
+            <h:panelGrid columns="2" style="width:100%"
+              columnClasses="alignright pcnt10,alignleft">
+              <h:outputLabel for="justification"
+                value="#{msg.justification}" styleClass="labelName" />
+              <h:panelGroup>
+                <h:inputText id="justification" styleClass="input80"
+                  readonly="#{readonly}"
+                  value="#{demandController.demand.justification}">
+                  <a4j:ajax event="blur" execute="@this" />
+                  <f:validateLength
+                    maximum="#{DBConstants.demandJustificationLength}" />
+                </h:inputText>
+                <rich:message for="justification" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel value="#{msg.comments}" for="comment" />
+                <br />
+                <h:outputText id="nbCar"
+                  style="marging-right:5px;vertical-align:top;font-size:xx-small;"
+                  value="#{demandController.availableChars} #{msg.character}" />
+              </h:panelGroup>
+              <a4j:region>
+                <h:inputTextarea id="comment" styleClass="input80"
+                  readonly="#{readonly}" rows="4"
+                  value="#{demandController.demand.comments}">
+                  <a4j:ajax event="blur" execute="@this" render="nbCar" />
+                  <f:validateLength
+                    maximum="#{DBConstants.demandCommentsLength}" />
+                </h:inputTextarea>
+                <rich:message for="comment" />
+              </a4j:region>
+            </h:panelGrid>
+
+          </fieldset>
+
+          <c:if test="#{updateOrCreate}">
+            <h:panelGrid cellspacing="10" columns="3">
+              <c:if test="#{demandController.createMode}">
+                <a4j:commandButton value="#{msg.create}" execute="@this"
+                  oncomplete="if (#{facesContext.maximumSeverity==null}) {#{rich:component('confirmationCreateDemand')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <c:if test="#{demandController.updateMode}">
+                <a4j:commandButton value="#{msg.save}"
+                  action="#{demandController.doUpdate}"
+                  oncomplete="javascript:window.scrollTo(0,0)" />
+              </c:if>
+              <a4j:commandButton value="#{msg.reset}"
+                action="#{demandController.doRefresh}" execute="@this"
+                render="mainContent" oncomplete="patchModal();"/>
+              <a4j:commandButton value="#{msg.cancel}" execute="@this"
+                action="#{demandController.doCancelUpdate}" />
+            </h:panelGrid>
+          </c:if>
+        </div>
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationCreateDemand" />
+        <ui:param name="controller" value="#{demandController}" />
+        <ui:param name="method" value="doCreate" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmCreationDemand}" />
+        <ui:param name="validateButtonId" value="createDemandValidBtn" />
+        <ui:param name="cancelButtonId" value="createDemandCancelBtn" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationConfirmDemand" />
+        <ui:param name="controller" value="#{demandController}" />
+        <ui:param name="method" value="doConfirmDemand" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmConfirmDemand}" />
+        <ui:param name="validateButtonId" value="confirmDemandValidBtn" />
+        <ui:param name="cancelButtonId" value="confirmDemandCancelBtn" />
+        <ui:param name="render" value="mainContent" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationMakeAvailableDemand" />
+        <ui:param name="controller" value="#{demandController}" />
+        <ui:param name="method" value="doMakeAvailableDemand" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmMakeAvailableDemand}" />
+        <ui:param name="validateButtonId" value="availDemandValidBtn" />
+        <ui:param name="cancelButtonId" value="availDemandCancelBtn" />
+        <ui:param name="render" value="mainContent" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationCancelDemand" />
+        <ui:param name="controller" value="#{demandController}" />
+        <ui:param name="method" value="doCancelDemand" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmCancelDemand}" />
+        <ui:param name="validateButtonId" value="cancelDemandValidBtn" />
+        <ui:param name="cancelButtonId" value="cancelDemandCancelBtn" />
+        <ui:param name="render" value="mainContent" />
+      </ui:include>
+
+      <ui:include src="/software/InstallSoftwareModal.xhtml">
+        <ui:param name="actionInstall" value="#{demandController}" />
+        <ui:param name="method" value="addSoftware" />
+        <ui:param name="OSonly" value="true" />
+      </ui:include>
+
+      <ui:include src="/demand/PCAvailabilityDateModal.xhtml">
+        <ui:param name="confirmationId" value="confirmationCloseDemand" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmCloseDemand}" />
+        <ui:param name="availabilityDateToDisplay"
+          value="#{demandController.demand.PCToReplace != null}" />
+        <ui:param name="availabilityDateText"
+          value="#{msg.replacedPCAvailabilityDateToFill}" />
+        <ui:param name="availabilityDateValue"
+          value="#{demandController.replacedPCAvailabilityDate}" />
+        <ui:param name="controller" value="#{demandController}" />
+        <ui:param name="validateMethod" value="doCloseDemand" />
+        <ui:param name="render" value="DemandForm" />
+      </ui:include>
+
+      <ui:include src="/localization/changeContainerModal.xhtml" >
+        <ui:param name="controller" value="#{containerController}" />
+        <ui:param name="method" value="doValidate" />
+      </ui:include>
+
+      <ui:include src="/localization/changeLocationModal.xhtml" />
+
+      <div align="right">
+        <a href="#top">#{msg.topPage}</a>
+      </div>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

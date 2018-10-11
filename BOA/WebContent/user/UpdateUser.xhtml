@@ -1,0 +1,44 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:c="http://java.sun.com/jstl/core"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('UserProfileUpdate'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <h:panelGroup
+      rendered="#{logInController.isAuthorized('UserProfileUpdate')}">
+      <h:inputHidden
+        value="#{userController.setUser(logInController.userLogged)}" />
+      <rich:panel>
+        <f:facet name="header">#{userController.title}</f:facet>
+        <h:form>
+          <h:panelGroup style="display:inline-block"><ui:include src="/user/UserForm.xhtml">
+              <ui:param name="assignRole" value="false" />
+              <ui:param name="isModal" value="false" />
+              <ui:param name="isDisplayRequired" value="false" />
+              <ui:param name="isDisplayPassRequired" value="false" />
+              <ui:param name="isUpdateLastNameAuthorized"
+                value="#{logInController.isAuthorized('UserProfileUpdateLastname')}" />
+              <ui:param name="isUpdateFisrtNameAuthorized"
+                value="#{logInController.isAuthorized('UserProfileUpdateFirstname')}" />
+              <ui:param name="isUpdateMailAuthorized"
+                value="#{logInController.isAuthorized('UserProfileUpdateMail')}" />
+              <ui:param name="isUpdateLoginAuthorized"
+                value="#{logInController.isAuthorized('UserProfileUpdateLogin')}" />
+              <ui:param name="isUpdatePasswordAuthorized"
+                value="#{logInController.isAuthorized('UserProfileUpdatePassword')}" />
+            </ui:include>
+          </h:panelGroup>
+        </h:form>
+      </rich:panel>
+    </h:panelGroup>
+  </ui:define>
+</ui:composition>

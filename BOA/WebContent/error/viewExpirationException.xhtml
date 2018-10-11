@@ -1,0 +1,69 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="header">
+    <ui:include src="/includes/header.xhtml">
+      <ui:param name="loginVisible" value="false"></ui:param>
+    </ui:include>
+  </ui:define>
+
+  <f:metadata>
+    <f:viewParam name="ret" value="#{logInController.reconnectPage}" />
+  </f:metadata>
+
+  <ui:define name="content">
+    <rich:panel>
+      <f:facet name="header">#{msg.sessionExpiredTitle}</f:facet>
+
+      <h:outputText value="#{msg.sessionExpiredText}"
+        styleClass="bigText error" />
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="reconnectError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="reconnectForm">
+
+        <rich:hotKey selector="#reconnectForm" key="return" enabledInInput="true">
+          <rich:componentControl target="reconnectBtn" operation="click" />
+        </rich:hotKey>
+
+        <h:panelGrid columns="2">
+          <h:outputLabel value="#{msg.userLogin}" />
+          <h:inputText id="login" value="#{logInController.login}"
+            required="true" />
+          <h:panelGroup />
+          <rich:message for="login" />
+
+          <h:outputLabel value="#{msg.userPassword}" />
+          <h:inputSecret id="password"
+            value="#{logInController.password}" required="true">
+          </h:inputSecret>
+          <h:panelGroup />
+          <rich:message for="password" />
+
+        </h:panelGrid>
+        <h:panelGrid columns="1">
+          <h:commandButton id="reconnectBtn"
+            value="#{msg.sessionReconnect}"
+            action="#{logInController.doReconnect}" />
+        </h:panelGrid>
+      </h:form>
+    </rich:panel>
+
+    <script type="text/javascript">       
+      window.onload = function() {
+        document.getElementById('reconnectForm:login').focus();
+  	  }
+  	</script>
+  </ui:define>
+
+</ui:composition>
+

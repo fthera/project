@@ -1,0 +1,263 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Modal allowing the change of the location. -->
+
+  <h:form>
+    <rich:popupPanel id="changeLocationModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:outputText value="#{msg.changeLocationModalTitle}"
+            rendered="#{locationController.placeMode}"
+            style="vertical-align:bottom;" />
+          <h:outputText value="#{msg.changeExternalLocationModalTitle}"
+            rendered="#{locationController.externalEntityMode}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="changeLocationError" />
+      </ui:include>
+
+      <a4j:outputPanel ajaxRendered="true">
+        <h:panelGroup rendered="#{locationController.placeMode}">
+
+          <h:panelGroup id="searchLocation">
+            <fieldset>
+              <legend>
+                <h:outputText value="#{msg.searchLocation}" />
+              </legend>
+
+              <h:panelGrid columns="4" cellspacing="5"
+                style="width:100%"
+                columnClasses="alignright,alignleft,alignright,alignleft">
+
+                <h:panelGroup>
+                  <h:outputLabel value="#{msg.inheritedLocation}"
+                    rendered="#{locationController.inheritedLocationAvailable}"
+                    styleClass="labelname" />
+                </h:panelGroup>
+                <h:panelGroup>
+                  <h:selectBooleanCheckbox
+                    value="#{locationController.tempLocationInherited}"
+                    valueChangeListener="#{locationController.inheritedChanged}"
+                    rendered="#{locationController.inheritedLocationAvailable}"
+                    immediate="true">
+                    <a4j:ajax event="change" render="locationInModal" />
+                  </h:selectBooleanCheckbox>
+                </h:panelGroup>
+                <h:panelGroup />
+                <h:panelGroup />
+
+                <h:outputLabel for="searchLocationBuilding"
+                  value="#{msg.Building}" />
+                <rich:select id="searchLocationBuilding" mode="client"
+                  value="#{locationController.selectedBuildingId}"
+                  defaultLabel="#{msg.allBuildings}"
+                  disabled="#{locationController.tempLocation.inherited}">
+                  <f:selectItem itemLabel="#{msg.allBuildings}" />
+                  <f:selectItems value="#{locationController.buildings}" />
+                  <a4j:ajax event="change" render="searchLocation" />
+                </rich:select>
+
+                <h:outputLabel for="searchLocationPlaceName"
+                  value="#{msg.name}" />
+                <h:inputText id="searchLocationPlaceName"
+                  styleClass="input20"
+                  value="#{locationController.inputSearchField}"
+                  disabled="#{locationController.tempLocation.inherited}" />
+
+              </h:panelGrid>
+
+              <h:panelGrid columns="2" cellspacing="5"
+                styleClass="center">
+                <a4j:commandButton id="findLocationButton"
+                  value="#{msg.search}"
+                  action="#{locationController.doFind}"
+                  disabled="#{locationController.tempLocation.inherited}"
+                  render="locationList,locationInModal" />
+                <a4j:commandButton value="#{msg.reset}"
+                  action="#{locationController.doResetSearchField}"
+                  disabled="#{locationController.tempLocation.inherited}"
+                  render="searchLocation,locationInModal" />
+              </h:panelGrid>
+
+              <h:panelGroup id="locationList">
+
+                <h:selectOneListbox style="width:100%;"
+                  converter="placeConverter"
+                  disabled="#{locationController.tempLocation.inherited}"
+                  valueChangeListener="#{locationController.placeChanged}"
+                  immediate="true" size="8">
+                  <f:selectItems
+                    value="#{locationController.foundPlaces}"
+                    var="lFoundLocationPlace"
+                    itemLabel="#{lFoundLocationPlace.detailedName}"
+                    itemValue="#{lFoundLocationPlace}" />
+                  <a4j:ajax event="change" render="locationInModal" />
+                </h:selectOneListbox>
+
+              </h:panelGroup>
+
+            </fieldset>
+          </h:panelGroup>
+
+          <h:panelGroup id="locationInModal">
+            <fieldset>
+              <legend>
+                <h:outputText value="#{msg.location}" />
+              </legend>
+
+              <h:panelGrid columns="2" cellspacing="5"
+                columnClasses="alignright,alignleft">
+
+                <h:outputLabel for="tempLocationName"
+                  value="#{msg.locationName}" styleClass="labelname" />
+                <h:panelGroup>
+                  <h:outputLabel id="tempLocationName" styleClass="labelname"
+                    value="#{locationController.tempLocation.locationDetailedName}" />
+                  <h:graphicImage id="tempLocationNameHelp"
+                    rendered="#{not empty locationController.tempLocation.toolTip}"
+                    styleClass="iconClass" style="margin-left:4px"
+                    value="/resources/images/icons/help_tooltip.png" />
+                  <boa:tooltip target="tempLocationNameHelp"
+                    rendered="#{not empty locationController.tempLocation.toolTip}"
+                    value="#{locationController.tempLocation.toolTip}" />
+                </h:panelGroup>
+
+                <h:outputLabel for="tempPrecision"
+                  rendered="#{locationController.showTempPrecision}"
+                  value="#{msg.precisionPlace}" styleClass="labelname" />
+                <h:panelGroup
+                  rendered="#{locationController.showTempPrecision}">
+                  <h:inputText id="tempPrecision" styleClass="input20"
+                    value="#{locationController.tempLocation.precision}">
+                    <a4j:ajax event="blur" execute="@this" />
+                    <f:validateLength
+                      maximum="#{DBConstants.locationPreciselocationLength}" />
+                  </h:inputText>
+                  <rich:message for="tempPrecision" />
+                </h:panelGroup>
+
+              </h:panelGrid>
+
+            </fieldset>
+          </h:panelGroup>
+
+        </h:panelGroup>
+
+
+        <h:panelGroup
+          rendered="#{locationController.externalEntityMode}">
+
+          <h:panelGroup id="searchExternalLocation">
+            <fieldset>
+              <legend>
+                <h:outputText value="#{msg.searchExternalLocation}" />
+              </legend>
+
+              <h:panelGrid columns="4" cellspacing="5"
+                style="width:100%"
+                columnClasses="alignright,alignleft,alignright,alignleft">
+
+                <h:outputLabel for="searchLocationFamily"
+                  value="#{msg.ClassTitle}" />
+                <rich:select id="searchLocationFamily" mode="client"
+                  value="#{locationController.selectedExternalEntityTypeId}"
+                  defaultLabel="#{msg.allTypes}">
+                  <f:selectItem itemLabel="#{msg.allTypes}" />
+                  <f:selectItems
+                    value="#{locationController.externalTypes}" />
+                </rich:select>
+
+                <h:outputLabel for="searchLocationExternalEntityName"
+                  value="#{msg.name}" />
+                <h:inputText id="searchLocationExternalEntityName"
+                  styleClass="input20"
+                  value="#{locationController.inputSearchField}" />
+
+              </h:panelGrid>
+
+              <h:panelGrid columns="2" cellspacing="5"
+                styleClass="center">
+                <a4j:commandButton id="findExtLocationButton"
+                  value="#{msg.search}"
+                  action="#{locationController.doFind}"
+                  render="extLocationList,extLocationInModal" />
+                <a4j:commandButton value="#{msg.reset}"
+                  action="#{locationController.doResetSearchField}"
+                  render="searchExternalLocation,extLocationInModal" />
+              </h:panelGrid>
+
+              <h:panelGroup id="extLocationList">
+
+                <h:selectOneListbox style="width:100%;"
+                  converter="externalEntityConverter"
+                  valueChangeListener="#{locationController.externalEntityChanged}"
+                  immediate="true" size="8">
+                  <f:selectItems
+                    value="#{locationController.foundExternalEntities}"
+                    var="lFoundLocationExternalEntity"
+                    itemLabel="#{lFoundLocationExternalEntity.name}"
+                    itemValue="#{lFoundLocationExternalEntity}" />
+                  <a4j:ajax event="change" render="extLocationInModal" />
+                </h:selectOneListbox>
+
+              </h:panelGroup>
+
+            </fieldset>
+          </h:panelGroup>
+
+          <h:panelGroup id="extLocationInModal">
+            <fieldset>
+              <legend>
+                <h:outputText value="#{msg.externalLocation}" />
+              </legend>
+
+              <h:panelGrid columns="2" cellspacing="5"
+                columnClasses="alignright,alignleft">
+
+                <h:outputLabel value="#{msg.externalLocationType}"
+                  styleClass="labelName" />
+                <h:outputLabel
+                  value="#{locationController.tempLocation.externalEntity.externalEntityType.localeValue}" />
+
+                <h:outputLabel value="#{msg.externalLocationName}"
+                  styleClass="labelname" />
+                <h:outputLabel id="tempExternalLocationName"
+                  value="#{locationController.tempLocation.externalLocationName}" />
+
+              </h:panelGrid>
+
+              <a4j:commandButton value="#{msg.setNoExternalLocation}"
+                action="#{locationController.doResetTempExternalLocation}"
+                render="extLocationInModal" />
+
+            </fieldset>
+          </h:panelGroup>
+
+        </h:panelGroup>
+      </a4j:outputPanel>
+
+
+      <h:panelGrid columns="3" cellspacing="5" styleClass="center">
+        <a4j:commandButton value="#{msg.validate}"
+          render="locationInPage, warningMessage"
+          action="#{locationController.doValidate}"
+          id="validateLocation"
+          oncomplete="#{rich:component('changeLocationModal')}.hide()" />
+        <a4j:commandButton value="#{msg.cancel}"
+          action="#{locationController.doCancel}"
+          onclick="#{rich:component('changeLocationModal')}.hide()" />
+      </h:panelGrid>
+
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

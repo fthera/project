@@ -1,0 +1,141 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="chooseEquipmentModalForm">
+    <rich:popupPanel id="chooseEquipmentModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeChooseEquipmentModal"
+          alt="#{msg.close}" class="hidelink"
+          value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('chooseEquipmentModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage
+            value="/resources/images/icons/search16x16.png"
+            style="padding-right:5px;width:16px;height:16px;" />
+          <h:outputText value="#{msg.chooseEquipmentModalTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <rich:hotKey selector="#chooseEquipmentModalForm" key="return"
+        enabledInInput="true"
+        onkeyup="#{rich:component('findButton')}.click();" />
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="chooseEquipmentError" />
+      </ui:include>
+
+      <fieldset>
+        <legend>
+          <h:outputText value="#{msg.searchEquipment}" />
+        </legend>
+
+        <table style="width: 100%; cellspacing: 5px;">
+          <tr>
+            <td align="right">
+              <h:outputLabel for="family" value="#{msg.ClassTitle}" />
+            </td>
+            <td>
+              <rich:select id="family" mode="client"
+                value="#{softwareController.findCriteria['family']}"
+                defaultLabel="#{msg.allFamilies}">
+                <f:selectItem itemLabel="#{msg.allFamilies}" />
+                <f:selectItems
+                  value="#{softwareController.getAllFamilies()}" />
+              </rich:select>
+            </td>
+            <td align="right">
+              <h:outputLabel for="type" value="#{msg.type}" />
+            </td>
+            <td>
+              <h:inputText id="type" styleClass="input20"
+                value="#{softwareController.findCriteria['typeArticle.label']}" />
+            </td>
+          </tr>
+          <tr>
+            <td align="right">
+              <h:outputLabel for="apn" value="#{msg.airbusPN}" />
+            </td>
+            <td>
+              <h:inputText id="apn" styleClass="input20"
+                value="#{softwareController.findCriteria['airbusPN.identifier']}" />
+            </td>
+            <td align="right">
+              <h:outputLabel for="mpn" value="#{msg.manufacturerPN}" />
+            </td>
+            <td>
+              <h:inputText id="mpn" styleClass="input20"
+                value="#{softwareController.findCriteria['manufacturerPN.identifier']}" />
+            </td>
+          </tr>
+          <tr>
+            <td align="right">
+              <h:outputLabel for="sn" value="#{msg.sn}" />
+            </td>
+            <td>
+              <h:inputText id="sn" styleClass="input20"
+                value="#{softwareController.findCriteria['sn']}"></h:inputText>
+            </td>
+          </tr>
+        </table>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="findButton" value="#{msg.search}"
+            action="#{softwareController.doFind}"
+            render="equipmentFound" />
+          <a4j:commandButton value="#{msg.reset}"
+            action="#{softwareController.resetFindField}"
+            render="family,sn,apn,mpn,type,findButton,equipmentFound" />
+        </h:panelGrid>
+
+
+
+
+        <rich:pickList id="equipmentFound" immediate="true"
+          value="#{softwareController.equipmentsSelected}"
+          var="equipment" minListHeight="150"
+          addText="#{msg.addText}"
+          addAllText="#{msg.addAllText}"
+          removeText="#{msg.removeText}"
+          removeAllText="#{msg.removeAllText}"
+          converter="articleConverter"
+          sourceCaption="#{msg.foundEquipmentCaption}"
+          targetCaption="#{msg.chosenEquipmentCaption}">
+          <f:selectItems value="#{softwareController.equipmentsFound}" />
+          <rich:column>
+            <h:outputText
+              value="#{msg[equipment.class.getSimpleName()]}"></h:outputText>
+          </rich:column>
+          <rich:column>
+            <h:outputText value="#{equipment.name}"></h:outputText>
+          </rich:column>
+        </rich:pickList>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton value="#{msg.add}"
+            render="equipmentTable,counts,dsTop,dsBottom"
+            action="#{softwareController.doModalChoose}"
+            id="chooseEquipment"
+            oncomplete="#{rich:component('chooseEquipmentModal')}.hide()">
+
+          </a4j:commandButton>
+          <a4j:commandButton value="#{msg.close}"
+            onclick="#{rich:component('chooseEquipmentModal')}.hide()" />
+
+
+        </h:panelGrid>
+
+
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>
+

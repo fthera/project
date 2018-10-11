@@ -1,0 +1,1135 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{PCController.createMode ? logInController.isAuthorized('ArticleCRUD','CRUD_Create') : (PCController.updateMode ? logInController.isAuthorized('ArticleCRUD','CRUD_Update') : logInController.isAuthorized('ArticleCRUD','CRUD_Read'))}" />
+    <c:set var="isKnowId" value="#{PCController.pc != null}" />
+    <c:set var="isArchivedAuthorized" value="#{PCController.pc.archived ? logInController.isAuthorized('ArchivedCRUDAuthorization') : true}" />
+
+    <h:outputText value="#{msg.notEnoughRightsForPage}"
+      rendered="#{not isAuthorized or not isArchivedAuthorized}"
+      styleClass="warning-block" />
+
+    <h:outputText value="#{msg.unknownId}" rendered="#{not isKnowId}"
+      styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized and isArchivedAuthorized and isKnowId}">
+      <f:facet name="header">#{PCController.title}</f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="PCManagementError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="PCForm">
+
+        <c:set var="readonly" value="#{PCController.readOnly}" />
+        <c:set var="updateOrCreate"
+          value="#{PCController.updateMode or PCController.createMode}" />
+
+        <div style="width: 90%">
+          <c:if test="#{readonly}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.businessActions}" />
+              </legend>
+              <h:panelGrid columns="3" cellspacing="10">
+                <a4j:commandButton value="#{msg.modify}"
+                  action="#{PCController.goToUpdatePage}"
+                  disabled="#{not logInController.isAuthorized('ArticleCRUD','CRUD_Update')}">
+                </a4j:commandButton>
+                <a4j:commandButton value="#{msg.obsolescence}"
+                  action="#{PCController.doViewObsolescence}"
+                  disabled="#{not (PCController.hasObsoData() and logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read'))}" />
+                <a4j:commandButton value="#{msg.delete}"
+                  id="deleteSoftware"
+                  oncomplete="#{rich:component('confirmationDeletePC')}.show();return false;"
+                  disabled="#{not logInController.isAuthorized('ArticleCRUD','CRUD_Delete')}" />
+              </h:panelGrid>
+            </fieldset>
+
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.AutoUpdateFieldset}" />
+              </legend>
+              <h:outputText value="#{msg.autoUpdateRemark}" />
+
+              <h:panelGrid id="autoUpdatePanel" columns="3"
+                cellspacing="10" style="width:100%"
+                columnClasses="top,top,top">
+                <h:panelGrid columns="2"
+                  columnClasses="alignright,alignleft">
+                  <h:outputLabel for="lastUpdateDate"
+                    value="#{msg.LastAutoUpdateDate} "
+                    styleClass="labelname" />
+                  <h:outputText id="lastUpdateDate"
+                    value="#{PCController.pc.lastAutoUpdate}"
+                    styleClass="labelname">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm"
+                      timeZone="Europe/Paris" />
+                  </h:outputText>
+
+                  <h:outputLabel for="lastUpdateType"
+                    value="#{msg.LastAutoUpdateType} "
+                    styleClass="labelname" />
+                  <h:outputText id="lastUpdateType"
+                    value="#{PCController.pc.lastAutoUpdateType.toString()}"
+                    styleClass="labelname" />
+
+                  <h:outputLabel for="validityDate"
+                    value="#{msg.AutoDataValidityDate} "
+                    styleClass="labelname" />
+                  <h:outputText id="validityDate"
+                    value="#{PCController.pc.autoDataValidityDate}"
+                    styleClass="labelname">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm"
+                      timeZone="Europe/Paris" />
+                  </h:outputText>
+                </h:panelGrid>
+
+                <h:panelGrid columns="1">
+                  <a4j:commandButton
+                    value="#{msg.AutoUpdateSysmonButton}"
+                    action="#{PCController.doAutoUpdateWithSysmon}"
+                    render="mainContent" oncomplete="patchModal();"
+                    disabled="#{not logInController.isAuthorized('ArticleCRUD','CRUD_Update')}" />
+
+                  <h:panelGroup>
+                    <h:selectBooleanCheckbox id="autoUpdate"
+                      value="#{PCController.pc.autoUpdate}"
+                      disabled="#{not logInController.isAuthorized('ArticleCRUD','CRUD_Update')}">
+                      <a4j:ajax event="change" 
+                        listener="#{PCController.doMergePC}"
+                        render="formInfoPC" />
+                    </h:selectBooleanCheckbox>
+                    <h:outputLabel for="autoUpdate"
+                      value="#{msg.AutoUpdateActivated}"
+                      styleClass="labelname" />
+                  </h:panelGroup>
+                </h:panelGrid>
+
+                <a4j:commandButton value="#{msg.AutoUpdateImportButton}"
+                  onclick="#{rich:component('uploadSysmonFileModal')}.show();return false;"
+                  disabled="#{not logInController.isAuthorized('ArticleCRUD','CRUD_Update')}" />
+              </h:panelGrid>
+            </fieldset>
+          </c:if>
+
+          <h:panelGroup rendered="#{updateOrCreate}">
+            <h:outputText value="#{msg.requiredFields}"
+              styleClass="requiredField" />
+            <br />
+            <h:outputText value="#{msg.autoUpdatedFields}"
+              styleClass="autoUpdatedField" />
+            <h:outputText value=" (#{msg.autoUpdateRemark})" />
+          </h:panelGroup>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+            <table style="width: 100%">
+              <tr id="departmentInChargeLine">
+                <td colspan="2">
+                  <h:panelGrid columns="3" styleClass="center">
+                    <h:panelGroup>
+                      <h:outputLabel id="departmentInChargeLabel" for="departmentInCharge"
+                        value="#{msg.DepartmentInCharge}"
+                        style="font-weight:bold;font-size:12px" />
+                      <c:if test="#{updateOrCreate}">
+                        <span style="color:red;margin-right:4px">*</span>
+                      </c:if>
+                    </h:panelGroup>
+                    <h:panelGrid columns="3">
+                      <c:if test="#{readonly}">
+                        <h:inputText id="departmentInCharge"
+                          styleClass="input40"
+                          value="#{PCController.pc.departmentInCharge.fullDescription}"
+                          readonly="true" />
+                      </c:if>
+                      <c:if test="#{updateOrCreate}">
+                        <rich:select id="departmentInCharge"
+                          mode="client" styleClass="input30"
+                          value="#{PCController.departmentInChargeId}"
+                          defaultLabel="#{msg.notFilled}"
+                          required="true"
+                          requiredMessage="#{msg.valueRequiredMsg}">
+                          <f:selectItem itemLabel="#{msg.notFilled}" />
+                          <f:selectItems
+                            value="#{PCController.departmentsInCharge}" />
+                          <a4j:ajax event="selectitem" />
+                        </rich:select>
+                      </c:if>
+                      <h:graphicImage id="departmentInChargeHelp" styleClass="iconClass"
+                        value="/resources/images/icons/help_tooltip.png" />
+                      <rich:message for="departmentInCharge" />
+                    </h:panelGrid>
+                  </h:panelGrid>
+                </td>
+              </tr>
+              <tr>
+                <td class="middlehalf">
+                  <table>
+                    <tr id="SNPCLine">
+                      <td align="right">
+                        <h:panelGroup>
+                          <h:outputLabel id="SnPCLabel" for="SnPC"
+                            value="#{msg.AirbusSN} "
+                            styleClass="labelname">
+                          </h:outputLabel>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span style="color: red;">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:inputText id="SnPC" styleClass="input20"
+                          readonly="#{readonly}"
+                          value="#{PCController.airbusSN}"
+                          required="true"
+                          requiredMessage="#{msg.valueRequiredMsg}"
+                          disabled="#{not PCController.authorizeUpdateAirbusSN}"
+                          validator="#{PCController.validateAirbusSN}">
+                          <a4j:ajax event="blur" execute="@this" />
+                          <f:validateLength
+                            maximum="#{DBConstants.articleAirbussnLength}" />
+                        </h:inputText>
+                        <h:graphicImage id="SnPCHelp"
+                          styleClass="iconClass" style="margin-left:4px"
+                          value="/resources/images/icons/help_tooltip.png" />
+                      </td>
+                      <td>
+                        <rich:message for="SnPC" />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>
+                        <h:panelGroup>
+                          <h:outputLabel for="createManufacturerSN"
+                            value="#{msg.manufacturerSN}" />
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="autoUpdatedField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:inputText id="createManufacturerSN"
+                          styleClass="input20" readonly="#{readonly}"
+                          value="#{PCController.manufacturerSN}">
+                          <a4j:ajax event="blur" execute="@this" />
+                          <f:validateLength
+                            maximum="#{DBConstants.articleManufacturersnLength}" />
+                        </h:inputText>
+                        <rich:message for="createManufacturerSN" />
+                      </td>
+                    </tr>
+
+                    <tr id="nameLine">
+                      <td align="right">
+                        <h:outputLabel id="nameLabel" for="name"
+                          value="#{msg.name}" styleClass="labelname" />
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="requiredField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:inputText id="name" styleClass="input20"
+                          readonly="#{readonly}"
+                          value="#{PCController.name}" required="true"
+                          requiredMessage="#{msg.valueRequiredMsg}"
+                          validator="#{PCController.validatePCName}">
+                          <a4j:ajax event="blur" execute="@this" />
+                          <f:validateLength
+                            maximum="#{DBConstants.pcNameLength}" />
+                        </h:inputText>
+                        <h:graphicImage id="nameHelp"
+                          styleClass="iconClass" style="margin-left:4px"
+                          value="/resources/images/icons/help_tooltip.png" />
+                      </td>
+                      <td>
+                        <rich:message for="name" />
+                      </td>
+                    </tr>
+
+                    <tr id="FunctionPCLine">
+                      <td align="right">
+                        <h:outputLabel id="FunctionPCLabel"
+                          for="FunctionPC" value="#{msg.function}"
+                          styleClass="labelname" />
+                      </td>
+                      <td />
+                      <td>
+                        <c:if test="#{readonly}">
+                          <h:inputText id="FunctionPC"
+                            styleClass="input50"
+                            value="#{PCController.function}"
+                            readonly="true" />
+                        </c:if>
+                        <c:if test="#{updateOrCreate}">
+                          <h:panelGroup>
+                            <h:inputText id="FunctionPC"
+                              styleClass="input50"
+                              title="#{msg.EntryMessageText}"
+                              value="#{PCController.function}">
+                              <a4j:ajax event="blur" execute="@this" />
+                              <f:validateLength
+                                maximum="#{DBConstants.pcFunctionLength}" />
+                            </h:inputText>
+                          </h:panelGroup>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:graphicImage id="FunctionPCHelp" styleClass="iconClass"
+                          value="/resources/images/icons/help_tooltip.png" />
+                      </td>
+                      <td>
+                        <rich:message for="FunctionPC" />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td align="right">
+                        <h:outputLabel for="domain"
+                          value="#{msg.Domain}" styleClass="labelname" />
+                      </td>
+                      <td />
+                      <td>
+                        <c:if test="#{readonly}">
+                          <h:inputText id="domain" styleClass="input20"
+                            value="#{PCController.pc.domain.defaultValue}"
+                            readonly="true" />
+                        </c:if>
+                        <c:if test="#{updateOrCreate}">
+                          <rich:select id="domain" mode="client"
+                            value="#{PCController.domainId}"
+                            defaultLabel="#{msg.notFilled}">
+                            <f:selectItem itemLabel="#{msg.notFilled}" />
+                            <f:selectItems
+                              value="#{PCController.domains}" />
+                          </rich:select>
+                        </c:if>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+
+                <td class="middlehalf">
+                  <table>
+                    <tr id="SNLine">
+                      <td align="right">
+                        <h:panelGroup>
+                          <h:outputLabel for="ProductTypePC"
+                            value="#{msg.ProductType} "
+                            styleClass="labelname">
+                          </h:outputLabel>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="requiredField">*</span>
+                          <span class="autoUpdatedField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <c:if test="#{readonly}">
+                          <h:inputText id="ProductTypePC"
+                            styleClass="input20"
+                            value="#{PCController.pc.productType.localeValue}"
+                            readonly="true" />
+                        </c:if>
+                        <c:if test="#{updateOrCreate}">
+                          <h:panelGroup>
+                            <rich:select id="ProductTypePC"
+                              mode="client"
+                              value="#{PCController.productTypeId}"
+                              defaultLabel="#{msg.notFilled}"
+                              required="true"
+                              requiredMessage="#{msg.valueRequiredMsg}">
+                              <f:selectItem itemLabel="#{msg.notFilled}" />
+                              <f:selectItems
+                                value="#{PCController.productTypes}" />
+                            </rich:select>
+                          </h:panelGroup>
+                        </c:if>
+                      </td>
+                      <td>
+                        <rich:message for="ProductTypePC" />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td align="right">
+                        <h:panelGroup>
+                          <h:outputLabel for="typePC"
+                            value="#{msg.type} " styleClass="labelname">
+                          </h:outputLabel>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="requiredField">*</span>
+                          <span class="autoUpdatedField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <c:if test="#{readonly}">
+                          <h:inputText id="typePC" styleClass="input50"
+                            value="#{PCController.typePCLabel}"
+                            readonly="true" />
+                        </c:if>
+                        <c:if test="#{updateOrCreate}">
+                          <h:panelGroup>
+                            <rich:select id="typePC" mode="client"
+                              styleClass="rf-sel-l"
+                              value="#{PCController.typePCLabel}"
+                              disabled="#{PCController.updateMode and not logInController.isAuthorized('ArticleUpdateType')}"
+                              enableManualInput="true" required="true"
+                              requiredMessage="#{msg.valueRequiredMsg}"
+                              validator="#{PCController.validateTypePCLabel}">
+                              <f:selectItems
+                                value="#{PCController.types}" />
+                            </rich:select>
+                          </h:panelGroup>
+                        </c:if>
+                      </td>
+                      <td>
+                        <rich:message for="typePC" />
+                      </td>
+                    </tr>
+
+                    <c:if test="#{readonly}">
+                      <tr>
+                        <td align="right">
+                          <h:outputLabel for="Manufacturer"
+                            value="#{msg.manufacturer}"
+                            styleClass="labelname" />
+                        </td>
+                        <td />
+                        <td>
+                          <h:inputText id="Manufacturer"
+                            styleClass="input50"
+                            value="#{PCController.pc.typeArticle.manufacturer}"
+                            readonly="true" disabled="true" />
+                        </td>
+                      </tr>
+                    </c:if>
+                    <c:if test="#{updateOrCreate}">
+                      <tr style="height: 22px" />
+                    </c:if>
+
+                    <tr style="height: 22px" />
+
+                    <tr id="PlatformLine">
+                      <td align="right">
+                        <h:outputLabel for="platform"
+                          value="#{msg.Platform}" styleClass="labelname" />
+                      </td>
+                      <td />
+                      <td>
+                        <c:if test="#{readonly}">
+                          <h:inputText id="platform"
+                            styleClass="input20"
+                            value="#{PCController.platform}"
+                            readonly="true" />
+                        </c:if>
+                        <c:if test="#{updateOrCreate}">
+                          <h:panelGroup>
+                            <h:inputText id="platform"
+                              styleClass="input20"
+                              value="#{PCController.platform}">
+                              <a4j:ajax event="blur" execute="@this" />
+                              <f:validateLength
+                                maximum="#{DBConstants.pcPlatformLength}" />
+                            </h:inputText>
+                            <rich:message for="platform" />
+                          </h:panelGroup>
+                        </c:if>
+                        <h:graphicImage id="PlatformHelp"
+                          styleClass="iconClass" style="margin-left:4px"
+                          value="/resources/images/icons/help_tooltip.png" />
+                      </td>
+                      <td>
+                        <rich:message for="platform" />
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <boa:tooltip target="departmentInChargeHelp"
+              value="#{msg.toolTipPCDepartmentInCharge}" />
+            <boa:tooltip target="SnPCHelp"
+              value="#{msg.toolTipPCAirbusSN}" />
+            <boa:tooltip target="nameHelp" value="#{msg.toolTipPCName}" />
+            <boa:tooltip target="FunctionPCHelp"
+              value="#{msg.toolTipPCFunction}" />
+            <boa:tooltip target="PlatformHelp"
+              value="#{msg.toolTipPCPlatform}" />
+
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.properties}" />
+            </legend>
+            <table style="width: 100%">
+              <tr>
+                <td class="middlehalf">
+                  <table>
+                    <tr id="InChargePCLine">
+                      <td align="right" valign="top">
+                        <h:panelGroup>
+                          <h:outputLabel for="InChargePC"
+                            value="#{msg.technicalContact} "
+                            styleClass="labelname">
+                          </h:outputLabel>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="requiredField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <c:if test="#{readonly}">
+                          <h:inputText id="InChargePC"
+                            styleClass="input50"
+                            value="#{PCController.personInCharge}"
+                            readonly="true" />
+                        </c:if>
+                        <c:if test="#{updateOrCreate}">
+                          <h:panelGroup>
+                            <rich:select id="InChargePC"
+                              styleClass="rf-sel-l"
+                              value="#{PCController.personInCharge}"
+                              required="true"
+                              requiredMessage="#{msg.valueRequiredMsg}"
+                              enableManualInput="true" mode="client"
+                              validator="#{PCController.validatePersonInCharge}">
+                              <f:selectItems
+                                value="#{PCController.personsInCharge}" />
+                            </rich:select>
+                          </h:panelGroup>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:graphicImage id="InChargePCHelp" styleClass="iconClass"
+                          value="/resources/images/icons/help_tooltip.png" />
+                      </td>
+                      <td>
+                        <rich:message for="InChargePC" />
+                      </td>
+                    </tr>
+
+                    <tr id="ownerLine">
+                      <td align="right" valign="top">
+                        <h:panelGroup>
+                          <h:outputLabel for="owner"
+                            value="#{msg.Owner} " styleClass="labelname">
+                          </h:outputLabel>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="requiredField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:inputText id="owner" styleClass="input50"
+                          readonly="#{readonly}"
+                          value="#{PCController.owner}" required="true"
+                          requiredMessage="#{msg.valueRequiredMsg}">
+                          <a4j:ajax event="blur" execute="@this" />
+                          <f:validateLength
+                            maximum="#{DBConstants.pcOwnerLength}" />
+                        </h:inputText>
+                      </td>
+                      <td>
+                        <h:graphicImage id="ownerHelp" styleClass="iconClass"
+                          value="/resources/images/icons/help_tooltip.png" />
+                      </td>
+                      <td>
+                        <rich:message for="owner" />
+                      </td>
+                    </tr>
+
+                    <tr id="ownerSiglumLine">
+                      <td align="right" valign="top">
+                        <h:panelGroup>
+                          <h:outputLabel for="ownerSiglum"
+                            value="#{msg.OwnerSiglum} "
+                            styleClass="labelname">
+                          </h:outputLabel>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="requiredField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:inputText id="ownerSiglum"
+                          styleClass="input20"
+                          value="#{PCController.ownerSiglum}"
+                          required="true" readonly="#{readonly}"
+                          requiredMessage="#{msg.valueRequiredMsg}">
+                          <a4j:ajax event="blur" execute="@this" />
+                          <f:validateLength
+                            maximum="#{DBConstants.pcOwnersiglumLength}" />
+                        </h:inputText>
+                        <h:graphicImage id="ownerSiglumHelp"
+                          styleClass="iconClass" style="margin-left:4px"
+                          value="/resources/images/icons/help_tooltip.png" />
+                      </td>
+                      <td/>
+                      <td>
+                        <rich:message for="ownerSiglum" />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td align="right" valign="top">
+                        <h:panelGroup>
+                          <h:outputLabel for="AdminPC"
+                            value="#{msg.admin} " styleClass="labelname">
+                          </h:outputLabel>
+                        </h:panelGroup>
+                      </td>
+                      <td />
+                      <td>
+                        <h:panelGroup>
+                          <h:inputTextarea id="AdminPC" rows="4"
+                            readonly="#{readonly}" styleClass="input20"
+                            title="#{msg.EntryMessagePCAdmin}"
+                            value="#{PCController.admin}">
+                            <f:validateLength
+                              maximum="#{DBConstants.pcAdminLength}" />
+                            <a4j:ajax event="blur" execute="@this" />
+                          </h:inputTextarea>
+                          <rich:message for="AdminPC" />
+                        </h:panelGroup>
+                      </td>
+                    </tr>
+                    <a4j:region>
+                      <tr>
+                        <td align="right">
+                          <h:outputLabel for="State"
+                            value="#{msg.articleState}"
+                            styleClass="labelName" />
+                        </td>
+                        <td />
+                        <td>
+                          <c:if test="#{readonly}">
+                            <h:inputText id="state" styleClass="input20"
+                              value="#{PCController.state}"
+                              readonly="true" converter="stateConverter" />
+                          </c:if>
+                          <c:if test="#{updateOrCreate}">
+                            <rich:select id="state" mode="client"
+                              value="#{PCController.state}">
+                              <f:selectItems
+                                value="#{PCController.states}" />
+                              <a4j:ajax event="selectitem"
+                                render="AcquisitionDatePCLabel,statusLabel,status,availabilityLabel,availability" />
+                            </rich:select>
+                          </c:if>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="right">
+                          <h:outputLabel for="UseState"
+                            value="#{msg.UseState}"
+                            styleClass="labelName" />
+                        </td>
+                        <td />
+                        <td>
+                          <c:if test="#{readonly}">
+                            <h:inputText id="UseState" styleClass="input20"
+                              value="#{PCController.useState}"
+                              readonly="true" converter="useStateConverter" />
+                          </c:if>
+                          <c:if test="#{updateOrCreate}">
+                            <rich:select id="UseState" mode="client"
+                              value="#{PCController.useState}">
+                              <f:selectItems
+                                value="#{PCController.useStates}" />
+                              <a4j:ajax event="selectitem"
+                                render="state,containerInPage,locationInPage" />
+                            </rich:select>
+                          </c:if>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td align="right">
+                          <h:outputLabel id="AcquisitionDatePCLabel"
+                            for="AcquisitionDatePC"
+                            value="#{PCController.acquisitionDateMsg}"
+                            styleClass="labelname" />
+                        </td>
+                        <td />
+                        <td>
+                          <c:if test="#{readonly}">
+                            <h:inputText id="AcquisitionDatePC"
+                              styleClass="input20"
+                              value="#{PCController.acquisitionDate}"
+                              readonly="true">
+                              <f:convertDateTime
+                                pattern="#{PCController.getDateFormat()}"
+                                timeZone="Europe/Paris" />
+                            </h:inputText>
+                          </c:if>
+                          <c:if test="#{updateOrCreate}">
+                            <h:panelGroup>
+                              <rich:calendar id="AcquisitionDatePC"
+                                value="#{PCController.acquisitionDate}"
+                                locale="#{localeCtrl.locale}"
+                                popup="true" enableManualInput="true"
+                                datePattern="dd/MM/yyyy"
+                                showApplyButton="true"
+                                disabled="#{PCController.updateMode and not PCController.authorizeUpdateAcquisitionDate}" />
+                            </h:panelGroup>
+                          </c:if>
+                        </td>
+                      </tr>
+                      <c:if test="#{updateOrCreate}">
+                        <tr>
+                          <td align="right">
+                            <h:panelGroup id="statusLabel">
+                              <h:outputLabel
+                                id="AvailabilityStatusLabel"
+                                for="AvailabilityStatus"
+                                value="#{msg.AvailabilityStatus}"
+                                rendered="#{PCController.availabilityMandatory}"
+                                styleClass="labelname" />
+                            </h:panelGroup>
+                          </td>
+                          <td />
+                          <td>
+                            <h:panelGroup id="status">
+                              <rich:select id="AvailabilityStatus"
+                                mode="client"
+                                value="#{PCController.availabilityStatus}"
+                                required="true"
+                                rendered="#{PCController.availabilityMandatory}"
+                                disabled="#{PCController.allAvailabilityStatus.size() le 1}">
+                                <f:selectItems
+                                  value="#{PCController.allAvailabilityStatus}" />
+                                <a4j:ajax event="change"
+                                  render="availabilityLabel,availability" />
+                              </rich:select>
+                            </h:panelGroup>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td align="right">
+                            <h:panelGroup id="availabilityLabel">
+                              <h:panelGroup
+                                rendered="#{PCController.availabilityDateMandatory}">
+                                <h:outputLabel
+                                  id="AvailabilityDateLabel"
+                                  for="AvailabilityDate"
+                                  value="#{msg.availabilityDate}"
+                                  styleClass="labelname" />
+                                <span class="requiredField">*</span>
+                              </h:panelGroup>
+                            </h:panelGroup>
+                          </td>
+                          <td />
+                          <td>
+                            <h:panelGroup id="availability">
+                              <h:panelGroup
+                                rendered="#{PCController.availabilityDateMandatory}">
+                                <rich:calendar id="AvailabilityDate"
+                                  value="#{PCController.availabilityDate}"
+                                  locale="#{localeCtrl.locale}"
+                                  popup="true" enableManualInput="true"
+                                  datePattern="dd/MM/yyyy"
+                                  showApplyButton="true" required="true" />
+                                <rich:message for="AvailabilityDate" />
+                              </h:panelGroup>
+                            </h:panelGroup>
+                          </td>
+                        </tr>
+                      </c:if>
+                    </a4j:region>
+                    <tr>
+                      <td align="right">
+                        <h:panelGroup>
+                          <h:outputLabel for="nbScreens"
+                            value="#{msg.PCNbScreens}"
+                            styleClass="labelname" />
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <c:if test="#{updateOrCreate}">
+                          <span class="autoUpdatedField">*</span>
+                        </c:if>
+                      </td>
+                      <td>
+                        <h:panelGroup>
+                          <h:inputText id="nbScreens"
+                            styleClass="input20" readonly="#{readonly}"
+                            validatorMessage="#{msg.valuePositiveInteger}"
+                            converterMessage="#{msg.valuePositiveInteger}"
+                            value="#{PCController.nbScreens}">
+                            <f:convertNumber integerOnly="true" />
+                            <f:validateLongRange minimum="0" />
+                          </h:inputText>
+                          <rich:message for="nbScreens" />
+                        </h:panelGroup>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+
+                <td class="middlehalf">
+                  <table style="width: 100%">
+                    <tr>
+                      <td>
+                        <ui:include src="/itemManagement/includes/PCSpecificities.xhtml"/>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+
+            <boa:tooltip target="InChargePCHelp"
+              value="#{msg.toolTipPCInCharge}" />
+            <boa:tooltip target="ownerHelp"
+              value="#{msg.toolTipPCOwner}" />
+            <boa:tooltip target="ownerSiglumHelp"
+              value="#{msg.toolTipPCOwnerSiglum}" />
+
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.comments}" />
+            </legend>
+              <table style="width: 100%">
+                <tr>
+                  <td style="text-align: center">
+                    <h:outputLabel for="CommentPC"
+                      value="#{msg.generalComment} " styleClass="labelname" />
+                  </td>
+                  <td>
+                    <rich:message for="CommentPC" />
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <h:inputTextarea id="CommentPC"
+                      readonly="#{readonly}" style="width:100%;margin-right:5px"
+                      rows="4" title="#{msg.EntryMessageText}"
+                      value="#{PCController.comment}">
+                      <f:validateLength
+                        maximum="#{DBConstants.pcCommentLength}" />
+                      <a4j:ajax event="blur" execute="@this" />
+                    </h:inputTextarea>
+                  </td>
+                </tr>
+                <tr>
+                  <td>
+                    <ui:include src="/itemManagement/includes/DatedComments.xhtml"/>
+                  </td>
+                </tr>
+              </table>
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.allocation}" />
+            </legend>
+            <table>
+              <tr>
+                <td align="right">
+                  <h:panelGroup>
+                    <h:outputLabel for="AllocationPC"
+                      value="#{msg.businessAlloc} "
+                      styleClass="labelname">
+                    </h:outputLabel>
+                  </h:panelGroup>
+                </td>
+                <td>
+                  <c:if test="#{updateOrCreate}">
+                    <span class="requiredField">*</span>
+                  </c:if>
+                </td>
+                <td>
+                  <c:if test="#{readonly}">
+                    <h:inputText id="AllocationPC" styleClass="input20"
+                      value="#{PCController.pc.allocation.localeValue}"
+                      readonly="true" />
+                  </c:if>
+                  <c:if test="#{updateOrCreate}">
+                    <h:panelGroup>
+                      <rich:select id="AllocationPC" mode="client"
+                        value="#{PCController.allocationId}"
+                        defaultLabel="#{msg.notFilled}" required="true"
+                        requiredMessage="#{msg.valueRequiredMsg}">
+                        <f:selectItem itemLabel="#{msg.notFilled}" />
+                        <f:selectItems
+                          value="#{PCController.allocations}" />
+                      </rich:select>
+                    </h:panelGroup>
+                  </c:if>
+                </td>
+                <td>
+                  <rich:message for="AllocationPC" />
+                </td>
+              </tr>
+
+              <tr>
+                <td align="right">
+                  <h:panelGroup>
+                    <h:outputLabel for="UsagePC"
+                      value="#{msg.businessUsage} "
+                      styleClass="labelname">
+                    </h:outputLabel>
+                  </h:panelGroup>
+                </td>
+                <td>
+                  <c:if test="#{updateOrCreate}">
+                    <span class="requiredField">*</span>
+                  </c:if>
+                </td>
+                <td>
+                  <c:if test="#{readonly}">
+                    <h:inputText id="UsagePC" styleClass="input20"
+                      value="#{PCController.pc.usage.localeValue}"
+                      readonly="true" />
+                  </c:if>
+                  <c:if test="#{updateOrCreate}">
+                    <h:panelGroup>
+                      <rich:select id="UsagePC" mode="client"
+                        value="#{PCController.usageId}"
+                        defaultLabel="#{msg.notFilled}" required="true"
+                        requiredMessage="#{msg.valueRequiredMsg}">
+                        <f:selectItem itemLabel="#{msg.notFilled}" />
+                        <f:selectItems value="#{PCController.usages}" />
+                      </rich:select>
+                    </h:panelGroup>
+                  </c:if>
+                </td>
+                <td>
+                  <rich:message for="UsagePC" />
+                </td>
+              </tr>
+
+              <tr>
+                <td align="right">
+                  <h:outputLabel for="AssignPC"
+                    value="#{msg.assignment}" styleClass="labelname" />
+                </td>
+                <td />
+                <td>
+                  <c:if test="#{readonly}">
+                    <h:inputText id="AssignPC" styleClass="input50"
+                      value="#{PCController.assignment}" readonly="true" />
+                  </c:if>
+                  <c:if test="#{updateOrCreate}">
+                    <h:panelGroup>
+                      <h:inputText id="AssignPC" styleClass="input50"
+                        title="#{msg.EntryMessageText}"
+                        value="#{PCController.assignment}">
+                        <a4j:ajax event="blur" execute="@this" />
+                        <f:validateLength
+                          maximum="#{DBConstants.pcAssignmentLength}" />
+                      </h:inputText>
+                    </h:panelGroup>
+                  </c:if>
+                </td>
+                <td>
+                  <rich:message for="AssignPC" />
+                </td>
+              </tr>
+            </table>
+          </fieldset>
+
+          <c:if test="#{readonly}">
+            <ui:include
+              src="/itemManagement/includes/NetworkInterfaces.xhtml">
+              <ui:param name="list"
+                value="#{PCController.networkInterfaces}" />
+            </ui:include>
+          </c:if>
+          <c:if test="#{updateOrCreate}">
+            <ui:include
+              src="/itemManagement/includes/CommunicationPorts.xhtml">
+              <ui:param name="readonly" value="false" />
+              <ui:param name="autoUpdate" value="true" />
+            </ui:include>
+          </c:if>
+
+          <ui:include src="/software/InstalledSoftware.xhtml">
+            <ui:param name="softwares" value="#{PCController.softwares}" />
+            <ui:param name="modifiable" value="#{updateOrCreate}" />
+            <ui:param name="actionRemove" value="#{PCController}" />
+            <ui:param name="method" value="removeSoftware" />
+            <ui:param name="target" value="#{PCController.software}" />
+            <ui:param name="displayDefaultOS" value="true" />
+            <ui:param name="defaultOS" value="#{PCController.defaultOS}" />
+            <ui:param name="autoUpdate" value="#{updateOrCreate}" />
+          </ui:include>
+
+          <ui:include src="/localization/container.xhtml">
+            <ui:param name="readonly" value="${readonly}" />
+          </ui:include>
+
+          <ui:include src="/localization/location.xhtml">
+            <ui:param name="readonly" value="${readonly}" />
+          </ui:include>
+
+          <div style="padding-top: 7px">
+            <rich:collapsiblePanel switchType="client"
+              header="#{msg.documents}" headerClass="collapsible-header">
+              <ui:include
+                src="/itemManagement/includes/DocumentList.xhtml">
+                <ui:param name="readonly" value="#{readonly}" />
+              </ui:include>
+            </rich:collapsiblePanel>
+          </div>
+
+          <c:if test="#{readonly}">
+            <div style="padding-top: 7px">
+              <rich:collapsiblePanel switchType="client"
+                header="#{msg.reminders}"
+                headerClass="collapsible-header">
+                <ui:include src="/reminder/ReminderList.xhtml" />
+              </rich:collapsiblePanel>
+            </div>
+
+            <ui:include src="/itemManagement/includes/History.xhtml">
+              <ui:param name="article" value="#{PCController.pc}" />
+            </ui:include>
+
+            <div style="padding-top: 10px">
+              <rich:collapsiblePanel switchType="client"
+                header="#{msg.billOfMaterialTitle}"
+                headerClass="collapsible-header">
+                <ui:include src="/explorer/explorerTreeView.xhtml" />
+              </rich:collapsiblePanel>
+            </div>
+          </c:if>
+
+          <c:if test="#{updateOrCreate}">
+            <h:panelGrid cellspacing="10" columns="3">
+              <c:if test="#{PCController.createMode}">
+                <a4j:commandButton value="#{msg.create}" execute="@form"
+                  oncomplete="if (#{facesContext.maximumSeverity==null or facesContext.maximumSeverity.ordinal lt 2})
+                              {#{rich:component('confirmationCreatePC')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <c:if test="#{PCController.updateMode}">
+                <a4j:commandButton value="#{msg.save}" execute="@form"
+                  oncomplete="if (#{facesContext.maximumSeverity==null or facesContext.maximumSeverity.ordinal lt 2})
+                              {#{rich:component('confirmationUpdatePC')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <a4j:commandButton value="#{msg.reset}"
+                action="#{PCController.doRefresh}" execute="@this"
+                render="mainContent" oncomplete="patchModal();"/>
+              <a4j:commandButton value="#{msg.cancel}" execute="@this"
+                action="#{PCController.doCancelUpdate}" />
+            </h:panelGrid>
+          </c:if>
+        </div>
+
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationCreatePC" />
+        <ui:param name="controller" value="#{PCController}" />
+        <ui:param name="method" value="doCreate" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmCreationPC}" />
+        <ui:param name="validateButtonId" value="confirmCreateBtn" />
+        <ui:param name="cancelButtonId" value="cancelCreateBtn" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationUpdatePC" />
+        <ui:param name="controller" value="#{PCController}" />
+        <ui:param name="method" value="doUpdate" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmModificationPC}" />
+        <ui:param name="validateButtonId" value="confirmUpdateBtn" />
+        <ui:param name="cancelButtonId" value="cancelUpdateBtn" />
+        <ui:param name="showHistoryComment" value="#{true}" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationDeletePC" />
+        <ui:param name="controller" value="#{PCController}" />
+        <ui:param name="method" value="doDelete" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmDeletionPC}" />
+        <ui:param name="validateButtonId" value="confirmDeleteBtn" />
+        <ui:param name="cancelButtonId" value="cancelDeleteBtn" />
+      </ui:include>
+      
+      <ui:include src="/itemManagement/includes/PCSpecificityModal.xhtml" />
+      
+      <ui:include src="/itemManagement/includes/DatedCommentModal.xhtml" />
+
+      <ui:include src="/itemManagement/includes/PortModal.xhtml" />
+
+      <ui:include src="/software/InstallSoftwareModal.xhtml">
+        <ui:param name="actionInstall" value="#{PCController}" />
+        <ui:param name="method" value="addSoftware" />
+        <ui:param name="isPC" value="true" />
+      </ui:include>
+
+      <ui:include src="/software/ChangeDefaultOSModal.xhtml">
+        <ui:param name="beanProperty"
+          value="#{PCController.defaultOSId}" />
+        <ui:param name="operatingSystems"
+          value="#{PCController.selectOperatingSystems}" />
+      </ui:include>
+
+      <ui:include src="/localization/changeContainerModal.xhtml" >
+        <ui:param name="controller" value="#{containerController}" />
+        <ui:param name="method" value="doValidate" />
+      </ui:include>
+
+      <ui:include src="/localization/changeLocationModal.xhtml" />
+
+      <ui:include src="/itemManagement/includes/DocumentModal.xhtml" />
+
+      <ui:include src="/reminder/ReminderModal.xhtml" />
+
+      <ui:include src="/includes/uploadFileModal.xhtml">
+        <ui:param name="modalId" value="uploadSysmonFileModal" />
+        <ui:param name="modalTitle" value="#{msg.uploadFile}" />
+        <ui:param name="uploadText" value="#{msg.selectUpdateFile}" />
+        <ui:param name="controller" value="#{PCController}" />
+        <ui:param name="validateMethod" value="doAutoUpdateFromFile" />
+        <ui:param name="fileUploadListener" value="fileUploadListener" />
+        <ui:param name="validateButtonId" value="uploadButton" />
+        <ui:param name="cancelButtonId" value="cancelUploadButton" />
+        <ui:param name="immediateUpload" value="#{true}" />
+        <ui:param name="render" value="PCForm" />
+      </ui:include>
+
+      <a href="#">#{msg.topPage}</a>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

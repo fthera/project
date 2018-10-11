@@ -1,0 +1,111 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Part containing the display of the documents
+     and the buttons allowing to add and delete them. -->
+
+  <!-- Usage of this composition -->
+  <!--
+    readonly = [optional] boolean indicating if the composition is in readonly
+                 mode or not (default false)
+    
+     Remark:
+     - The modal named 'uploadFileModal' must exist in the page when
+         readonly is false.
+  -->
+
+  <c:if test="#{empty readonly}">
+    <c:set var="readonly" value="#{false}" />
+  </c:if>
+
+  <h:panelGrid columns="1" cellspacing="2">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="documentListError" />
+    </ui:include>
+
+    <a4j:commandButton id="addDocumentButton" rendered="#{!readonly}"
+      value="#{msg.LinkDocumentButton}"
+      onclick="#{rich:component('uploadFileModal')}.show();return false;" />
+
+    <h:outputLabel id="countDocuments"
+      value="#{msg.countDocuments} : #{documentController.documents.size()}" />
+
+    <h:panelGroup>
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsTopDocuments" for="documentsList"
+          maxPages="10" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+      <rich:dataTable id="documentsList"
+        value="#{documentController.documents}" var="document" rows="30"
+        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+        rowClasses="evenRow, oddRow">
+
+        <rich:column sortBy="#{document.name}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.name}" />
+          </f:facet>
+          <h:outputText value="#{document.name}" />
+        </rich:column>
+
+        <rich:column sortBy="#{document.uploadDate}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.UploadDate}" />
+          </f:facet>
+          <h:outputText value="#{document.uploadDate}">
+            <f:convertDateTime pattern="dd/MM/yyyy"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+        <rich:column rendered="#{readonly}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.download}" />
+          </f:facet>
+          <h:commandButton value="#{msg.download}"
+            action="#{documentController.doDownloadDocument}">
+            <f:setPropertyActionListener value="#{document}"
+              target="#{documentController.document}" />
+          </h:commandButton>
+        </rich:column>
+
+        <rich:column rendered="#{!readonly}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.actions}" />
+          </f:facet>
+
+          <a4j:commandLink id="deleteDocument" execute="@this"
+            action="#{documentController.removeDocument}"
+            render="documentsList,countDocuments,dsTopDocuments,dsBottomDocuments">
+            <h:graphicImage value="/resources/images/icons/delete.gif"
+              style="border:0" />
+            <f:setPropertyActionListener value="#{document}"
+              target="#{documentController.document}" />
+          </a4j:commandLink>
+
+          <boa:tooltip target="deleteDocument" value="#{msg.delete}" />
+
+        </rich:column>
+
+        <f:facet name="footer">
+	          #{(empty documentController.documents? msg.noDocument:'')}
+	        </f:facet>
+
+      </rich:dataTable>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsBottomDocuments" for="documentsList"
+          maxPages="10" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+    </h:panelGroup>
+  </h:panelGrid>
+
+</ui:composition>

@@ -1,0 +1,200 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="http://java.sun.com/jsf/composite/boacc"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:inputHidden value="#{searchSoftwareController.prepareSearch()}" />
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('SoftwareCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('SoftwareCRUD','CRUD_Read')}">
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:outputText value="#{msg.searchSoftwareTitle} - " />
+          <a4j:outputPanel ajaxRendered="true">
+            <h:outputText
+              value="#{searchSoftwareController.searchResultsMessageCount}"
+              styleClass="bigText" />
+            <h:outputText
+              value="#{searchSoftwareController.searchResultsMessageSome}" />
+            <h:outputText
+              value="#{searchSoftwareController.searchResultsMessageNone}"
+              style="color:red;" />
+          </a4j:outputPanel>
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="searchSoftwaresError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form>
+        <h:panelGroup id="searchSoftwareOutputPanel"
+          style="width:50%;display:block">
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+
+            <h:panelGrid columns="4" cellspacing="5"
+              columnClasses="alignright25,alignleft25,alignright25,alignleft25">
+
+              <h:outputLabel for="name" value="#{msg.name} " />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['name']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsSoftwareNames}"
+                id="name" render="searchSoftwareOutputPanel"
+                minChars="0" displayButton="true" />
+
+              <h:outputLabel for="distribution"
+                value="#{msg.distribution} " />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['distribution']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsSoftwareDistributions}"
+                id="distribution" render="searchSoftwareOutputPanel"
+                minChars="0" displayButton="true" />
+
+              <h:outputLabel for="kernel" value="#{msg.kernel} " />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['kernel']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsSoftwareKernels}"
+                id="kernel" render="searchSoftwareOutputPanel"
+                minChars="0" displayButton="true" />
+
+              <h:outputLabel for="operatingSystem"
+                value="#{msg.operatingSystem}" />
+              <p:selectCheckboxMenu id="operatingSystem" widgetVar="operatingSystemWidget"
+                value="#{searchSoftwareController.inputTextField['operatingSystem']}"
+                label="#{searchSoftwareController.searchOsFiltered ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchSoftwareController.searchOsFiltered ? 'checkboxmenured' : 'checkboxmenu'}"
+                converter="operatingSystemConverter"
+                filter="true" filterMatchMode="startsWith">
+                <f:selectItems value="#{searchSoftwareController.operatingSystems}" />
+                <p:ajax event="change" oncomplete="PF('operatingSystemWidget').show()"
+                  listener="#{searchSoftwareController.updateSearchResults}"
+                  update="operatingSystem" />
+                <p:ajax event="toggleSelect" oncomplete="PF('operatingSystemWidget').show()"
+                  listener="#{searchSoftwareController.updateSearchResults}"
+                  update="operatingSystem" />
+                <a4j:ajax event="change" oncomplete="PF('operatingSystemWidget').show()"
+                  render="searchSoftwareOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('operatingSystemWidget').show()"
+                  render="searchSoftwareOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel for="manufacturer"
+                value="#{msg.manufacturer} " />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['manufacturer']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsSoftwareManufacturers}"
+                id="manufacturer" render="searchSoftwareOutputPanel"
+                minChars="0" displayButton="true" />
+
+              <h:outputLabel for="licence" value="#{msg.licenceNumber}" />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['licence']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsSoftwareLicences}"
+                id="licence" render="searchSoftwareOutputPanel"
+                minChars="0" displayButton="true" />
+
+              <h:outputLabel for="description"
+                value="#{msg.description}" />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['description']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsSoftwareDescriptions}"
+                id="description" render="searchSoftwareOutputPanel"
+                minChars="0" displayButton="true" />
+
+            </h:panelGrid>
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.equipment}" />
+            </legend>
+            <h:panelGrid columns="4" cellspacing="5"
+              columnClasses="alignright25,alignleft25,alignright25,alignleft25">
+              <h:outputLabel for="family" value="#{msg.ClassTitle}" />
+              <p:selectCheckboxMenu id="family" widgetVar="familyWidget"
+                value="#{searchSoftwareController.inputTextField['family']}"
+                label="#{searchSoftwareController.familyFiltered ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchSoftwareController.familyFiltered ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith">
+                <f:selectItems value="#{searchSoftwareController.allFamilies}" />
+                <p:ajax event="change" oncomplete="PF('familyWidget').show()"
+                  listener="#{searchSoftwareController.updateSearchResults}"
+                  update="family" />
+                <p:ajax event="toggleSelect" oncomplete="PF('familyWidget').show()"
+                  listener="#{searchSoftwareController.updateSearchResults}"
+                  update="family" />
+                <a4j:ajax event="change" oncomplete="PF('familyWidget').show()"
+                  render="searchSoftwareOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('familyWidget').show()"
+                  render="searchSoftwareOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel for="type" value="#{msg.type}" />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['type']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsEquipmentTypes}"
+                id="type" render="searchSoftwareOutputPanel"
+                minChars="3" displayButton="false" />
+
+              <h:outputLabel for="apn" value="#{msg.airbusPN}" />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['apn']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsEquipmentAirbusPNs}"
+                id="apn" render="searchSoftwareOutputPanel" minChars="3"
+                displayButton="false" />
+
+              <h:outputLabel for="mpn" value="#{msg.manufacturerPN}" />
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['mpn']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsEquipmentManufacturerPNs}"
+                id="mpn" render="searchSoftwareOutputPanel" minChars="3"
+                displayButton="false" />
+
+              <h:outputLabel for="sn" value="#{msg.sn}" />
+
+              <boa:inputTextSuggestionBox
+                beanProperty="#{searchSoftwareController.inputTextField['sn']}"
+                updateFunction="#{searchSoftwareController.updateSearchResults}"
+                suggestionFunction="#{searchSoftwareController.suggestionsEquipmentSNs}"
+                id="sn" render="searchSoftwareOutputPanel" minChars="3"
+                withCategory="true" toolTip="#{msg.searchToolTipSN}" />
+            </h:panelGrid>
+          </fieldset>
+
+          <h:panelGrid columns="3" cellspacing="5">
+            <h:commandButton value="#{msg.search}"
+              action="#{searchSoftwareController.doSearch}" />
+            <a4j:commandButton value="#{msg.reset}" execute="@this"
+              render="mainContent" oncomplete="patchModal();"
+              action="#{searchSoftwareController.doResetCriteria}" />
+            <h:commandButton value="#{msg.cancel}" action="Main" />
+          </h:panelGrid>
+        </h:panelGroup>
+      </h:form>
+    </rich:panel>
+  </ui:define>
+</ui:composition>

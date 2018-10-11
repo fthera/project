@@ -1,0 +1,268 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('InstallationCRUD','CRUD_Delete'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('InstallationCRUD','CRUD_Delete')}">
+      <f:facet name="header">#{msg.deleteInstallationTitle}
+			</f:facet>
+      <style type="text/css">
+.pcolumn {
+  vertical-align: top;
+}
+</style>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="deleteInstallationError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="deleteInstallation">
+
+        <h:panelGrid columns="3" cellpadding="5">
+          <h:outputLabel value="#{msg.name}" />
+          <h:inputText id="name" value="#{deleteController.name}"
+            validator="#{deleteController.validateExistInstallation}">
+            <a4j:ajax event="blur" execute="@this"
+              render="panelChildren,chosenInstallation,childrenList,confirm,confirmationDeleteInstallation" />
+          </h:inputText>
+          <rich:message for="name" />
+
+        </h:panelGrid>
+        <fieldset>
+          <legend align="top">
+            <h:outputText value="#{msg.identification}" />
+          </legend>
+          <h:panelGrid id="chosenInstallation" columns="2">
+            <h:outputText styleClass="labelname" value="#{msg.simu} :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.installation.name}" />
+
+            <h:outputText styleClass="labelname"
+              value="#{msg.comments} :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.installation.comments}" />
+
+            <h:outputText styleClass="labelname"
+              value="#{msg.businessSiglum} :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.installation.businessSiglum}" />
+
+            <h:outputText styleClass="labelname"
+              value="#{msg.program} :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.installation.aircraftProgram.defaultValue}" />
+
+            <h:outputText styleClass="labelname"
+              value="#{msg.technicalContact} :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.installation.personInCharge.loginDetails}" />
+
+            <h:outputText styleClass="labelname"
+              value="#{msg.startingDate} :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.installation.startingDate}">
+              <f:convertDateTime
+                pattern="#{deleteController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </h:panelGrid>
+        </fieldset>
+
+        <h:panelGrid columns="2" cellpadding="5">
+          <a4j:commandButton id="confirm" value="#{msg.validateDelete}"
+            oncomplete="#{rich:component('confirmationDeleteInstallation')}.show();return false;"
+            disabled="#{deleteController.installation == null}" />
+          <h:commandButton value="#{msg.cancel}" action="Main"
+            immediate="true" tabindex="0" />
+
+        </h:panelGrid>
+
+        <h:panelGroup id="panelChildren">
+
+          <rich:panel
+            rendered="#{not empty deleteController.childrenInstallation}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText value="#{msg.warningDeleteInstallation}"
+                styleClass="warning" />
+              <h:outputText value="#{deleteController.name}"
+                styleClass="warning" />
+              <br />
+              <h:outputText value="#{msg.warningDeleteContainer2}"
+                styleClass="warning" />
+            </h:panelGroup>
+
+            <rich:list id="childrenList"
+              value="#{deleteController.childrenInstallation}" var="art">
+
+              <h:outputLink
+                value="${request.contextPath}/itemManagement/${art.class.simpleName}Management.faces">
+                <h:outputText value="#{art.name}" />
+                <f:param name="id" value="#{art.id}" />
+                <f:param name="mode" value="READ" />
+              </h:outputLink>
+              <h:outputText value=" #{art.airbusPN.identifier}" />
+              <h:outputText value=" #{art.typeArticle.label}" />
+              <br />
+              <h:outputText value="#{msg.location} : " />
+              <h:outputText value="#{art.location.locationName}" />
+              <br />
+              <h:outputText value="#{msg.externalLocation} : " />
+              <h:outputText value="#{art.location.externalLocationName}" />
+              <br />
+              <h:outputText value="#{msg.container} : " />
+              <h:outputText
+                value="(#{art.container.type}) #{art.container.containerName}" />
+
+            </rich:list>
+          </rich:panel>
+
+          <rich:panel
+            rendered="#{not empty deleteController.installationTools}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText
+                value="#{msg.warningDeleteInstallationTools}"
+                styleClass="warning" />
+              <h:outputText value="#{deleteController.name}"
+                styleClass="warning" />
+              <br />
+              <h:outputText value="#{msg.warningDeleteContainer2}"
+                styleClass="warning" />
+            </h:panelGroup>
+
+            <rich:list id="toolsList"
+              value="#{deleteController.installationTools}" var="tool">
+
+              <h:outputLink
+                value="${request.contextPath}/itemManagement/ToolManagement.faces">
+                <h:outputText value="#{tool.name}" />
+                <f:param name="id" value="#{tool.id}" />
+                <f:param name="mode" value="READ" />
+              </h:outputLink>
+              <br />
+              <h:outputText value="#{msg.location} : " />
+              <h:outputText value="#{tool.location.locationName}" />
+              <br />
+              <h:outputText value="#{msg.externalLocation} : " />
+              <h:outputText
+                value="#{tool.location.externalLocationName}" />
+              <br />
+              <h:outputText value="#{msg.container} : " />
+              <h:outputText
+                value="(#{tool.container.type}) #{tool.container.containerName}" />
+
+            </rich:list>
+          </rich:panel>
+
+          <rich:panel
+            rendered="#{not empty deleteController.installationReminders}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText
+                value="#{msg.warningDeleteInstallationReminders}"
+                styleClass="warning" />
+              <h:outputText value="#{deleteController.name}"
+                styleClass="warning" />
+              <br />
+              <h:outputText value="#{msg.warningDeleteRelatedReminders}"
+                styleClass="warning" />
+            </h:panelGroup>
+
+            <rich:list id="remindersList"
+              value="#{deleteController.installationReminders}"
+              var="reminder">
+
+              <h:outputText value="#{reminder.object}" />
+              <br />
+              <h:outputText value="#{msg.targetDate} : " />
+              <h:outputText value="#{reminder.targetDate}">
+                <f:convertDateTime
+                  pattern="#{deleteController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:outputText>
+              <br />
+              <h:outputText value="#{msg.technicalContact} : " />
+              <h:outputText value="#{reminder.user.loginDetails}" />
+
+            </rich:list>
+          </rich:panel>
+
+          <rich:panel
+            rendered="#{not empty deleteController.installationDocuments}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText
+                value="#{msg.warningDeleteInstallationDocuments}"
+                styleClass="warning" />
+              <h:outputText value="#{deleteController.name}"
+                styleClass="warning" />
+              <br />
+              <h:outputText value="#{msg.warningDeleteRelatedDocuments}"
+                styleClass="warning" />
+            </h:panelGroup>
+
+            <rich:list id="documentsList"
+              value="#{deleteController.installationDocuments}"
+              var="document">
+
+              <h:outputText value="#{document.name}" />
+              <br />
+              <h:outputText value="#{msg.UploadDate} : " />
+              <h:outputText value="#{document.uploadDate}">
+                <f:convertDateTime
+                  pattern="#{deleteController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:outputText>
+
+            </rich:list>
+          </rich:panel>
+        </h:panelGroup>
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationDeleteInstallation" />
+        <ui:param name="controller" value="#{deleteController}" />
+        <ui:param name="method" value="doRemoveInstallation" />
+        <ui:param name="confirmationText"
+          value="Suppression de #{deleteController.installation.getName()}" />
+        <ui:param name="render" value="mainContent" />
+      </ui:include>
+
+    </rich:panel>
+  </ui:define>
+
+
+</ui:composition>

@@ -1,0 +1,91 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Usage of this modal -->
+  <!--
+    confirmationId            = the id of the modal
+    confirmationText          = the text to display
+    availabilityDateToDisplay = a boolean indicating if the availability date
+                                  is to be displayed
+    availabilityDateText      = the text for filling the availability date.
+                                  Necessary only if availabilityDateToDisplay
+                                  is true
+    availabilityDateValue     = the availability date value. Necessary only
+                                  if availabilityDateToDisplay is true
+    controller                = the controller to be used
+    validateMethod            = the method name of the controller to be called
+                                  as validate button action
+    render                  = [optional] the render attribute for validate
+                                  button.
+    validateButtonId          = [optional] the validate button id
+    cancelButtonId            = [optional] the cancel button id
+  -->
+
+  <c:if test="#{empty validateButtonId}">
+    <c:set var="validateButtonId" value="validateButton" />
+  </c:if>
+
+  <c:if test="#{empty cancelButtonId}">
+    <c:set var="cancelButtonId" value="cancelButton" />
+  </c:if>
+
+  <h:form>
+    <rich:popupPanel id="#{confirmationId}" autosized="true"
+      modal="true" domElementAttachment="parent">
+
+      <f:facet name="header">
+        <h:outputText value="#{confirmationText}" />
+      </f:facet>
+
+      <rich:panel>
+        <h:graphicImage
+          url="/resources/images/icons/messagebox_warning.png"
+          styleClass="pic" />
+        <h:outputText value="#{confirmationText}" />
+        <br />
+
+        <h:panelGroup rendered="#{availabilityDateToDisplay}">
+          <h:outputText value="#{availabilityDateText}" />
+
+          <h:panelGrid columns="2">
+            <h:panelGroup>
+              <h:outputLabel for="availabilityDate"
+                value="#{msg.availabilityDate}" styleClass="labelName" />
+              <span style="color: red;">*</span>
+            </h:panelGroup>
+            <rich:calendar id="availabilityDate"
+              value="#{availabilityDateValue}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true" required="true"
+              requiredMessage="#{msg.valueRequiredMsg}"
+              datePattern="#{demandController.getDateFormat()}"
+              showApplyButton="true">
+              <a4j:ajax event="inputblur" execute="@this" />
+              <a4j:ajax event="change" execute="@this" />
+            </rich:calendar>
+          </h:panelGrid>
+
+          <rich:message for="availabilityDate" />
+        </h:panelGroup>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="#{validateButtonId}"
+            action="#{controller[validateMethod]}"
+            value="#{msg.validate}"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component(confirmationId)}.hide();"
+            render="#{render}" />
+          <a4j:commandButton id="#{cancelButtonId}" execute="@this"
+            value="#{msg.cancel}"
+            onclick="#{rich:component(confirmationId)}.hide();" />
+        </h:panelGrid>
+
+      </rich:panel>
+    </rich:popupPanel>
+  </h:form>
+
+</ui:composition>

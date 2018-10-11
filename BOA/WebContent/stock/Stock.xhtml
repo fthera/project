@@ -1,0 +1,521 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('StockRead'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel rendered="#{logInController.isAuthorized('StockRead')}">
+      <f:facet name="header">#{msg.stockManagementTitle}</f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="stockManagementError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="stockFormSearch">
+        <fieldset>
+          <legend>#{msg.typeSearch}</legend>
+          <h:panelGrid columns="3" style="width:100%"
+            columnClasses="middle,middle,middle text-center">
+            <h:panelGroup>
+              <h:panelGrid columns="2" columnClasses="alignright,alignleft">
+                <h:outputLabel for="type" value="#{msg.type}"
+                  styleClass="labelname" />
+                <h:inputText id="type" styleClass="input20"
+                  value="#{stockController.inputType}" />
+      
+                <h:outputLabel for="apn" value="#{msg.AirbusPN}"
+                  styleClass="labelname" />
+                <h:inputText id="apn" styleClass="input20"
+                  value="#{stockController.inputAPN}" />
+      
+                <h:outputLabel for="mpn" value="#{msg.ManufacturerPN}"
+                  styleClass="labelname" />
+                <h:inputText id="mpn" styleClass="input20"
+                  value="#{stockController.inputMPN}" />
+              </h:panelGrid>
+      
+              <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+                <a4j:commandButton value="#{msg.search}"
+                  action="#{stockController.doSearch}"
+                  render="typeFound"/>
+                <a4j:commandButton value="#{msg.reset}"
+                  action="#{stockController.doReset}"
+                  render="typeFound,type,apn,mpn"/>
+              </h:panelGrid>
+            </h:panelGroup>
+            
+            <rich:pickList id="typeFound" immediate="true"
+              value="#{stockController.typesSelected}" var="type"
+              minListHeight="130px" listWidth="350px"
+              addText="#{msg.addText}"
+              addAllText="#{msg.addAllText}"
+              removeText="#{msg.removeText}"
+              removeAllText="#{msg.removeAllText}"
+              sourceCaption="#{msg.foundTypes}"
+              targetCaption="#{msg.chosenTypes}"
+              keepSourceOrder="true"
+              converter="typeArticleConverter">
+              <f:selectItems value="#{stockController.typesFound}" />
+              <rich:column>
+                <h:outputText style="padding-right:5px"
+                  value="#{msg[type.class.simpleName]}" />
+              </rich:column>
+              <rich:column>
+                <h:outputText value="#{type.label}" />
+              </rich:column>
+              <a4j:ajax event="change" render="saveSelectionButton"/>
+            </rich:pickList>
+            
+            <h:panelGrid columns="1" styleClass="center">
+              <a4j:commandButton id="saveSelectionButton"
+                value="#{msg.saveSelection}" execute="@this"
+                action="#{stockController.doPrepareSaveSelection}"
+                oncomplete="#{rich:component('saveSelectionModal')}.show();"
+                disabled="#{empty stockController.typesSelected}"
+                render="saveSelectionModal" style="width:100%"/>
+              <a4j:commandButton value="#{msg.loadSelection}" execute="@this"
+                action="#{stockController.doPrepareLoadSelection}"
+                oncomplete="#{rich:component('loadSelectionModal')}.show();"
+                render="loadSelectionModal" style="width:100%"/>
+              <a4j:commandButton value="#{msg.computeStock}"
+                action="#{stockController.doComputeStock}"
+                render="stockForm" style="width:100%"/>
+            </h:panelGrid>
+          </h:panelGrid>
+        </fieldset>
+      </h:form>
+
+      <h:form id="stockForm">
+        <fieldset>
+          <legend>#{msg.stockManagementTitle}</legend>
+          
+          <h:panelGrid styleClass="center">
+            <h:commandButton value="#{msg.export}"
+              disabled="#{empty stockController.stocks}"
+              action="#{stockController.doExport}"/>
+          </h:panelGrid>
+          
+          <h:panelGrid columns="2" style="width:100%"
+            columnClasses="tophalf,tophalf" cellspacing="5">
+  
+            <h:panelGrid id="leftSection" columns="1" style="width:100%">
+              <h:panelGroup id="typeSection">
+                <fieldset>
+                  <legend>#{msg.typeTableTitle} </legend>
+    
+                  <h:panelGroup style="display:block;text-align:center">
+                    <rich:dataScroller id="dsTop" for="typeTable"
+                      maxPages="5" fastControls="hide"
+                      renderIfSinglePage="false" />
+                  </h:panelGroup>
+    
+                  <rich:dataTable id="typeTable" style="width:100%"
+                    value="#{stockController.stocks}" var="stock"
+                    selection="#{stockController.selectedTypes}"
+                    onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                    onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+                    selectionMode="single" sortMode="single" rows="5">
+    
+                    <a4j:ajax event="rowclick"
+                      render="PNSection,rightSection"
+                      listener="#{stockController.doSelectStock}">
+                    </a4j:ajax>
+    
+                    <f:facet name="header">
+                      <h:panelGroup>
+                        <h:outputText value="Types" />
+                      </h:panelGroup>
+                    </f:facet>
+    
+                    <rich:column sortBy="#{msg[type.class.simpleName]}"
+                      filterType="custom" width="90px"
+                      filter="#{stockController.stockFilter}">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.ClassTitle}" />
+                          <br />
+                          <h:inputText styleClass="input10" id="family"
+                            value="#{stockController.filterValues['classe']}">
+                            <a4j:ajax event="keyup"
+                              render="typeTable@body,dsTop" />
+                          </h:inputText>
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText
+                        value="#{msg[stock.type.class.simpleName]}" />
+                    </rich:column>
+    
+                    <rich:column sortBy="#{type.label}" filterType="custom"
+                      filter="#{stockController.stockFilter}" width="170px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.type}" />
+                          <br />
+                          <h:inputText id="labelType"
+                            value="#{stockController.filterValues['label']}">
+                            <a4j:ajax event="keyup"
+                              render="typeTable@body,dsTop" />
+                          </h:inputText>
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText id="labelValue"
+                        value="#{stock.type.label}" />
+                    </rich:column>
+    
+                    <rich:column id="typeQtTotal" width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityTotal}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyTotalMessage}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stock.quantityTotal}" />
+                    </rich:column>
+    
+                    <rich:column id="typeQtStock" width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityStock}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyStockMessage}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stock.quantityStock}" />
+                    </rich:column>
+    
+                    <rich:column width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityUse}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyUseMessage}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stock.quantityUse}" />
+                    </rich:column>
+    
+                    <rich:column width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.percentSpare}"
+                            styleClass="wrapTitle" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stock.spare}" />
+                    </rich:column>
+    
+                    <rich:column width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityOther}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyOtherMessage}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText id="OtherValue" style="display:block;width:100%"
+                        value="#{stock.quantityOther}" />
+                      <boa:tooltip target ="OtherValue" value="#{stock.otherDescription}"/>
+                    </rich:column>
+                  </rich:dataTable>      
+                </fieldset>
+              </h:panelGroup>
+  
+              <h:panelGroup id="PNSection">
+                <fieldset>
+                  <legend>#{msg.pnTableTitle}</legend>
+    
+                  <h:panelGroup style="display:block;text-align:center">
+                    <rich:dataScroller id="dsTopListPN" for="listPN"
+                      maxPages="5" fastControls="hide"
+                      renderIfSinglePage="false" />
+                  </h:panelGroup>
+    
+                  <rich:dataTable id="listPN" style="width:100%"
+                    value="#{stockController.stockPNs}" var="stockpn"
+                    selectionMode="single" sortMode="single" rows="5"
+                    selection="#{stockController.selectedPNs}"
+                    onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                    onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'">
+                    <f:facet name="header">
+                      <h:outputText id="selectedTypeTitle"
+                        value="#{empty stockController.selectedTypeTitle ? msg.pnTableTitle : stockController.selectedTypeTitle}" />
+                    </f:facet>
+                    
+                    <a4j:ajax event="rowclick"
+                      render="rightSection"
+                      listener="#{stockController.doSelectStock}">
+                    </a4j:ajax>
+                    
+                    <rich:column width="90px"
+                      sortBy="#{msg[stockpn.pn.class.simpleName]}">
+                      <f:facet name="header">#{msg.ClassTitle}</f:facet>
+                      <h:outputText id="pnClass"
+                        value="#{msg[stockpn.pn.class.simpleName]}" />
+                    </rich:column>
+    
+                    <rich:column sortBy="#{pn.identifier}" width="170px">
+                      <f:facet name="header">#{msg.name}</f:facet>
+                      <h:outputText id="pnIdentifier"
+                        value="#{stockpn.pn.identifier}" />
+                    </rich:column>
+    
+                    <rich:column id="pnQtTotal" width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityTotal}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyUseTotal}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stockpn.quantityTotal}" />
+                    </rich:column>
+    
+                    <rich:column id="pnQtStock" width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityStock}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyStockMessage}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stockpn.quantityStock}" />
+                    </rich:column>
+    
+                    <rich:column id="pnQtUse" width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityUse}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyUseMessage}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stockpn.quantityUse}" />
+                    </rich:column>
+    
+                    <rich:column width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.percentSpare}"
+                            styleClass="wrapTitle" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText value="#{stockpn.spare}" />
+                    </rich:column>
+    
+                    <rich:column id="pnQtOther" width="60px">
+                      <f:facet name="header">
+                        <h:panelGroup>
+                          <h:outputText value="#{msg.quantityOther}"
+                            styleClass="wrapTitle"
+                            title="#{msg.qtyOtherMessage}" />
+                          <br />
+                        </h:panelGroup>
+                      </f:facet>
+                      <h:outputText id="pnQtOtherValue" style="display:block;width:100%"
+                        value="#{stockpn.quantityOther}" />
+                      <boa:tooltip target ="pnQtOtherValue" value="#{stockpn.otherDescription}"/>
+                    </rich:column>
+                  </rich:dataTable>
+                </fieldset>
+              </h:panelGroup>
+            </h:panelGrid>
+            
+            <h:panelGroup id="rightSection">
+              <rich:tabPanel style="padding-top:9px"
+                activeItem="#{stockController.activeTab}"
+                itemChangeListener="#{stockController.tabChangeListener}"
+                rendered="#{stockController.selectedStock != null}">
+                <rich:tab id="stockEvolution" header="#{msg.stockEvolution}">
+                  <h:panelGrid columns="1">
+                    <h:panelGrid columns="4" styleClass="center">
+                      <h:outputLabel for="fromDate" value="#{msg.between}" />
+                      <rich:calendar id="fromDate"
+                        value="#{stockController.stockEvolutionFrom}"
+                        locale="#{localeCtrl.locale}" popup="true"
+                        enableManualInput="true"
+                        datePattern="#{stockController.getDateFormat()}"
+                        showApplyButton="true">
+                        <a4j:ajax event="change" render="stockEvolutionResults"/>
+                        <a4j:ajax event="inputblur" render="stockEvolutionResults"/>
+                      </rich:calendar>
+                      <h:outputLabel for="toDate" value="#{msg.with}" />
+                      <rich:calendar id="toDate"
+                        value="#{stockController.stockEvolutionTo}"
+                        locale="#{localeCtrl.locale}" popup="true"
+                        enableManualInput="true"
+                        datePattern="#{stockController.getDateFormat()}"
+                        showApplyButton="true">
+                        <a4j:ajax event="change" render="stockEvolutionResults"/>
+                        <a4j:ajax event="inputblur" render="stockEvolutionResults"/>
+                      </rich:calendar>
+                    </h:panelGrid>
+                    
+                    <h:panelGrid id="stockEvolutionResults" styleClass="center" columns="2">
+                      <h:outputLabel for="breakdownsNumber" value="#{msg.Breakdowns}" />
+                      <h:inputText id="breakdownsNumber" styleClass="input10"
+                        value="#{stockController.breakdownsNumber}" readonly="true"/>
+                      <h:outputLabel for="scrappingsNumber" value="#{msg.Scrappings}" />
+                      <h:inputText id="scrappingsNumber" styleClass="input10"
+                        value="#{stockController.scrapingsNumber}" readonly="true"/>
+                    </h:panelGrid>
+                    
+                    <p:chart id="stockEvolutionChart" type="line" style="width:555px;height:345px"
+                      model="#{stockController.selectedStock.stockEvolutionModel}"/>
+                    
+                  </h:panelGrid>
+                </rich:tab>
+        
+                <rich:tab id="typeRepartition" header="#{msg.UseOnInstallation}">
+                  <h:panelGroup style="display:block;text-align:center">
+                    <rich:dataScroller id="dsTopInstallationList" for="installationList"
+                      maxPages="5" fastControls="hide"
+                      renderIfSinglePage="false" />
+                  </h:panelGroup>
+                  
+                  <rich:dataTable id="installationList"
+                    var="installation" style="width:100%"
+                    value="#{stockController.selectedStock.repartitionMapKeys}"
+                    onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                    onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+                    sortMode="single" rows="15">
+                    <f:facet name="header">
+                      <h:outputText value="#{msg.UseOnInstallation}" />
+                    </f:facet>
+  
+                    <rich:column sortBy="#{installation.name}" id="name">
+                      <f:facet name="header">
+                        <h:outputText styleClass="headerText"
+                          value="#{msg.Installation}" />
+                      </f:facet>
+                      <h:outputText value="#{installation.name}" />
+                    </rich:column>
+  
+                    <rich:column
+                      sortBy="#{stockController.selectedStock.repartitionMap[installation]}"
+                      id="quantity">
+                      <f:facet name="header">
+                        <h:outputText styleClass="headerText"
+                          value="#{msg.Quantity}" />
+                      </f:facet>
+                      <h:outputText
+                        value="#{stockController.selectedStock.repartitionMap[installation]}" />
+                    </rich:column>
+                  </rich:dataTable>
+                </rich:tab>
+              </rich:tabPanel>
+            </h:panelGroup>
+          </h:panelGrid>
+        </fieldset>
+      </h:form>
+    </rich:panel>
+    
+    <h:form id="saveSelectionForm">
+      <rich:popupPanel id="saveSelectionModal" autosized="true" modal="true"
+        domElementAttachment="parent">
+        <f:facet name="controls">
+          <h:graphicImage id="closeButtonsaveSelection" alt="#{msg.close}"
+            class="hidelink" value="/resources/images/icons/close.png"
+            style="cursor:pointer"
+            onclick="#{rich:component('saveSelectionModal')}.hide();return false;" />
+        </f:facet>
+        <f:facet name="header">
+          <h:outputText value="#{msg.saveSelection}"/>
+        </f:facet>
+  
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="saveSelectionError" />
+        </ui:include>
+
+        <h:panelGrid columns="3"
+          columnClasses="alignright,alignleft,alignleft">
+
+          <h:outputLabel for="selectionName" value="#{msg.name}"
+            styleClass="labelName" />
+          <h:inputText id="selectionName" styleClass="input30"
+            value="#{stockController.stockSelectionName}"
+            validator="#{stockController.validateStockSelectionName}"
+            required="true">
+            <a4j:ajax event="keyup"/>
+            <f:validateLength
+              maximum="#{DBConstants.stockSelectionNameLength}" />
+          </h:inputText>
+          <rich:message for="selectionName" />
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="saveSelectionModalButton" value="#{msg.save}"
+            action="#{stockController.doSaveSelection}" execute="@this"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('saveSelectionModal')}.hide();">
+          </a4j:commandButton>
+          <h:commandButton value="#{msg.cancel}" execute="@this"
+            onclick="#{rich:component('saveSelectionModal')}.hide();return false;" />
+        </h:panelGrid>
+      </rich:popupPanel>
+    </h:form>
+    
+    
+    <h:form id="loadSelectionForm">
+      <rich:popupPanel id="loadSelectionModal" autosized="true" modal="true"
+        domElementAttachment="parent">
+        <f:facet name="controls">
+          <h:graphicImage id="closeButtonLoadSelection" alt="#{msg.close}"
+            class="hidelink" value="/resources/images/icons/close.png"
+            style="cursor:pointer"
+            onclick="#{rich:component('loadSelectionModal')}.hide();return false;" />
+        </f:facet>
+        <f:facet name="header">
+          <h:outputText value="#{msg.loadSelection}"/>
+        </f:facet>
+  
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="loadSelectionError" />
+        </ui:include>
+
+        <h:selectOneListbox id="stockSelectionList"
+          style="width:100%;" size="8" immediate="true"
+          converter="stockSelectionConverter"
+          valueChangeListener="#{stockController.stockSelectionChanged}" >
+          <f:selectItems value="#{stockController.stockSelections}"
+            var="lStockSelection"
+            itemLabel="#{lStockSelection.name}"
+            itemValue="#{lStockSelection}"/>
+          <a4j:ajax event="change"/>
+        </h:selectOneListbox>
+
+        <h:panelGrid columns="3" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="loadSelectionButton" value="#{msg.load}"
+            action="#{stockController.doLoadSelection}" execute="@this"
+            render="typeFound,saveSelectionButton"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('loadSelectionModal')}.hide();">
+          </a4j:commandButton>
+          <a4j:commandButton id="deleteSelectionButton" value="#{msg.delete}"
+            action="#{stockController.doDeleteSelection}"
+            execute="@this" render="stockSelectionList">
+          </a4j:commandButton>
+          <h:commandButton value="#{msg.cancel}" execute="@this"
+            onclick="#{rich:component('loadSelectionModal')}.hide();return false;" />
+        </h:panelGrid>
+      </rich:popupPanel>
+    </h:form>
+  </ui:define>
+</ui:composition>

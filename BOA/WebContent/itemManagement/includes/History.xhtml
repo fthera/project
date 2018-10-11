@@ -1,0 +1,68 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <div style="padding-top: 7px">
+    <rich:collapsiblePanel switchType="ajax"
+      headerClass="collapsible-header" header="#{msg.historyTitle}"
+      expanded="false">
+      <rich:dataTable value="#{article.history.actions}" var="action">
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.userLoginHeader}" />
+          </f:facet>
+          <h:outputText value="#{action.login}" />
+        </rich:column>
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.labelHeader}" />
+          </f:facet>
+          <h:outputText value="#{msg[action.label]}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.modifiedFieldHeader}" />
+          </f:facet>
+          <h:outputText value="#{msg[action.field]}"
+            rendered="#{action.class.getSimpleName() == 'FieldModification'}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.previousContentHeader}" />
+          </f:facet>
+          <h:outputText value="#{action.beforeValue}" escape="false"
+            rendered="#{action.class.getSimpleName() == 'FieldModification'}" />
+        </rich:column>
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.newContentHeader}" />
+          </f:facet>
+          <h:outputText value="#{action.afterValue}" escape="false"
+            rendered="#{action.class.getSimpleName() == 'FieldModification'}" />
+        </rich:column>
+
+        <rich:column sortable="true" sortBy="#{action.date}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.date}" />
+          </f:facet>
+          <h:outputText value="#{action.date}">
+            <f:convertDateTime pattern="dd/MM/yyyy HH:mm"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.commentHeader}" />
+          </f:facet>
+          <h:outputText value="#{action.comment}" />
+        </rich:column>
+      </rich:dataTable>
+    </rich:collapsiblePanel>
+  </div>
+</ui:composition>

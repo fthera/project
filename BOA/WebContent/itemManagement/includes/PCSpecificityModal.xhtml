@@ -1,0 +1,84 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:mj="http://mojarra.dev.java.net/mojarra_ext">
+
+  <h:form id="PCSpecificityForm">
+    <rich:popupPanel id="PCSpecificityModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closePCSpecificityModal" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('PCSpecificityModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/list.png"
+            style="padding-right:5px;width:16px;height:16px" />
+          <h:outputText value="#{msg.AddPCSpecificity}"
+            rendered="#{PCSpecificityController.createMode}"
+            style="vertical-align:bottom;" />
+          <h:outputText value="#{msg.ModifyPCSpecificity}"
+            rendered="#{PCSpecificityController.updateMode}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="PCSpecificityModalError" />
+      </ui:include>
+
+      <h:panelGrid id="PCSpecificityFormContent" columns="4"
+        columnClasses="alignright,alignright,alignleft,alignleft">
+        <h:outputLabel for="specificityDesc"
+          value="#{msg.description} " styleClass="labelname" />
+        <span class="requiredField">*</span>
+        <h:inputTextarea id="specificityDesc" style="width:100%; margin-right:2px"
+          rows="2" title="#{msg.EntryMessageText}"
+          required="true"
+          value="#{PCSpecificityController.description}">
+          <f:validateLength
+            maximum="#{DBConstants.pcSpecificityDescLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputTextarea>
+        <rich:message for="specificityDesc" />
+        
+        <h:outputLabel for="specificityContact"
+          value="#{msg.contact} " styleClass="labelname" />
+        <h:panelGroup/>
+        <h:inputText id="specificityContact" styleClass="input50"
+          value="#{PCSpecificityController.contact}">
+          <f:validateLength
+            maximum="#{DBConstants.pcSpecificityContactLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+        <rich:message for="specificityContact" />
+      </h:panelGrid>
+
+      <h:panelGrid columns="3" cellspacing="5" styleClass="center">
+        <a4j:commandButton value="#{msg.add}"
+          rendered="#{PCSpecificityController.createMode}"
+          action="#{PCSpecificityController.doAdd}"
+          render="PCSpecificities,dsBottomPCSpecificities"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('PCSpecificityModal')}.hide();" />
+        <a4j:commandButton value="#{msg.modify}"
+          rendered="#{PCSpecificityController.updateMode}"
+          action="#{PCSpecificityController.doUpdate}"
+          render="PCSpecificities,dsBottomPCSpecificities"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('PCSpecificityModal')}.hide();" />
+        <a4j:commandButton value="#{msg.reset}" execute="@this"
+          action="#{PCSpecificityController.doReset}" render="PCSpecificityFormContent" />
+        <a4j:commandButton id="cancelButton" value="#{msg.cancel}"
+          execute="@this"
+          onclick="#{rich:component('PCSpecificityModal')}.hide();return false;" />
+      </h:panelGrid>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

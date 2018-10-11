@@ -1,0 +1,148 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="UpdateTypeModalForm">
+    <rich:popupPanel id="updateTypeModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeButtonUpdateType" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('updateTypeModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/edit.gif"
+            style="padding-right:5px;" />
+          <h:outputText value="#{msg.updateTypeTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <fieldset>
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="updateTypeError" />
+        </ui:include>
+
+        <h:outputText value="#{msg.requiredFields}" style="color:red" />
+
+        <h:panelGrid columns="4" columnClasses="top,top">
+
+          <h:outputLabel for="TypeName" value="#{msg.name}" />
+          <span style="color: red;">*</span>
+          <h:inputText id="TypeName" styleClass="input50"
+            value="#{typeController.newTypeName}"
+            validator="#{typeController.validateNewTypeName}"
+            required="true">
+            <a4j:ajax event="change" execute="@this" />
+            <f:validateLength
+              maximum="#{DBConstants.typearticleLabelLength}" />
+          </h:inputText>
+          <rich:message for="TypeName" />
+
+          <h:outputLabel for="TypeManufacturer"
+            value="#{msg.manufacturer}" />
+          <h:panelGroup />
+          <h:inputText id="TypeManufacturer" styleClass="input50"
+            value="#{typeController.newTypeManufacturer}">
+            <a4j:ajax event="change" execute="@this" />
+            <f:validateLength
+              maximum="#{DBConstants.typearticleManufacturerLength}" />
+          </h:inputText>
+          <rich:message for="TypeManufacturer" />
+
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="updateTypeButton" value="#{msg.save}"
+            action="#{typeController.doUpdateType}" type="submit"
+            execute="@this"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('updateTypeModal')}.hide();"
+            render="gestionType,labelValue,manufacturerValue,selectedTypeTitle,counts">
+          </a4j:commandButton>
+          <h:commandButton value="#{msg.cancel}" immediate="true"
+            onclick="#{rich:component('updateTypeModal')}.hide();return false;" />
+        </h:panelGrid>
+
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+
+  <h:form id="UpdatePNModalForm">
+    <rich:popupPanel id="updatePNModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeButtonUpdatePN" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('updatePNModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/edit.gif"
+            style="padding-right:5px;" />
+          <h:outputText value="#{msg.updatePNTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <fieldset>
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="updatePNError" />
+        </ui:include>
+
+        <h:panelGrid columns="3"
+          columnClasses="alignright,alignleft,alignleft">
+
+          <h:outputLabel for="updateIdentifier" value="#{msg.name}"
+            styleClass="labelName" />
+          <h:inputText id="updateIdentifier" styleClass="input50"
+            value="#{typeController.updateIdentifier}"
+            validator="#{typeController.validateUpdateIdentifier}"
+            required="true">
+            <a4j:ajax event="change" execute="@this" />
+            <f:validateLength
+              maximum="#{DBConstants.pnIdentifierLength}" />
+          </h:inputText>
+          <rich:message for="updateIdentifier" />
+
+          <h:outputLabel for="movePnTo" value="#{msg.moveAirbusPN}"
+            styleClass="labelName"
+            rendered="#{typeController.selectedPN.class.simpleName=='AirbusPN'}" />
+          <rich:autocomplete id="movePnTo" styleClass="input50"
+            value="#{typeController.movedToTypeLabel}" minChars="0"
+            enableManualInput="true" showButton="true" layout="table"
+            autocompleteMethod="#{typeController.suggestionTypeArticle}"
+            var="suggestion" fetchValue="#{suggestion.label}"
+            itemLabel="#{suggestion.label} #{msg[suggestion.class.simpleName]}"
+            rendered="#{typeController.selectedPN.class.simpleName=='AirbusPN'}">
+            <rich:column>
+              <h:outputText value="#{suggestion.label}" />
+            </rich:column>
+            <rich:column>
+              <h:outputText value="#{msg[suggestion.class.simpleName]}" />
+            </rich:column>
+          </rich:autocomplete>
+          <rich:message for="movePnTo"
+            rendered="#{typeController.selectedPN.class.simpleName=='AirbusPN'}" />
+
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="updatePnButton" value="#{msg.save}"
+            action="#{typeController.doUpdatePN}"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('updatePNModal')}.hide();"
+            render="gestionType, listPN">
+          </a4j:commandButton>
+          <h:commandButton value="#{msg.cancel}" immediate="true"
+            onclick="#{rich:component('updatePNModal')}.hide();return false;" />
+        </h:panelGrid>
+
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

@@ -1,0 +1,136 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="ExternalEntityForm">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="externalEntityError" />
+    </ui:include>
+
+    <h:commandButton value="#{msg.export}"
+      action="#{externalEntityController.doExport}" />
+
+    <h:panelGrid columns="5" cellspacing="10" columnClasses="pcolumn">
+      <h:outputLabel for="externalEntityName" value="#{msg.name}" />
+      <h:panelGroup>
+        <h:inputText id="externalEntityName"
+          disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+          value="#{externalEntityController.newExternalEntityName}">
+          <f:validateLength
+            maximum="#{DBConstants.externalentityNameLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+      </h:panelGroup>
+      <h:selectOneMenu id="externalEntityTypeList"
+        disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+        value="#{externalEntityController.newExternalEntityTypeId}">
+        <f:selectItems
+          value="#{externalEntityController.externalEntityTypes}" />
+      </h:selectOneMenu>
+      <a4j:commandButton value="#{msg.addExternalEntity}"
+        disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+        action="#{externalEntityController.doAddExternalEntity}"
+        render="externalEntityTable,dsTop,dsBottom" />
+      <rich:message for="externalEntityName" />
+    </h:panelGrid>
+
+    <h:panelGrid column="2">
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsTop" for="externalEntityTable"
+          maxPages="5" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+      <h:panelGroup>
+        <div class="scroll-div"
+          style="max-height: 68%; max-height: 68vh;">
+          <rich:dataTable id="externalEntityTable" layout="block"
+            sortMode="single" selectionMode="single"
+            ajaxKeys="#{externalEntityController.rowsToUpdate}"
+            value="#{externalEntityController.externalEntities}"
+            var="externalEntity" rows="15" rowClasses="oddRow, evenRow"
+            onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+            onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'">
+
+            <f:facet name="header">#{msg.externalEntityList}</f:facet>
+
+            <rich:column
+              sortBy="#{externalEntity.externalEntityType.localeValue}">
+              <f:facet name="header">#{msg.externalEntityType}</f:facet>
+              <h:outputText id="externalEntityType"
+                value="#{externalEntity.externalEntityType.localeValue}" />
+            </rich:column>
+
+            <rich:column sortBy="#{externalEntity.name}">
+              <f:facet name="header">#{msg.name}</f:facet>
+              <h:outputText id="externalEntityName"
+                value="#{externalEntity.name}" />
+            </rich:column>
+
+            <rich:column
+              sortBy="#{externalEntity.locatedOrmArticles.size()}">
+              <f:facet name="header">#{msg.numberArticleAtExternalEntity}</f:facet>
+              <h:outputText
+                value="#{externalEntity.locatedOrmArticles.size()}" />
+            </rich:column>
+
+            <rich:column
+              rendered="#{logInController.isAuthorized('LocationCRUD','CRUD_Update') or logInController.isAuthorized('LocationCRUD','CRUD_Delete')}">
+              <f:facet name="header">#{msg.actions}</f:facet>
+
+              <h:panelGrid cellspacing="5" columns="2">
+
+                <a4j:commandLink id="modifyExternalEntityName"
+                  disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Update')}"
+                  execute="@this"
+                  oncomplete="#{rich:component('updateExternalEntityModal')}.show()">
+                  <h:graphicImage
+                    value="/resources/images/icons/edit.gif"
+                    style="border:0" />
+                  <f:setPropertyActionListener
+                    value="#{externalEntity.name}"
+                    target="#{externalEntityController.updateName}" />
+                  <f:setPropertyActionListener
+                    value="#{externalEntity.externalEntityType.id}"
+                    target="#{externalEntityController.updateTypeId}" />
+                  <f:setPropertyActionListener
+                    value="#{externalEntity.id}"
+                    target="#{externalEntityController.selectedExternalEntityId}" />
+                </a4j:commandLink>
+
+                <a4j:commandLink id="deleteExternalEntityLink"
+                  disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Delete')}"
+                  onclick="if (!confirm('#{msg.delete} #{externalEntity.name}')) return false;"
+                  action="#{externalEntityController.doDeleteExternalEntity}"
+                  render="externalEntityTable,dsTop,dsBottom">
+                  <h:graphicImage
+                    value="/resources/images/icons/delete.gif"
+                    style="border:0" />
+                  <f:setPropertyActionListener
+                    value="#{externalEntity.id}"
+                    target="#{externalEntityController.selectedExternalEntityId}" />
+                </a4j:commandLink>
+
+              </h:panelGrid>
+
+              <boa:tooltip target="modifyExternalEntityName"
+                value="#{msg.edit}" />
+              <boa:tooltip target="deleteExternalEntityLink"
+                value="#{msg.delete}" />
+            </rich:column>
+          </rich:dataTable>
+        </div>
+      </h:panelGroup>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsBottom" for="externalEntityTable"
+          maxPages="5" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+    </h:panelGrid>
+
+  </h:form>
+</ui:composition>

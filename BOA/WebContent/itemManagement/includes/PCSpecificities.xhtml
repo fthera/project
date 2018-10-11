@@ -1,0 +1,103 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Part containing the display of the pc specificities
+     and the buttons allowing to add and delete them. -->
+
+  <!-- Usage of this composition -->
+  <!--
+    readonly = [optional] boolean indicating if the composition is in readonly
+                 mode or not (default false)
+    
+     Remark:
+     - The modal named 'PCSpecificityModal' must exist in the page when
+         readonly is false.
+  -->
+
+  <c:if test="#{empty readonly}">
+    <c:set var="readonly" value="#{false}" />
+  </c:if>
+
+  <h:panelGrid cellpadding="0" cellspacing="0" style="width:100%">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="PCSpecificitiesError" />
+    </ui:include>
+
+    <h:panelGroup>
+      <rich:dataTable id="PCSpecificities" style="width:100%"
+        value="#{PCSpecificityController.specificities}" var="PCSpecificity" rows="5"
+        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+        rowClasses="evenRow, oddRow">
+        
+        <f:facet name="header">
+          <h:outputText id ="specificitiesTitle" value="#{msg.specificities}" />
+          <a4j:commandLink id="addPCSpecificityButton" rendered="#{!readonly}"
+            action="#{PCSpecificityController.prepareAdd}"
+            render="PCSpecificityModal" execute="@this"
+            oncomplete="#{rich:component('PCSpecificityModal')}.show()">
+              <h:graphicImage value="/resources/images/icons/add.png"
+                style="border:0px;margin-left:10px;vertical-align:bottom" />
+            </a4j:commandLink>
+            <boa:tooltip target="specificitiesTitle"
+              value="#{msg.specificitiesTooltip}" />
+        </f:facet>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.description}" />
+          </f:facet>
+          <h:outputText value="#{PCSpecificity.description}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.contact}" />
+          </f:facet>
+          <h:outputText value="#{PCSpecificity.contact}" />
+        </rich:column>
+
+        <rich:column rendered="#{!readonly}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.actions}" />
+          </f:facet>
+
+          <a4j:commandLink id="updatePCSpecificity" execute="@this"
+            action="#{PCSpecificityController.prepareUpdate}"
+            render="PCSpecificityModal"
+            oncomplete="#{rich:component('PCSpecificityModal')}.show()">
+            <h:graphicImage value="/resources/images/icons/edit.gif"
+              style="border:0" />
+            <f:setPropertyActionListener value="#{PCSpecificity}"
+              target="#{PCSpecificityController.specificity}" />
+          </a4j:commandLink>
+
+          <a4j:commandLink id="deletePCSpecificity" execute="@this"
+            action="#{PCSpecificityController.doDelete}"
+            render="PCSpecificities,dsBottomPCSpecificities">
+            <h:graphicImage value="/resources/images/icons/delete.gif"
+              style="border:0" />
+            <f:setPropertyActionListener value="#{PCSpecificity}"
+              target="#{PCSpecificityController.specificity}" />
+          </a4j:commandLink>
+
+          <boa:tooltip target="deletePCSpecificity" value="#{msg.delete}" />
+
+        </rich:column>
+      </rich:dataTable>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsBottomPCSpecificities" for="PCSpecificities"
+          maxPages="5" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+    </h:panelGroup>
+  </h:panelGrid>
+
+</ui:composition>

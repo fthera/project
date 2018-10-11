@@ -1,0 +1,41 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/itemManagement/ArticleManagement.xhtml">
+  <ui:param name="articleController" value="#{boardController}" />
+
+  <ui:define name="SpecificIdentification">
+    <h:panelGrid columns="4" style="width:100%;padding:2px"
+      columnClasses="alignright,alignleft,alignright,alignleft">
+      <h:outputLabel value="#{msg.ManufacturerPNRevH}" for="revH"
+        disabled="#{empty articleController.manufacturerPNIdentifier}" />
+      <h:panelGroup>
+        <h:inputText id="revH" readonly="#{readonly}" style="width:100%"
+          value="#{articleController.article.revH}">
+          <f:validateLength maximum="#{DBConstants.boardRevhLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+      </h:panelGroup>
+
+      <h:outputLabel value="#{msg.ManufacturerPNRevS}" for="revS"
+        disabled="#{empty articleController.manufacturerPNIdentifier}" />
+      <h:panelGroup>
+        <h:inputText id="revS" readonly="#{readonly}" style="width:100%"
+          value="#{articleController.article.revS}">
+          <f:validateLength maximum="#{DBConstants.boardRevsLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+      </h:panelGroup>
+
+      <h:panelGroup />
+      <rich:message for="revH" />
+      <h:panelGroup />
+      <rich:message for="revS" />
+    </h:panelGrid>
+  </ui:define>
+
+</ui:composition>

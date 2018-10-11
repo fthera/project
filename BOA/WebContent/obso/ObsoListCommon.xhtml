@@ -1,0 +1,404 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- List of the found obsolescence sheet included by other pages -->
+
+  <div style="overflow-x: auto;">
+
+    <fieldset>
+      <legend align="top">
+        <h:outputText value="Actions" />
+      </legend>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="obsoListError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form>
+        <h:panelGrid columns="4" cellspacing="5">
+          <h:commandButton id="generateConstituantSheet" execute="@this"
+            value="#{reportingObsoController.getGenerateObsoButtonName()}"
+            action="#{reportingObsoController.doGenerateConstituantForm()}" />
+
+
+          <a4j:commandButton execute="@this"
+            value="#{msg.generatePlatformSheet}"
+            onclick="#{rich:component('generatePlatformModal')}.show();return false;" />
+
+          <h:commandButton id="extractObso" value="#{msg.export}"
+            execute="@this"
+            action="#{reportingObsoController.doExportObsolescence}" />
+
+
+          <a4j:commandButton id="resetFilter"
+            value="#{msg.resetFilters}" execute="@this"
+            action="#{reportingObsoController.doResetFilters}"
+            render="reportingTable,dsTop,dsBottom,counts,airbusStatus,comments,consultPeriod,
+					continuityDate,cstName,currentAction,endOfOrderDate,endOfSupportDate,
+					lastObsolescenceUpdate,manufacturerStatus,nextConsultingDate,obsolescenceDate,
+					personInCharge,reference,strategy">
+
+          </a4j:commandButton>
+
+          <h:outputText id="counts" styleClass="bigText"
+            value="#{msg.countFiltered} : #{reportingObsoController.countFiltered}" />
+        </h:panelGrid>
+      </h:form>
+    </fieldset>
+
+    <h:form id="obsoReportingForm">
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsTop" for="reportingTable" maxPages="10"
+          fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+      <div class="scroll-div" style="max-height: 65%; max-height: 65vh;">
+        <rich:dataTable value="#{reportingObsoController.searchResults}"
+          var="obso" render="dsTop" layout="block" id="reportingTable"
+          sortMode="single" rows="30" rowClasses="oddRow, evenRow"
+          onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+          onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'">
+
+          <f:facet name="header">
+            <h:outputText value="#{msg.reportingObsoTitle}" />
+          </f:facet>
+
+          <a4j:ajax event="rowclick" render="generateConstituantSheet"
+            listener="#{reportingObsoController.doSelectObso(obso.id)}">
+          </a4j:ajax>
+
+          <rich:column sortBy="#{obso.constituantName}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.constituantName}"
+                  styleClass="columnTitle " />
+                <br />
+                <h:inputText id="cstName"
+                  value="#{reportingObsoController.filterValues['constituantName']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+
+            <h:outputLink id="infoArtCmd"
+              value="${request.contextPath}/obso/ObsolescenceManagement.faces">
+              <h:outputText value="#{obso.constituantName}"
+                style="#{reportingObsoController.ColorErrorOnConstituant(obso)}" />
+              <f:param name="id" value="#{obso.id}" />
+              <f:param name="mode" value="READ" />
+            </h:outputLink>
+
+          </rich:column>
+
+          <rich:column sortBy="#{obso.lastObsolescenceUpdate}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.lastUpdate}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="lastObsolescenceUpdate"
+                  value="#{reportingObsoController.filterValues['lastObsolescenceUpdate']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.lastObsolescenceUpdate}">
+              <f:convertDateTime
+                pattern="#{reportingObsoController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+
+          <rich:column filterType="custom"
+            sortBy="#{obso.consultPeriod.localeValue}"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.consultPeriod}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="consultPeriod"
+                  value="#{reportingObsoController.filterValues['consultPeriod']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText
+              value="#{obso.consultPeriod.localeValue}">
+            </h:outputText>
+          </rich:column>
+
+
+          <rich:column sortBy="#{obso.nextConsultingDate}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.nextConsultingDate}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="nextConsultingDate"
+                  value="#{reportingObsoController.filterValues['nextConsultingDate']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.nextConsultingDate}"
+              style="#{reportingObsoController.colorationDate(obso.nextConsultingDate)}">
+              <f:convertDateTime
+                pattern="#{reportingObsoController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+
+          <rich:column sortBy="#{obso.endOfOrderDate}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.endOfOrder}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="endOfOrderDate"
+                  value="#{reportingObsoController.filterValues['endOfOrderDate']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.endOfOrderDate}"
+              style="#{reportingObsoController.colorationDate(obso.endOfOrderDate)}">
+              <f:convertDateTime
+                pattern="#{reportingObsoController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+          <rich:column sortBy="#{obso.endOfSupportDate}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.endOfSupport}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="endOfSupportDate"
+                  value="#{reportingObsoController.filterValues['endOfSupportDate']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.endOfSupportDate}"
+              style="#{reportingObsoController.colorationDate(obso.endOfSupportDate)}">
+              <f:convertDateTime
+                pattern="#{reportingObsoController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+          <rich:column sortBy="#{obso.continuityDate}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.continuityDate}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="continuityDate"
+                  value="#{reportingObsoController.filterValues['continuityDate']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.continuityDate}"
+              style="#{reportingObsoController.colorationDate(obso.continuityDate)}">
+              <f:convertDateTime
+                pattern="#{reportingObsoController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+          <rich:column sortBy="#{obso.obsolescenceDate}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.obsolescenceDate}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="obsolescenceDate"
+                  value="#{reportingObsoController.filterValues['obsolescenceDate']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.obsolescenceDate}"
+              style="#{reportingObsoController.colorationDate(obso.obsolescenceDate)}">
+              <f:convertDateTime
+                pattern="#{reportingObsoController.getDateFormat()}"
+                timeZone="Europe/Paris" />
+            </h:outputText>
+          </rich:column>
+
+
+
+          <rich:column filterType="custom"
+            sortBy="#{obso.manufacturerStatus.localeValue}"
+            style="background-color:#{obso.manufacturerStatus.colorHex};"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.manufacturerStatus}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="manufacturerStatus"
+                  value="#{reportingObsoController.filterValues['manufacturerStatus']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText
+              value="#{obso.manufacturerStatus.localeValue}">
+            </h:outputText>
+          </rich:column>
+
+
+          <rich:column filterType="custom"
+            sortBy="#{obso.airbusStatus.localeValue}"
+            style="background-color:#{obso.airbusStatus.colorHex};"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.airbusStatus}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="airbusStatus"
+                  value="#{reportingObsoController.filterValues['airbusStatus']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText
+              value="#{obso.airbusStatus.localeValue}">
+            </h:outputText>
+          </rich:column>
+
+          <rich:column filterType="custom"
+            sortBy="#{obso.currentAction.localeValue}"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.currentAction}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="currentAction"
+                  value="#{reportingObsoController.filterValues['currentAction']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText
+              value="#{obso.currentAction.localeValue}">
+            </h:outputText>
+          </rich:column>
+
+          <rich:column filterType="custom"
+            sortBy="#{obso.strategyKept.localeValue}"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.strategy}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="strategy"
+                  value="#{reportingObsoController.filterValues['strategy']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText
+              value="#{obso.strategyKept.localeValue}">
+            </h:outputText>
+          </rich:column>
+
+          <rich:column filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.comments}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="comments"
+                  value="#{reportingObsoController.filterValues['comments']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.commentOnStrategy}" />
+          </rich:column>
+
+          <rich:column sortBy="#{obso.mtbf}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.mtbf}" />
+            </f:facet>
+            <h:outputText value="#{obso.mtbf}" />
+          </rich:column>
+
+          <rich:column sortBy="#{obso.personInCharge}"
+            filterType="custom"
+            filter="#{reportingObsoController.obsoFilter}">
+            <f:facet name="header">
+              <h:panelGroup>
+                <h:outputText value="#{msg.inChargeOf}"
+                  styleClass="wrapTitle" />
+                <br />
+                <h:inputText id="personInCharge"
+                  value="#{reportingObsoController.filterValues['personInCharge']}">
+                  <a4j:ajax event="keyup"
+                    render="reportingTable@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </h:panelGroup>
+            </f:facet>
+            <h:outputText value="#{obso.personInCharge}" />
+          </rich:column>
+        </rich:dataTable>
+      </div>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsBottom" for="reportingTable"
+          maxPages="10" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+    </h:form>
+
+    <ui:include src="/obso/generatePlatformModal.xhtml">
+    </ui:include>
+
+  </div>
+</ui:composition>

@@ -1,0 +1,296 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Modal allowing the change of the container. -->
+
+  <h:form id="changeContainerModalForm">
+    <rich:popupPanel id="changeContainerModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:outputText value="#{msg.changeContainerModalTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="changeContainerError" />
+      </ui:include>
+
+      <h:panelGroup id="searchContainer">
+        <fieldset>
+          <legend>
+            <h:outputText value="#{msg.searchContainer}" />
+          </legend>
+
+          <h:panelGrid columns="3" cellspacing="5"
+            columnClasses="alignright,alignleft,alignleft">
+
+            <h:outputLabel for="searchContainerFamily"
+              value="#{msg.ClassTitle}" />
+            <h:selectOneRadio
+              value="#{containerController.selectedClass}"
+              layout="pageDirection"
+              valueChangeListener="#{containerController.selectedClassChanged}">
+              <f:selectItems value="#{containerController.classes}" />
+              <a4j:ajax event="change" render="searchContainer" />
+            </h:selectOneRadio>
+            <rich:select id="searchContainerFamily" mode="client"
+              value="#{containerController.findCriteria['family']}"
+              defaultLabel="#{msg.allFamilies}"
+              rendered="#{containerController.articleMode}">
+              <f:selectItem itemLabel="#{msg.allFamilies}" />
+              <f:selectItems
+                value="#{containerController.articleClasses}" />
+            </rich:select>
+
+          </h:panelGrid>
+
+          <!-- Installation -->
+
+          <h:panelGrid
+            rendered="#{containerController.installationMode}"
+            columns="4" cellspacing="5"
+            columnClasses="alignright,alignleft">
+
+            <h:outputLabel for="searchContainerInstName"
+              value="#{msg.name}" />
+            <h:inputText id="searchContainerInstName"
+              styleClass="input20"
+              value="#{containerController.inputSearchField}" />
+
+          </h:panelGrid>
+
+          <!-- Article -->
+
+          <h:panelGrid rendered="#{containerController.articleMode}"
+            columns="4" cellspacing="5"
+            columnClasses="alignright,alignleft">
+
+            <h:outputLabel for="searchContainerType" value="#{msg.type}" />
+            <h:inputText id="searchContainerType" styleClass="input20"
+              value="#{containerController.findCriteria['typeArticle.label']}" />
+
+            <h:outputLabel for="searchContainerApn"
+              value="#{msg.airbusPN}" />
+            <h:inputText id="searchContainerApn" styleClass="input20"
+              value="#{containerController.findCriteria['airbusPN.identifier']}" />
+
+            <h:outputLabel for="searchContainerSN" value="#{msg.sn}" />
+            <h:inputText id="searchContainerSN" styleClass="input20"
+              value="#{containerController.findCriteria['sn']}" />
+
+            <h:outputLabel for="searchContainerMpn"
+              value="#{msg.manufacturerPN}" />
+            <h:inputText id="searchContainerMpn" styleClass="input20"
+              value="#{containerController.findCriteria['manufacturerPN.identifier']}" />
+
+            <h:outputLabel for="searchContainerDesignation"
+              value="#{msg.Designation}" />
+            <h:inputText id="searchContainerDesignation"
+              styleClass="input20"
+              value="#{containerController.findCriteria['designation']}" />
+
+            <h:outputLabel for="searchContainerCmsCode"
+              value="#{msg.cmsCode}" />
+            <h:inputText id="searchContainerCmsCode"
+              styleClass="input20"
+              value="#{containerController.findCriteria['cmsCode']}" />
+
+          </h:panelGrid>
+
+          <!-- Tool -->
+
+          <h:panelGrid rendered="#{containerController.toolMode}"
+            columns="4" cellspacing="5"
+            columnClasses="alignright,alignleft">
+
+            <h:outputLabel for="searchContainerToolName"
+              value="#{msg.name}" />
+            <h:inputText id="searchContainerToolName"
+              styleClass="input20"
+              value="#{containerController.inputSearchField}" />
+
+          </h:panelGrid>
+
+          <!-- Buttons and search results -->
+
+          <h:panelGrid columns="2" cellspacing="5">
+            <a4j:commandButton id="findButton" value="#{msg.search}"
+              action="#{containerController.doFind}"
+              render="parentList,containerInModal" />
+            <a4j:commandButton value="#{msg.reset}"
+              action="#{containerController.doResetSearchField}"
+              render="searchContainer,containerInModal" />
+          </h:panelGrid>
+
+          <h:panelGroup id="parentList">
+
+            <h:selectOneListbox style="width:100%;"
+              rendered="#{containerController.installationMode}"
+              converter="installationConverter"
+              valueChangeListener="#{containerController.parentInstallationChanged}"
+              immediate="true" size="8">
+              <f:selectItems
+                value="#{containerController.foundParentInstallations}"
+                var="lFoundParentInstallation"
+                itemLabel="#{lFoundParentInstallation.name}"
+                itemValue="#{lFoundParentInstallation}" />
+              <a4j:ajax event="change"
+                render="containerInModal,validationButtons" />
+            </h:selectOneListbox>
+
+            <h:selectOneListbox style="width:100%;"
+              rendered="#{containerController.articleMode}"
+              converter="articleConverter"
+              valueChangeListener="#{containerController.parentArticleChanged}"
+              immediate="true" size="8">
+              <f:selectItems
+                value="#{containerController.foundParentArticles}"
+                var="lFoundParentArticle"
+                itemLabel="#{lFoundParentArticle.name}"
+                itemValue="#{lFoundParentArticle}" />
+              <a4j:ajax event="change"
+                render="containerInModal,validationButtons" />
+            </h:selectOneListbox>
+
+            <h:selectOneListbox style="width:100%;"
+              rendered="#{containerController.toolMode}"
+              converter="toolConverter"
+              valueChangeListener="#{containerController.parentToolChanged}"
+              immediate="true" size="8">
+              <f:selectItems
+                value="#{containerController.foundParentTools}"
+                var="lFoundParentTool"
+                itemLabel="#{lFoundParentTool.name}"
+                itemValue="#{lFoundParentTool}" />
+              <a4j:ajax event="change"
+                render="containerInModal,validationButtons" />
+            </h:selectOneListbox>
+
+          </h:panelGroup>
+
+        </fieldset>
+      </h:panelGroup>
+
+      <h:panelGroup id="containerInModal">
+        <fieldset>
+          <legend>
+            <h:outputText value="#{msg.container}" />
+          </legend>
+
+          <a4j:outputPanel ajaxRendered="true">
+            <h:panelGrid columns="2" cellspacing="5"
+              columnClasses="alignright,alignleft">
+
+              <h:outputLabel for="tempContainerType"
+                value="#{msg.containerType}" styleClass="labelname" />
+              <h:outputLabel id="tempContainerType"
+                value="#{containerController.tempContainer.type.toString()}" />
+
+              <h:outputLabel for="tempContainerName"
+                value="#{msg.containerName}" styleClass="labelname" />
+              <h:panelGroup>
+                <h:outputLabel id="tempContainerName" styleClass="labelname"
+                  value="#{containerController.tempContainer.containerDetailedName}" />
+                <h:graphicImage id="tempContainerNameHelp"
+                  styleClass="iconClass" style="margin-left:4px"
+                  rendered="#{not empty containerController.tempContainer.toolTip}"
+                  value="/resources/images/icons/help_tooltip.png" />
+                <boa:tooltip target="tempContainerNameHelp"
+                  rendered="#{not empty containerController.tempContainer.toolTip}"
+                  value="#{containerController.tempContainer.toolTip}" />
+              </h:panelGroup>
+
+              <h:outputLabel for="tempPrecision"
+                value="#{containerController.tempPrecisionLabel}"
+                rendered="#{containerController.showTempPrecision}"
+                styleClass="labelname" />
+              <h:panelGroup
+                rendered="#{containerController.showTempPrecision}">
+                <h:inputText id="tempPrecision" styleClass="input20"
+                  value="#{containerController.tempContainer.precision}"
+                  validator="#{containerController.validateTempPrecision}">
+                  <a4j:ajax event="blur" execute="@this" />
+                  <f:validateLength
+                    maximum="#{containerController.tempPrecisionMaxLength}" />
+                </h:inputText>
+                <h:graphicImage id="tempPrecisionHelp"
+                  rendered="#{not empty containerController.tempPrecisionToolTip}"
+                  styleClass="iconClass" style="margin-left:4px"
+                  value="/resources/images/icons/help_tooltip.png" />
+                <boa:tooltip target="tempPrecisionHelp"
+                  rendered="#{not empty containerController.tempPrecisionToolTip}"
+                  value="#{containerController.tempPrecisionToolTip}" />
+                <rich:message for="tempPrecision" />
+              </h:panelGroup>
+
+            </h:panelGrid>
+          </a4j:outputPanel>
+
+          <a4j:commandButton value="#{msg.setNoContainer}"
+            action="#{containerController.doResetTempContainer}"
+            render="containerInModal,validationButtons" />
+
+        </fieldset>
+      </h:panelGroup>
+
+      <h:panelGrid id="validationButtons" columns="3" cellspacing="7">
+        <a4j:commandButton value="#{msg.validate}"
+          rendered="#{!(locationController.replaceLocationQuestionToBeAsked and containerController.tempContainer != null)}"
+          render="containerInPage, locationInPage, useState"
+          action="#{controller[method]}"
+          id="validateContainer"
+          oncomplete="if(#{facesContext.maximumSeverity==null}) #{rich:component('changeContainerModal')}.hide();return false;">
+        </a4j:commandButton>
+        <a4j:commandButton value="#{msg.validate}"
+          rendered="#{locationController.replaceLocationQuestionToBeAsked and containerController.tempContainer != null}"
+          render="updateLocationModal"
+          id="validateContainerWithQuestion"
+          action="#{containerController.setUpdateLocationAction(0)}"
+          oncomplete="if(#{facesContext.maximumSeverity==null}) {#{rich:component('updateLocationModal')}.show();return false;}">
+        </a4j:commandButton>
+        <a4j:commandButton value="#{msg.cancel}" execute="@this"
+          action="#{containerController.doCancel}"
+          onclick="#{rich:component('changeContainerModal')}.hide()" />
+      </h:panelGrid>
+    </rich:popupPanel>
+  </h:form>
+
+  <h:form id="updateLocationModalForm">
+    <rich:popupPanel id="updateLocationModal" autosized="true"
+      modal="true">
+      <f:facet name="header">
+        <h:outputText value="#{msg.updateLocationTitle}" />
+      </f:facet>
+
+      <rich:panel>
+        <h:graphicImage
+          url="/resources/images/icons/messagebox_info.png"
+          styleClass="pic" />
+        <h:outputText value="#{msg.updateLocationQuestion}" />
+        <h:selectOneRadio id ="updateLocationAction"
+          value="#{containerController.updateLocationAction}"
+          layout="pageDirection">
+          <f:selectItem itemValue="0" itemLabel="#{msg.inheritParentLocation}" />
+          <f:selectItem itemValue="1" itemLabel="#{msg.copyParentLocation}" />
+          <f:selectItem itemValue="2" itemLabel="#{msg.keepCurrentLocation}" />
+        </h:selectOneRadio>
+        <h:panelGrid columns="2" cellspacing="10" styleClass="center">
+          <a4j:commandButton value="#{msg.validate}" id="updateLocationvalidataion"
+            action="#{controller[method]}"
+            onclick="#{rich:component('updateLocationModal')}.hide();#{rich:component('changeContainerModal')}.hide();"
+            render="containerInPage, locationInPage, warningMessage, useState"/>
+          <a4j:commandButton value="#{msg.cancel}"
+            onclick="#{rich:component('updateLocationModal')}.hide();"/>
+        </h:panelGrid>
+      </rich:panel>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>
+

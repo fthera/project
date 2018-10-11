@@ -1,0 +1,181 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="ValueListModalForm">
+    <rich:popupPanel id="ValueListModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeValueListModal" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('ValueListModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/list.png"
+            style="padding-right:5px;width:16px;height:16px" />
+          <h:outputText value="#{msg.editValueList}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="valueListModalError" />
+      </ui:include>
+
+      <h:panelGroup>
+        <fieldset>
+          <legend>#{msg.updateValueListTitle}</legend>
+          
+          <table>
+            <tr>
+              <td>
+                <h:outputLabel value="#{valueListController.renderFrenchItem ? msg.engValue : msg.value}"
+                  styleClass="labelname" />
+              </td>
+              <td>
+                <h:panelGroup>
+                  <h:inputText id="defaultValue" styleClass="input20"
+                    value="#{valueListController.defaultValue}">
+                    <f:validateLength
+                      maximum="#{valueListController.defaultValueLength}" />
+                    <a4j:ajax event="blur" execute="@this" />
+                  </h:inputText>
+                </h:panelGroup>
+              </td>
+            </tr>
+            <tr>
+              <td />
+              <td>
+                <rich:message for="defaultValue" />
+              </td>
+            </tr>
+            
+            <h:panelGroup
+              rendered="#{valueListController.renderFrenchItem}">
+              <tr>
+                <td>
+                  <h:outputLabel value="#{msg.fraValue}"
+                    styleClass="labelname" />
+                </td>
+                <td>
+                  <h:panelGroup>
+                    <h:inputText id="fraValue" styleClass="input20"
+                      value="#{valueListController.frenchValue}">
+                      <f:validateLength
+                        maximum="#{valueListController.frenchValueLength}" />
+                      <a4j:ajax event="blur" execute="@this" />
+                    </h:inputText>
+                  </h:panelGroup>
+                </td>
+              </tr>
+              <tr>
+                <td />
+                <td>
+                  <rich:message for="fraValue" />
+                </td>
+              </tr>
+            </h:panelGroup>
+            
+            <h:panelGroup
+              rendered="#{valueListController.renderDescriptionItem}">
+              <tr>
+                <td>
+                  <h:outputLabel value="#{msg.description}"
+                    styleClass="labelname" />
+                </td>
+                <td>
+                  <h:panelGroup>
+                    <h:inputText id="description" styleClass="input30"
+                      value="#{valueListController.description}">
+                      <f:validateLength
+                        maximum="#{valueListController.descriptionLength}" />
+                      <a4j:ajax event="blur" execute="@this" />
+                    </h:inputText>
+                  </h:panelGroup>
+                </td>
+              </tr>
+              <tr>
+                <td />
+                <td>
+                  <rich:message for="description" />
+                </td>
+              </tr>
+            </h:panelGroup>
+
+            <h:panelGroup
+              rendered="#{valueListController.renderColorItem}">
+              <tr>
+                <td>
+                  <h:outputLabel value="#{msg.colorValue}"
+                    styleClass="labelname" />
+                </td>
+                <td>
+                  <p:colorPicker id="colorValue"
+                    value="#{valueListController.colorHexValue}" />
+                </td>
+              </tr>
+            </h:panelGroup>
+
+            <h:panelGroup
+              rendered="#{valueListController.renderMonthNumberItem}">
+              <tr>
+                <td>
+                  <h:outputLabel value="#{msg.monthNumberValue}"
+                    styleClass="labelname" />
+                </td>
+                <td>
+                  <rich:inputNumberSlider
+                    value="#{valueListController.monthNumber}"
+                    maxValue="12" step="1" showToolTip="true" />
+                </td>
+              </tr>
+            </h:panelGroup>
+
+            <h:panelGroup
+              rendered="#{valueListController.renderLevelItem}">
+              <tr>
+                <td>
+                  <h:outputLabel value="#{msg.levelValue}"
+                    styleClass="labelname" />
+                </td>
+                <td>
+                  <h:inputText id="level" styleClass="input10"
+                    validatorMessage="#{msg.valueIntegerFrom1To99}"
+                    converterMessage="#{msg.valueIntegerFrom1To99}"
+                    value="#{valueListController.level}">
+                    <f:convertNumber integerOnly="true" />
+                    <f:validateLongRange
+                      minimum="#{valueListController.levelMin}"
+                      maximum="#{valueListController.levelMax}" />
+                  </h:inputText>
+                </td>
+              </tr>
+            </h:panelGroup>
+
+          </table>
+
+          <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+            <a4j:commandButton value="#{msg.add}"
+              action="#{valueListController.doAdd}"
+              rendered="#{valueListController.createMode}"
+              render="tableValueLists"
+              oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('ValueListModal')}.hide();return false;" />
+            <a4j:commandButton value="#{msg.modify}"
+              action="#{valueListController.doUpdate}"
+              rendered="#{valueListController.updateMode}"
+              render="tableValueLists"
+              oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('ValueListModal')}.hide();return false;" />
+            <a4j:commandButton id="cancelButton" value="#{msg.cancel}"
+              onclick="#{rich:component('ValueListModal')}.hide();return false;" />
+          </h:panelGrid>
+        </fieldset>
+      </h:panelGroup>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

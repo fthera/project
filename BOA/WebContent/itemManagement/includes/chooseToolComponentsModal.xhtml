@@ -1,0 +1,129 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="chooseToolComponentModalForm">
+    <rich:popupPanel id="chooseToolComponentsModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeChooseToolComponentsModal"
+          alt="#{msg.close}" class="hidelink"
+          value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('chooseToolComponentsModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage
+            value="/resources/images/icons/search16x16.png"
+            style="padding-right:5px;width:16px;height:16px;" />
+          <h:outputText value="#{msg.chooseToolComponentModalTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <rich:hotKey selector="#chooseToolComponentModalForm" key="return"
+        handler="#{rich:component('findButton')}.click();" />
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="chooseToolComponentError" />
+      </ui:include>
+
+      <fieldset>
+        <legend>
+          <h:outputText value="#{msg.searchComponent}" />
+        </legend>
+
+        <table style="width: 100%; cellspacing: 5px;">
+          <tr>
+            <td align="right">
+              <h:outputLabel for="family" value="#{msg.ClassTitle}" />
+            </td>
+            <td style="width: 25%;">
+              <h:selectOneMenu id="family"
+                value="#{toolController.findCriteria['family']}">
+                <f:selectItem itemLabel="#{msg.allFamilies}" />
+                <f:selectItems value="#{toolController.classes}" />
+              </h:selectOneMenu>
+            </td>
+            <td align="right">
+              <h:outputLabel for="type" value="#{msg.type}" />
+            </td>
+            <td>
+              <h:inputText id="type"
+                value="#{toolController.findCriteria['typeArticle.label']}" />
+            </td>
+          </tr>
+          <tr>
+            <td align="right">
+              <h:outputLabel for="apn" value="#{msg.airbusPN}" />
+            </td>
+            <td>
+              <h:inputText id="apn"
+                value="#{toolController.findCriteria['airbusPN.identifier']}" />
+            </td>
+            <td align="right">
+              <h:outputLabel for="mpn" value="#{msg.manufacturerPN}" />
+            </td>
+            <td>
+              <h:inputText id="mpn"
+                value="#{toolController.findCriteria['manufacturerPN.identifier']}" />
+            </td>
+          </tr>
+          <tr>
+            <td align="right">
+              <h:outputLabel for="sn" value="#{msg.sn}" />
+            </td>
+            <td>
+              <h:inputText id="sn"
+                value="#{toolController.findCriteria['sn']}" />
+            </td>
+          </tr>
+        </table>
+
+        <h:panelGrid columns="2" cellspacing="5">
+          <a4j:commandButton id="findButton" value="#{msg.search}"
+            action="#{toolController.doFind}" render="componentFound" />
+          <a4j:commandButton value="#{msg.reset}"
+            action="#{toolController.doResetFindField}"
+            render="family,sn,apn,mpn,type,findButton,componentFound" />
+        </h:panelGrid>
+
+        <rich:pickList id="componentFound" immediate="true"
+          value="#{toolController.componentsSelected}" var="lComponent"
+          minListHeight="150" addText="#{msg.addText}"
+          addAllText="#{msg.addAllText}"
+          removeText="#{msg.removeText}"
+          removeAllText="#{msg.removeAllText}"
+          converter="articleConverter"
+          sourceCaption="#{msg.foundComponentCaption}"
+          targetCaption="#{msg.chosenComponentCaption}">
+          <f:selectItems value="#{toolController.componentsFound}" />
+          <rich:column>
+            <h:outputText
+              value="#{msg[lComponent.class.getSimpleName()]}" />
+          </rich:column>
+          <rich:column>
+            <h:outputText value="#{lComponent.name}" />
+          </rich:column>
+
+        </rich:pickList>
+
+        <h:panelGrid columns="2" cellspacing="7">
+          <a4j:commandButton value="#{msg.add}"
+            render="tableArticles,counts,dsTop,dsBottom"
+            action="#{toolController.doModalChoose}"
+            id="chooseComponent"
+            oncomplete="#{rich:component('chooseToolComponentsModal')}.hide()" />
+          <a4j:commandButton value="#{msg.close}"
+            onclick="#{rich:component('chooseToolComponentsModal')}.hide()" />
+        </h:panelGrid>
+
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>
+

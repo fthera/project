@@ -1,0 +1,68 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="generatePlatformModalForm">
+    <rich:popupPanel id="generatePlatformModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeGeneratePlatformModal"
+          alt="#{msg.close}" class="hidelink"
+          value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('generatePlatformModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage
+            value="/resources/images/icons/oldparchment.jpeg"
+            style="padding-right:5px;width:16px;height:16px;" />
+          <h:outputText value="#{msg.generatePlatformSheet}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="generatePlatformError" />
+      </ui:include>
+
+      <fieldset>
+        <legend>#{msg.selectPlatform}</legend>
+
+        <rich:pickList
+          value="#{reportingObsoController.selectedPlatforms}"
+          var="platform" listHeight="150" listWidth="130"
+          sourceCaption="#{msg.availablePlatforms}"
+          targetCaption="#{msg.selectedPlatforms}" immediate="true"
+          keepSourceOrder="true"
+          addText="#{msg.addText}"
+          addAllText="#{msg.addAllText}"
+          removeText="#{msg.removeText}"
+          removeAllText="#{msg.removeAllText}"
+          converter="installationConverter">
+          <f:selectItems
+            value="#{reportingObsoController.platforms}" />
+          <rich:column>
+            <h:outputText value="#{platform.name}"></h:outputText>
+          </rich:column>
+
+        </rich:pickList>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <h:commandButton value="#{msg.generatePlatform}"
+            action="#{reportingObsoController.doGeneratePlatforms()}"
+            disabled="#{reportingObsoController.generatePlatformButtonDisabled}">
+          </h:commandButton>
+          <a4j:commandButton id="cancelButtonGeneratePlatform"
+            execute="@this" value="#{msg.cancel}"
+            onclick="#{rich:component('generatePlatformModal')}.hide();return false;" />
+        </h:panelGrid>
+
+      </fieldset>
+
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

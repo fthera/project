@@ -1,0 +1,137 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:mj="http://mojarra.dev.java.net/mojarra_ext">
+
+  <h:form id="portForm">
+    <rich:popupPanel id="portModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closePortModal" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('portModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/list.png"
+            style="padding-right:5px;width:16px;height:16px" />
+          <h:outputText value="#{msg.AddPort}"
+            rendered="#{comPortController.createMode}"
+            style="vertical-align:bottom;" />
+          <h:outputText value="#{msg.editPort}"
+            rendered="#{comPortController.updateMode}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="portModalError" />
+      </ui:include>
+
+      <h:panelGrid id="portFormContent" columns="3"
+        columnClasses="alignright,alignleft,alignleft">
+        <h:outputLabel for="NamePort" value="#{msg.name} "
+          styleClass="labelname" />
+        <h:inputText id="NamePort" styleClass="input20"
+          value="#{comPortController.portName}">
+          <f:validateLength
+            maximum="#{DBConstants.communicationportNameLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+        <rich:message for="NamePort" />
+
+        <h:outputLabel for="IPAddress" value="#{msg.IPAddress} "
+          styleClass="labelname" />
+        <h:inputText id="IPAddress" styleClass="input20"
+          value="#{comPortController.ipAddress}">
+          <f:validateLength
+            maximum="#{DBConstants.communicationportIpaddressLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+        <rich:message for="IPAddress" />
+
+        <h:outputLabel for="FixedIP" value="#{msg.FixedIP} "
+          styleClass="labelname" />
+        <h:selectBooleanCheckbox id="FixedIP" value="#{comPortController.fixedIP}" >
+          <a4j:ajax event="blur" execute="@this" />
+        </h:selectBooleanCheckbox>
+        <rich:message for="IPAddress" />
+
+        <h:outputLabel for="mask" value="#{msg.mask} "
+          styleClass="labelname" />
+        <h:inputText id="mask" styleClass="input20"
+          value="#{comPortController.mask}">
+          <f:validateLength
+            maximum="#{DBConstants.communicationportMaskLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+        <rich:message for="mask" />
+
+        <h:outputLabel for="MACAddress" value="#{msg.MACAddress} "
+          styleClass="labelname" />
+        <h:inputText id="MACAddress" styleClass="input20"
+          value="#{comPortController.macAddress}">
+          <f:validateLength
+            maximum="#{DBConstants.communicationportMacaddressLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+        <rich:message for="MACAddress" />
+
+        <h:outputLabel for="network" value="#{msg.network} "
+          styleClass="labelname" />
+        <rich:select id="networkId" mode="client"
+          value="#{comPortController.networkId}"
+          defaultLabel="#{msg.notFilled}">
+          <f:selectItem itemLabel="#{msg.notFilled}" />
+          <f:selectItems value="#{comPortController.networksNames}" />
+        </rich:select>
+        <rich:message for="networkId" />
+
+        <h:outputLabel for="socket" value="#{msg.socket} "
+          styleClass="labelname" />
+        <h:inputText id="socket" styleClass="input20"
+          value="#{comPortController.socket}" immediate="true">
+          <f:validateLength
+            maximum="#{DBConstants.communicationportSocketLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputText>
+        <rich:message for="socket" />
+
+        <h:outputLabel for="comment" value="#{msg.comment} "
+          styleClass="labelname" />
+        <h:inputTextarea id="comment" rows="4" styleClass="input20"
+          value="#{comPortController.comment}">
+          <f:validateLength
+            maximum="#{DBConstants.communicationportCommentLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputTextarea>
+        <rich:message for="comment" />
+      </h:panelGrid>
+
+      <h:panelGrid columns="3" cellspacing="5" styleClass="center">
+        <a4j:commandButton value="#{msg.add}"
+          rendered="#{comPortController.createMode}"
+          action="#{comPortController.doAdd}"
+          render="portsList,NbPortsPC"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('portModal')}.hide();" />
+        <a4j:commandButton value="#{msg.modify}"
+          rendered="#{comPortController.updateMode}"
+          action="#{comPortController.doUpdate}"
+          render="portsList,NbPortsPC"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('portModal')}.hide();" />
+        <a4j:commandButton value="#{msg.reset}" execute="@this"
+          action="#{comPortController.doReset}" render="portFormContent" />
+        <a4j:commandButton id="cancelButton" value="#{msg.cancel}"
+          execute="@this"
+          onclick="#{rich:component('portModal')}.hide();return false;" />
+      </h:panelGrid>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

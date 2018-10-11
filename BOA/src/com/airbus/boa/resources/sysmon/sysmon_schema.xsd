@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="SYSMON">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="infos"/>
+        <xs:element ref="host"/>
+        <xs:element ref="hardware"/>
+        <xs:element ref="operating_system"/>
+        <xs:element ref="networks"/>
+      </xs:sequence>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="infos">
+    <xs:complexType>
+      <xs:attribute name="sysmon_version" type="xs:string" use="required"/>
+      <xs:attribute name="date" type="xs:string" use="required"/>
+      <xs:attribute name="time" type="xs:string" use="required"/>
+      <xs:attribute name="user" type="xs:string" use="required"/>
+      <xs:attribute name="sudo_user" type="xs:string"/>
+      <xs:attribute name="user_has_admin_rights" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="host">
+    <xs:complexType>
+      <xs:attribute name="hostname" type="xs:string" use="required"/>
+      <xs:attribute name="domain" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="hardware">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="cpu"/>
+        <xs:element ref="memory"/>
+        <xs:element ref="graphics"/>
+        <xs:element ref="devices"/>
+      </xs:sequence>
+      <xs:attribute name="manufacturer" type="xs:string" use="required"/>
+      <xs:attribute name="product_name" type="xs:string" use="required"/>
+      <xs:attribute name="manufacturer_sn" type="xs:string" use="required"/>
+      <xs:attribute name="bios_revision" type="xs:string" use="required"/>
+      <xs:attribute name="platform" type="xs:string" use="required"/>
+      <xs:attribute name="product_type" type="xs:string" use="required"/>
+      <xs:attribute name="article" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="cpu">
+    <xs:complexType>
+      <xs:attribute name="type" type="xs:string" use="required"/>
+      <xs:attribute name="max_speed" type="xs:string" use="required"/>
+      <xs:attribute name="sockets" type="xs:integer" use="required"/>
+      <xs:attribute name="core_per_socket" type="xs:integer" use="required"/>
+      <xs:attribute name="logical_cpu_per_socket" type="xs:integer" use="required"/>
+      <xs:attribute name="total_logical_cpus" type="xs:integer" use="required"/>
+      <xs:attribute name="hyperthreading" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="disabled"/>
+            <xs:enumeration value="enabled"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="memory">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="slot" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="total_memory_size" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="slot">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="used" type="xs:boolean" use="required"/>
+      <xs:attribute name="memory_size" type="xs:string"/>
+      <xs:attribute name="memory_type" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="graphics">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="card"/>
+        <xs:element ref="monitor"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="monitor">
+    <xs:complexType>
+      <xs:attribute name="number" type="xs:integer" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="card">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="devices">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="pci_device" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="pci_device">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="sn" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="operating_system">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="installed_kernels"/>
+        <xs:element ref="notable_sysconfig_keys" minOccurs="0"/>
+      </xs:sequence>
+      <xs:attribute name="type" use="required">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="Linux"/>
+            <xs:enumeration value="Windows"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+	  <xs:attribute name="has_sudo" type="xs:boolean"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="installed_kernels">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="kernel" maxOccurs="unbounded"/>
+      </xs:sequence>
+      <xs:attribute name="default" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="kernel">
+    <xs:complexType>
+      <xs:attribute name="version" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="notable_sysconfig_keys">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="sysconfig" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="sysconfig">
+    <xs:complexType>
+      <xs:attribute name="key" type="xs:string" use="required"/>
+      <xs:attribute name="value" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="networks">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="interface" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="interface">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="network">
+        <xs:simpleType>
+          <xs:restriction base="xs:NMTOKEN">
+            <xs:enumeration value="IONEXT"/>
+            <xs:enumeration value="AFDX"/>
+            <xs:enumeration value="General"/>
+            <xs:enumeration value="Local"/>
+			<xs:enumeration value="ADIS"/>
+			<xs:enumeration value="VISUEL"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="MAC_address" type="xs:string"/>
+      <xs:attribute name="dhcp" type="xs:string"/>
+      <xs:attribute name="ipv4_address" type="xs:string"/>
+      <xs:attribute name="mask" type="xs:string"/>
+      <xs:attribute name="link_detected" type="xs:boolean" use="required"/>
+      <xs:attribute name="speed" type="xs:string"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+
+

@@ -1,0 +1,188 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="BuildingForm">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="buildingError" />
+      <ui:param name="globalOnly" value="true" />
+    </ui:include>
+
+    <h:panelGrid columns="2" cellspacing="2" columnClasses="top, top">
+
+      <a4j:commandButton value="#{msg.export}"
+        onclick="#{rich:component('exportBuildingsModal')}.show();return false;"
+        execute="@this" />
+      <h:panelGroup />
+
+      <h:panelGrid columns="3" cellspacing="10"
+        columnClasses="pcolumn,pcolumn,pcolumn">
+
+        <h:outputLabel for="nomBuilding" value="#{msg.name}" />
+        <h:panelGroup>
+          <h:inputText id="nomBuilding"
+            disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+            value="#{buildingController.newBuilding}"
+            styleClass="input20">
+            <f:validateLength
+              maximum="#{DBConstants.buildingNameLength}" />
+            <a4j:ajax event="blur" execute="@this" />
+          </h:inputText>
+          <rich:message for="nomBuilding" />
+        </h:panelGroup>
+
+        <a4j:commandButton value="#{msg.addBuilding}"
+          action="#{buildingController.doAddBuilding}"
+          disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+          render="buildingList,removeBuildingBtn" />
+
+
+        <h:outputLabel for="buildingList" value="#{msg.buildingList}" />
+        <h:selectOneListbox id="buildingList" styleClass="input20"
+          value="#{buildingController.selectedBuilding}"
+          immediate="true" converter="buildingConverter">
+          <f:selectItems value="#{buildingController.listBuildings}" />
+          <a4j:ajax event="change"
+            render="addPlaceBtn,placeNameLabel,placeTable,removeBuildingBtn,dsTop,dsBottom" />
+        </h:selectOneListbox>
+
+        <a4j:commandButton id="removeBuildingBtn"
+          value="#{msg.removeBuilding}" styleClass="pcolumn"
+          action="#{buildingController.doRemoveBuilding}"
+          render="buildingList,addPlaceBtn"
+          disabled="#{empty buildingController.selectedBuilding or !logInController.isAuthorized('LocationCRUD','CRUD_Delete')}" />
+      </h:panelGrid>
+
+      <rich:panel>
+        <h:panelGroup cellspacing="10" columnClasses="pcolumn">
+
+          <h:panelGrid cellspacing="5" columns="5">
+            <h:outputLabel for="namePlace" value="#{msg.name}" />
+            <h:panelGroup>
+              <h:inputText id="namePlace"
+                disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+                value="#{buildingController.newPlace.name}">
+                <f:validateLength
+                  maximum="#{DBConstants.placeNameLength}" />
+                <a4j:ajax event="blur" execute="@this" />
+              </h:inputText>
+              <rich:message for="namePlace" />
+            </h:panelGroup>
+            <h:selectOneMenu id="placeTypeList"
+              disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+              value="#{buildingController.newPlace.type}">
+              <f:selectItems
+                value="#{buildingController.getPlaceTypeList()}" />
+            </h:selectOneMenu>
+            <a4j:commandButton id="addPlaceBtn" value="#{msg.addPlace}"
+              action="#{buildingController.doAddPlace}"
+              disabled="#{buildingController.selectedBuilding == null or !logInController.isAuthorized('LocationCRUD','CRUD_Create')}"
+              render="placeTable,dsTop,dsBottom" />
+          </h:panelGrid>
+
+          <h:panelGroup style="display:block;text-align:center">
+            <rich:dataScroller id="dsTop" for="placeTable" maxPages="5"
+              fastControls="hide" renderIfSinglePage="false" />
+          </h:panelGroup>
+
+          <div class="scroll-div"
+            style="max-height: 68%; max-height: 68vh; width: 100%">
+            <rich:dataTable id="placeTable" var="place" layout="block"
+              sortMode="single" style="width:100%"
+              value="#{buildingController.selectedPlaces}"
+              ajaxKeys="#{buildingController.rowsToUpdate}" rows="20"
+              rowClasses="oddRow, evenRow"
+              onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+              onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'">
+
+              <f:facet name="header">
+                <h:outputText
+                  value="#{msg.placeNameTitle} #{(empty buildingController.selectedBuilding)?'':buildingController.selectedBuilding.name}" />
+              </f:facet>
+
+              <rich:column sortBy="#{place.name}">
+                <f:facet name="header">
+                  <h:outputText value="#{msg.name}" />
+                </f:facet>
+                <h:outputText id="tplacename" value="#{place.name}" />
+              </rich:column>
+
+              <rich:column sortBy="#{place.type}">
+                <f:facet name="header">
+                  <h:outputText value="#{msg.placeType}" />
+                </f:facet>
+                <h:outputText id="tplacetype" value="#{place.type}"
+                  converter="placeTypeConverter" />
+              </rich:column>
+
+              <rich:column
+                rendered="#{logInController.isAuthorized('LocationCRUD','CRUD_Update') or logInController.isAuthorized('LocationCRUD','CRUD_Delete')}">
+                <f:facet name="header">Actions</f:facet>
+
+                <h:panelGrid columns="2" cellspacing="5">
+
+                  <a4j:commandLink id="modifyPlaceName" execute="@this"
+                    disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Update')}"
+                    oncomplete="#{rich:component('updatePlaceModal')}.show();return false;">
+                    <h:graphicImage
+                      value="/resources/images/icons/edit.gif"
+                      style="border:0" />
+                    <f:setPropertyActionListener value="#{place.name}"
+                      target="#{buildingController.placeName}" />
+                    <f:setPropertyActionListener value="#{place.type}"
+                      target="#{buildingController.placeType}" />
+                    <f:setPropertyActionListener value="#{place.id}"
+                      target="#{buildingController.selectedPlaceId}" />
+                  </a4j:commandLink>
+
+                  <a4j:commandLink id="deletePlaceLink"
+                    disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Delete')}"
+                    onclick="if (!confirm('#{msg.delete} #{place.name}')) return false;"
+                    action="#{buildingController.doDeletePlace}"
+                    render="placeTable,dsTop,dsBottom">
+                    <h:graphicImage
+                      value="/resources/images/icons/delete.gif"
+                      style="border:0" />
+                    <f:setPropertyActionListener value="#{place.id}"
+                      target="#{buildingController.selectedPlaceId}" />
+                  </a4j:commandLink>
+
+                </h:panelGrid>
+
+                <boa:tooltip target="deletePlaceLink"
+                  value="#{msg.delete}" />
+                <boa:tooltip target="modifyPlaceName"
+                  value="#{msg.modify}" />
+
+              </rich:column>
+
+              <f:facet name="footer">
+                <h:panelGroup>
+                  <h:outputText value="#{msg.placeNumber}" />
+                  <h:outputText
+                    value="#{buildingController.selectedBuilding.places.size()}" />
+
+                </h:panelGroup>
+              </f:facet>
+
+            </rich:dataTable>
+          </div>
+
+          <h:panelGroup style="display:block;text-align:center">
+            <rich:dataScroller id="dsBottom" for="placeTable"
+              maxPages="5" fastControls="hide"
+              renderIfSinglePage="false" />
+          </h:panelGroup>
+
+        </h:panelGroup>
+      </rich:panel>
+    </h:panelGrid>
+
+  </h:form>
+
+</ui:composition>

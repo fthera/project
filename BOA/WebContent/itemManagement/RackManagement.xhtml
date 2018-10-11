@@ -1,0 +1,37 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/itemManagement/ArticleManagement.xhtml">
+  <ui:param name="articleController" value="#{rackController}" />
+
+  <ui:define name="SpecificIdentification">
+    <h:panelGrid columns="3" style="padding-right:3px;width:100%"
+      columnClasses="alignright,alignright,alignleft pcnt100">
+      <h:panelGroup>
+        <h:outputLabel for="RackDesignation" value="#{msg.designation}" />
+      </h:panelGroup>
+      <h:panelGroup>
+        <c:if test="#{updateOrCreate}">
+          <span style="color: red;">*</span>
+        </c:if>
+      </h:panelGroup>
+      <h:panelGroup>
+        <h:inputText id="RackDesignation" style="width:100%"
+          readonly="#{readonly}" value="#{rackController.designation}"
+          required="true">
+          <a4j:ajax event="blur" execute="@this" />
+          <f:validateLength
+            maximum="#{DBConstants.rackDesignationLength}" />
+        </h:inputText>
+      </h:panelGroup>
+
+      <h:panelGroup />
+      <h:panelGroup />
+      <rich:message for="RackDesignation"></rich:message>
+    </h:panelGrid>
+  </ui:define>
+</ui:composition>

@@ -1,0 +1,69 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="creationPN">
+    <rich:popupPanel id="createPNModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeButton2" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('createPNModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:outputText value="#{msg.createPNTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <rich:panel>
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="createPNError" />
+        </ui:include>
+
+        <h:panelGrid columns="2" columnClasses="alignright,alignleft">
+
+          <h:outputLabel value="#{msg.type}" />
+          <h:inputText id="TypeArticle" styleClass="input50"
+            value="#{typeController.selectedType.label}"
+            readonly="true" />
+
+          <h:outputLabel value="#{msg.AirbusPN}" />
+          <h:panelGroup>
+            <h:inputText id="APNIdentifier" styleClass="input20"
+              value="#{typeController.identifier}"
+              validator="#{typeController.validatePNIdentifier}"
+              required="true">
+              <a4j:ajax event="blur" execute="@this" />
+              <f:validateLength
+                maximum="#{DBConstants.airbuspnIdentifierLength}" />
+            </h:inputText>
+          </h:panelGroup>
+
+          <h:panelGroup />
+          <rich:message for="APNIdentifier" />
+        </h:panelGrid>
+          
+        <h:panelGrid columns="2" columnClasses="alignright,alignleft">
+          <h:outputLabel value="#{msg.createObsoPN}" />
+          <h:selectBooleanCheckbox id="createObso"
+            value="#{typeController.createObso}"/>
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="createBtn" value="#{msg.create}"
+            action="#{typeController.doCreatePN}"
+            oncomplete="if(#{facesContext.maximumSeverity==null}) #{rich:component('createPNModal')}.hide();"
+            render="gestionType" />
+          <a4j:commandButton id="cancelButton" value="#{msg.cancel}"
+            onclick="#{rich:component('createPNModal')}.hide();return false;" />
+        </h:panelGrid>
+      </rich:panel>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

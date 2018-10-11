@@ -1,0 +1,835 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:boacc="http://java.sun.com/jsf/composite/boacc"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:inputHidden value="#{searchController.updateSearchResults(null)}" />
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('ArticleCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('ArticleCRUD','CRUD_Read')}">
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:outputText id="headerTitle"
+            value="#{msg.searchArticleTitle} - " />
+          <a4j:outputPanel ajaxRendered="true">
+            <h:outputText
+              value="#{searchController.searchResultsMessageCount}"
+              styleClass="bigText" />
+            <h:outputText
+              value="#{searchController.searchResultsMessageSome}" />
+            <h:outputText
+              value="#{searchController.searchResultsMessageNone}"
+              style="color:red;" />
+          </a4j:outputPanel>
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="searchArticlesError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+      
+      <h:inputHidden value="#{searchController.doInitListChoices()}" />
+
+      <h:form id="searchForm">
+
+        <h:panelGroup id="searchOutputPanel"
+          style="width:60%;display:block">
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+            <h:panelGrid columns="4" cellspacing="5"
+              columnClasses="alignright25,alignleft25,alignright25,alignleft25"
+              style="width:100%">
+
+              <h:outputLabel value="#{msg.ClassTitle}" />
+              <rich:select id="family" mode="client"
+                value="#{searchController.inputTextField['family']}"
+                defaultLabel="#{msg.notFilled}">
+                <f:selectItem itemLabel="#{msg.notFilled}" />
+                <f:selectItems value="#{searchController.classes}" />
+                <a4j:ajax event="selectitem"
+                  listener="#{searchController.changeFamilyValue}"
+                  render="searchOutputPanel" />
+              </rich:select>
+
+              <h:outputLabel value="#{msg.type}" />
+              <boacc:inputTextSuggestionBox
+                beanProperty="#{searchController.inputTextField['typeArticle.label']}"
+                updateFunction="#{searchController.updateSearchResults}"
+                suggestionFunction="#{searchController.suggestionsArticleTypes}"
+                id="type" render="searchOutputPanel" minChars="3" />
+
+              <h:outputLabel value="SN" />
+              <boacc:inputTextSuggestionBox
+                beanProperty="#{searchController.inputTextField['sn']}"
+                updateFunction="#{searchController.updateSearchResults}"
+                suggestionFunction="#{searchController.suggestionsArticleSNs}"
+                id="sn" render="searchOutputPanel" minChars="3"
+                withCategory="true" toolTip="#{msg.searchToolTipSN}" />
+
+              <h:outputLabel value="#{msg.AirbusPN}"
+                rendered="#{searchController.displayArticleExceptPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayArticleExceptPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['airbusPN.identifier']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsArticleAirbusPNs}"
+                  id="apn" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.cmsCode}"
+                rendered="#{searchController.displayArticleExceptPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayArticleExceptPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['cmsCode']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsArticleCmsCodes}"
+                  id="cmsCode" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.ManufacturerPN}"
+                rendered="#{searchController.displayArticleExceptPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayArticleExceptPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['manufacturerPN.identifier']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsArticleManufacturerPNs}"
+                  id="mpn" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.Designation}"
+                rendered="#{searchController.displayArticleExceptPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayArticleExceptPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['designation']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsArticleDesignations}"
+                  id="designation" render="searchOutputPanel"
+                  minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.ProductType}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <p:selectCheckboxMenu id="productTypePC" widgetVar="productTypePCWidget"
+                value="#{searchController.inputTextField['productType']}"
+                rendered="#{searchController.displayPCCriteria}"
+                label="#{searchController.isFiltered('search','productType') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','productType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="idConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','productType')}" />
+                <p:ajax event="change" oncomplete="PF('productTypePCWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="productTypePC" />
+                <p:ajax event="toggleSelect" oncomplete="PF('productTypePCWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="productTypePC" />
+                <a4j:ajax event="change" oncomplete="PF('productTypePCWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('productTypePCWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel value="#{msg.name}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['name']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPCNames}"
+                  id="name" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.function}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['function']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPCFunctions}"
+                  id="function" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.Domain}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <p:selectCheckboxMenu id="domainPC" widgetVar="domainPCWidget"
+                value="#{searchController.inputTextField['domain']}"
+                rendered="#{searchController.displayPCCriteria}"
+                label="#{searchController.isFiltered('search','domain') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','domain') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="idConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','domain')}" />
+                <p:ajax event="change" oncomplete="PF('domainPCWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="domainPC" />
+                <p:ajax event="toggleSelect" oncomplete="PF('domainPCWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="domainPC" />
+                <a4j:ajax event="change" oncomplete="PF('domainPCWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('domainPCWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel value="#{msg.Platform}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['platform']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPCPlatforms}"
+                  id="platform" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+              
+              <h:outputLabel value="#{msg.DepartmentInCharge}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <p:selectCheckboxMenu id="departmentInCharge" widgetVar="departmentInChargeWidget"
+                value="#{searchController.inputTextField['departmentInCharge']}"
+                rendered="#{searchController.displayPCCriteria}"
+                label="#{searchController.isFiltered('search','departmentInCharge') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','departmentInCharge') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="idConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','departmentInCharge')}" />
+                <p:ajax event="change" oncomplete="PF('departmentInChargeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="departmentInCharge" />
+                <p:ajax event="toggleSelect" oncomplete="PF('departmentInChargeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="departmentInCharge" />
+                <a4j:ajax event="change" oncomplete="PF('departmentInChargeWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('departmentInChargeWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+            </h:panelGrid>
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.properties}" />
+            </legend>
+            <h:panelGrid columns="4" cellspacing="5"
+              columnClasses="alignright25,alignleft25,alignright25,alignleft25"
+              style="width:100%">
+              <h:outputLabel value="#{msg.articleState}" />
+              <p:selectCheckboxMenu id="state" widgetVar="stateWidget"
+                value="#{searchController.inputTextField['state']}"
+                label="#{searchController.isFiltered('search','state') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','state') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="stateConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','state')}" />
+                <p:ajax event="change" oncomplete="PF('stateWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="state" />
+                <p:ajax event="toggleSelect" oncomplete="PF('stateWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="state" />
+                <a4j:ajax event="change" oncomplete="PF('stateWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('stateWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel value="#{msg.UseState}" />
+              <p:selectCheckboxMenu id="useState" widgetVar="useStateWidget"
+                value="#{searchController.inputTextField['useState']}"
+                label="#{searchController.isFiltered('search','useState') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','useState') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="useStateConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','useState')}" />
+                <p:ajax event="change" oncomplete="PF('useStateWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="useState" />
+                <p:ajax event="toggleSelect" oncomplete="PF('useStateWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="useState" />
+                <a4j:ajax event="change" oncomplete="PF('useStateWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('useStateWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel value="#{msg.technicalContact}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['inCharge.loginDetails']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPCInCharges}"
+                  id="inCharge" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.Owner}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['owner']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPCOwners}"
+                  id="owner" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.admin}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['admin']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPCAdmins}"
+                  id="admin" render="searchOutputPanel" minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.OwnerSiglum}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGroup
+                rendered="#{searchController.displayPCCriteria}">
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['ownerSiglum']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPCOwnerSiglums}"
+                  id="ownerSiglum" render="searchOutputPanel"
+                  minChars="3" />
+              </h:panelGroup>
+
+              <h:outputLabel value="#{msg.commentGenContains}" />
+              <h:inputText id="comment" styleClass="input20"
+                value="#{searchController.inputTextField['comment']}">
+                <a4j:ajax event="change" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+              </h:inputText>
+
+              <h:outputLabel value="#{msg.historyCommentContains}" />
+              <h:inputText styleClass="input20"
+                value="#{searchController.inputTextField['HComment']}">
+                <a4j:ajax event="change" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+              </h:inputText>
+
+              <h:outputLabel value="#{msg.datedCommentsContain}" />
+              <h:inputText id="datedComment" styleClass="input20"
+                value="#{searchController.inputTextField['datedComment']}">
+                <a4j:ajax event="change" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+              </h:inputText>
+                
+              <h:outputLabel value="#{msg.hasDocuments}" />
+              <p:selectCheckboxMenu id="hasDocuments" widgetVar="hasDocumentsWidget"
+                value="#{searchController.inputTextField['hasDocuments']}"
+                label="#{searchController.isFiltered('search','hasDocuments') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','hasDocuments') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="boolConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','hasDocuments')}" />
+                <p:ajax event="change" oncomplete="PF('hasDocumentsWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="hasDocuments" />
+                <p:ajax event="toggleSelect" oncomplete="PF('hasDocumentsWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="hasDocuments" />
+                <a4j:ajax event="change" oncomplete="PF('hasDocumentsWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('hasDocumentsWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel value="#{msg.acquisitionDateBetween}" />
+              <rich:calendar id="calendarfirst"
+                value="#{searchController.inputTextField['acquisitionDateMin']}"
+                locale="#{localeCtrl.locale}" popup="true"
+                enableManualInput="true" datePattern="dd/MM/yyyy"
+                showApplyButton="true">
+                <a4j:ajax event="inputchange" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="change" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+              </rich:calendar>
+              <h:outputLabel value="#{msg.with}" />
+              <rich:calendar id="calendarSecond"
+                value="#{searchController.inputTextField['acquisitionDateMax']}"
+                locale="#{localeCtrl.locale}" popup="true"
+                enableManualInput="true" datePattern="dd/MM/yyyy"
+                showApplyButton="true">
+                <a4j:ajax event="inputchange" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="change" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+              </rich:calendar>
+
+              <h:outputLabel value="#{msg.PCNbScreens} #{msg.between}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:panelGrid columns="3"
+                rendered="#{searchController.displayPCCriteria}"
+                styleClass="input20" cellspacing="0" cellpadding="0">
+                <h:inputText id="nbScreensFirst" style="width:55px"
+                  validatorMessage="#{msg.valuePositiveInteger}"
+                  value="#{searchController.inputTextField['nbScreensMin']}">
+                  <f:validateLongRange minimum="0"
+                    disabled="#{empty searchController.inputTextField['nbScreensMin']}"/>
+                  <a4j:ajax event="change" execute="@this"
+                    listener="#{searchController.updateSearchResults}"
+                    render="searchOutputPanel" />
+                </h:inputText>
+                <h:outputLabel value="#{msg.with}" />
+                <h:inputText id="nbScreensSecond" style="width:55px"
+                  validatorMessage="#{msg.valuePositiveInteger}"
+                  value="#{searchController.inputTextField['nbScreensMax']}">
+                  <f:validateLongRange minimum="0"
+                    disabled="#{empty searchController.inputTextField['nbScreensMax']}"/>
+                  <a4j:ajax event="change" execute="@this"
+                    listener="#{searchController.updateSearchResults}"
+                    render="searchOutputPanel" />
+                </h:inputText>
+              </h:panelGrid>
+              <rich:message for="nbScreensFirst" />
+              <rich:message for="nbScreensSecond" />
+              
+              <h:outputLabel value="#{msg.specificitiesContain}"
+                rendered="#{searchController.displayPCCriteria}" />
+              <h:inputText id="PCSpecificity" styleClass="input20"
+                rendered="#{searchController.displayPCCriteria}"
+                value="#{searchController.inputTextField['PCSpecificity']}">
+                <a4j:ajax event="change" execute="@this"
+                  listener="#{searchController.updateSearchResults}"
+                  render="searchOutputPanel" />
+              </h:inputText>
+            </h:panelGrid>
+          </fieldset>
+
+          <h:panelGroup rendered="#{searchController.displayPCCriteria}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.allocation}" />
+              </legend>
+              <h:panelGrid columns="4" cellspacing="5"
+                columnClasses="alignright25,alignleft25,alignright25,alignleft25"
+                style="width:100%">
+
+                <h:outputLabel value="#{msg.businessAlloc}"
+                  rendered="#{searchController.displayPCCriteria}" />
+                <p:selectCheckboxMenu id="allocationPC" widgetVar="allocationPCWidget"
+                  value="#{searchController.inputTextField['allocation']}"
+                  label="#{searchController.isFiltered('search','allocation') ? msg.activeFilter : msg.noFilter}"
+                  styleClass="#{searchController.isFiltered('search','allocation') ? 'checkboxmenured' : 'checkboxmenu'}"
+                  filter="true" filterMatchMode="startsWith"
+                  converter="idConverter">
+                  <f:selectItems value="#{searchController.getFilterChoices('search','allocation')}" />
+                  <p:ajax event="change" oncomplete="PF('allocationPCWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="allocationPC" />
+                  <p:ajax event="toggleSelect" oncomplete="PF('allocationPCWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="allocationPC" />
+                  <a4j:ajax event="change" oncomplete="PF('allocationPCWidget').show()"
+                    render="searchOutputPanel" />
+                  <a4j:ajax event="toggleSelect" oncomplete="PF('allocationPCWidget').show()"
+                    render="searchOutputPanel" />
+                </p:selectCheckboxMenu>
+
+                <h:outputLabel value="#{msg.assignment}"
+                  rendered="#{searchController.displayPCCriteria}" />
+                <h:panelGroup
+                  rendered="#{searchController.displayPCCriteria}">
+                  <boacc:inputTextSuggestionBox
+                    beanProperty="#{searchController.inputTextField['assignment']}"
+                    updateFunction="#{searchController.updateSearchResults}"
+                    suggestionFunction="#{searchController.suggestionsPCAssignments}"
+                    id="assignment" render="searchOutputPanel" />
+                </h:panelGroup>
+
+                <h:outputLabel value="#{msg.businessUsage}"
+                  rendered="#{searchController.displayPCCriteria}" />
+                <p:selectCheckboxMenu id="usagePC" widgetVar="usagePCWidget"
+                  value="#{searchController.inputTextField['usage']}"
+                  label="#{searchController.isFiltered('search','usage') ? msg.activeFilter : msg.noFilter}"
+                  styleClass="#{searchController.isFiltered('search','usage') ? 'checkboxmenured' : 'checkboxmenu'}"
+                  filter="true" filterMatchMode="startsWith"
+                  converter="idConverter">
+                  <f:selectItems value="#{searchController.getFilterChoices('search','usage')}" />
+                  <p:ajax event="change" oncomplete="PF('usagePCWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="usagePC" />
+                  <p:ajax event="toggleSelect" oncomplete="PF('usagePCWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="usagePC" />
+                  <a4j:ajax event="change" oncomplete="PF('usagePCWidget').show()"
+                    render="searchOutputPanel" />
+                  <a4j:ajax event="toggleSelect" oncomplete="PF('usagePCWidget').show()"
+                    render="searchOutputPanel" />
+                </p:selectCheckboxMenu>
+              </h:panelGrid>
+            </fieldset>
+          </h:panelGroup>
+
+          <h:panelGroup rendered="#{searchController.displayPCCriteria}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.commPorts}" />
+              </legend>              
+              <h:panelGrid columns="4" cellspacing="5"
+                columnClasses="alignright25,alignleft25,alignright25,alignleft25"
+                style="width:100%">
+                
+                <h:outputLabel value="#{msg.hasComPorts}" />
+                <p:selectCheckboxMenu id="hasComPorts" widgetVar="hasComPortsWidget"
+                  value="#{searchController.inputTextField['hasComPorts']}"
+                  label="#{searchController.isFiltered('search','hasComPorts') ? msg.activeFilter : msg.noFilter}"
+                  styleClass="#{searchController.isFiltered('search','hasComPorts') ? 'checkboxmenured' : 'checkboxmenu'}"
+                  filter="true" filterMatchMode="startsWith"
+                  converter="boolConverter">
+                  <f:selectItems value="#{searchController.getFilterChoices('search','hasComPorts')}" />
+                  <p:ajax event="change" oncomplete="PF('hasComPortsWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="hasComPorts" />
+                  <p:ajax event="toggleSelect" oncomplete="PF('hasComPortsWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="hasComPorts" />
+                  <a4j:ajax event="change" oncomplete="PF('hasComPortsWidget').show()"
+                    render="searchOutputPanel" />
+                  <a4j:ajax event="toggleSelect" oncomplete="PF('hasComPortsWidget').show()"
+                    render="searchOutputPanel" />
+                </p:selectCheckboxMenu>
+                
+                <h:panelGroup />
+                <h:panelGroup />
+
+                <h:outputLabel value="#{msg.name}" />
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['portName']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPortNames}"
+                  id="namePort" render="searchOutputPanel" minChars="3" />
+
+                <h:outputLabel value="#{msg.network}" />
+                <p:selectCheckboxMenu id="network" widgetVar="networkWidget"
+                  value="#{searchController.inputTextField['network']}"
+                  label="#{searchController.isFiltered('search','network') ? msg.activeFilter : msg.noFilter}"
+                  styleClass="#{searchController.isFiltered('search','network') ? 'checkboxmenured' : 'checkboxmenu'}"
+                  filter="true" filterMatchMode="startsWith"
+                  converter="idConverter">
+                  <f:selectItems value="#{searchController.getFilterChoices('search','network')}" />
+                  <p:ajax event="change" oncomplete="PF('networkWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="network" />
+                  <p:ajax event="toggleSelect" oncomplete="PF('networkWidget').show()"
+                    listener="#{searchController.updateSearchResults}"
+                    update="network" />
+                  <a4j:ajax event="change" oncomplete="PF('networkWidget').show()"
+                    render="searchOutputPanel" />
+                  <a4j:ajax event="toggleSelect" oncomplete="PF('networkWidget').show()"
+                    render="searchOutputPanel" />
+                </p:selectCheckboxMenu>
+
+                <h:outputLabel value="#{msg.IPAddress}" />
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['ipAddress']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPortIPAddresses}"
+                  id="IPAddress" render="searchOutputPanel" minChars="3" />
+
+                <h:outputLabel value="#{msg.socket}" />
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['socket']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPortSockets}"
+                  id="socket" render="searchOutputPanel" minChars="3" />
+
+                <h:outputLabel value="#{msg.MACAddress}" />
+                <boacc:inputTextSuggestionBox
+                  beanProperty="#{searchController.inputTextField['macAddress']}"
+                  updateFunction="#{searchController.updateSearchResults}"
+                  suggestionFunction="#{searchController.suggestionsPortMACAddresses}"
+                  id="MACAddress" render="searchOutputPanel"
+                  minChars="3" />
+
+                <h:outputLabel value="#{msg.commentContains}" />
+                <h:inputText id="commentPort" styleClass="input20"
+                  value="#{searchController.inputTextField['commentPort']}">
+                  <a4j:ajax event="change" execute="@this"
+                    listener="#{searchController.updateSearchResults}"
+                    render="searchOutputPanel" />
+                </h:inputText>
+
+              </h:panelGrid>
+            </fieldset>
+          </h:panelGroup>
+
+          <h:panelGrid columns="2" style="width:100%"
+            columnClasses="tophalf,tophalf" cellspacing="0"
+            cellpadding="0">
+            <h:panelGroup
+              rendered="#{searchController.displayPCCriteria}">
+              <fieldset>
+                <legend align="top">
+                  <h:outputText value="#{msg.installedSoftware}" />
+                </legend>
+              
+                <h:panelGroup styleClass="center">
+                </h:panelGroup>
+              
+                <h:panelGrid columns="2" cellspacing="5"
+                  columnClasses="alignright25,alignleft25"
+                  style="width:100%">
+                  
+                  <h:outputLabel value="#{msg.hasSoftwares}" />
+                  <p:selectCheckboxMenu id="hasSoftwares" widgetVar="hasSoftwaresWidget"
+                    value="#{searchController.inputTextField['hasSoftwares']}"
+                    label="#{searchController.isFiltered('search','hasSoftwares') ? msg.activeFilter : msg.noFilter}"
+                    styleClass="#{searchController.isFiltered('search','hasSoftwares') ? 'checkboxmenured' : 'checkboxmenu'}"
+                    filter="true" filterMatchMode="startsWith"
+                    converter="boolConverter">
+                    <f:selectItems value="#{searchController.getFilterChoices('search','hasSoftwares')}" />
+                    <p:ajax event="change" oncomplete="PF('hasSoftwaresWidget').show()"
+                      listener="#{searchController.updateSearchResults}"
+                      update="hasSoftwares" />
+                    <p:ajax event="toggleSelect" oncomplete="PF('hasSoftwaresWidget').show()"
+                      listener="#{searchController.updateSearchResults}"
+                      update="hasSoftwares" />
+                    <a4j:ajax event="change" oncomplete="PF('hasSoftwaresWidget').show()"
+                      render="searchOutputPanel" />
+                    <a4j:ajax event="toggleSelect" oncomplete="PF('hasSoftwaresWidget').show()"
+                      render="searchOutputPanel" />
+                  </p:selectCheckboxMenu>
+
+                  <h:outputLabel value="#{msg.name}" />
+                  <boacc:inputTextSuggestionBox
+                    beanProperty="#{searchController.inputTextField['softName']}"
+                    updateFunction="#{searchController.updateSearchResults}"
+                    suggestionFunction="#{searchController.suggestionsSoftwareNames}"
+                    id="softName" render="searchOutputPanel"
+                    minChars="3" />
+
+                  <h:outputLabel value="#{msg.distribution}" />
+                  <boacc:inputTextSuggestionBox
+                    beanProperty="#{searchController.inputTextField['softDistribution']}"
+                    updateFunction="#{searchController.updateSearchResults}"
+                    suggestionFunction="#{searchController.suggestionsSoftwareDistributions}"
+                    id="softDistribution" render="searchOutputPanel"
+                    minChars="3" />
+
+                  <h:outputLabel value="#{msg.kernel}" />
+                  <boacc:inputTextSuggestionBox
+                    beanProperty="#{searchController.inputTextField['softKernel']}"
+                    updateFunction="#{searchController.updateSearchResults}"
+                    suggestionFunction="#{searchController.suggestionsSoftwareKernels}"
+                    id="softKernel" render="searchOutputPanel"
+                    minChars="3" />
+
+                </h:panelGrid>
+              </fieldset>
+            </h:panelGroup>
+
+            <h:panelGroup
+              rendered="#{searchController.displayPCCriteria}">
+              <fieldset>
+                <legend align="top">
+                  <h:outputText value="#{msg.defaultOS}" />
+                </legend>
+                <h:panelGrid columns="2" cellspacing="5"
+                  columnClasses="alignright25,alignleft25"
+                  style="width:100%">
+                  
+                  <h:outputLabel value="#{msg.hasDefaultOS}" />
+                  <p:selectCheckboxMenu id="hasDefaultOS" widgetVar="hasDefaultOSWidget"
+                    value="#{searchController.inputTextField['hasDefaultOS']}"
+                    label="#{searchController.isFiltered('search','hasDefaultOS') ? msg.activeFilter : msg.noFilter}"
+                    styleClass="#{searchController.isFiltered('search','hasDefaultOS') ? 'checkboxmenured' : 'checkboxmenu'}"
+                    filter="true" filterMatchMode="startsWith"
+                    converter="boolConverter">
+                    <f:selectItems value="#{searchController.getFilterChoices('search','hasDefaultOS')}" />
+                    <p:ajax event="change" oncomplete="PF('hasDefaultOSWidget').show()"
+                      listener="#{searchController.updateSearchResults}"
+                      update="hasDefaultOS" />
+                    <p:ajax event="toggleSelect" oncomplete="PF('hasDefaultOSWidget').show()"
+                      listener="#{searchController.updateSearchResults}"
+                      update="hasDefaultOS" />
+                    <a4j:ajax event="change" oncomplete="PF('hasDefaultOSWidget').show()"
+                      render="searchOutputPanel" />
+                    <a4j:ajax event="toggleSelect" oncomplete="PF('hasDefaultOSWidget').show()"
+                      render="searchOutputPanel" />
+                  </p:selectCheckboxMenu>
+
+                  <h:outputLabel value="#{msg.name}" />
+                  <boacc:inputTextSuggestionBox
+                    beanProperty="#{searchController.inputTextField['defaultOSName']}"
+                    updateFunction="#{searchController.updateSearchResults}"
+                    suggestionFunction="#{searchController.suggestionsDefaultOSNames}"
+                    id="defaultOSName" render="searchOutputPanel"
+                    minChars="3" />
+
+                  <h:outputLabel value="#{msg.distribution}" />
+                  <boacc:inputTextSuggestionBox
+                    beanProperty="#{searchController.inputTextField['defaultOSDistribution']}"
+                    updateFunction="#{searchController.updateSearchResults}"
+                    suggestionFunction="#{searchController.suggestionsDefaultOSDistributions}"
+                    id="defaultOSDistribution"
+                    render="searchOutputPanel" minChars="3" />
+
+                  <h:outputLabel value="#{msg.kernel}" />
+                  <boacc:inputTextSuggestionBox
+                    beanProperty="#{searchController.inputTextField['defaultOSKernel']}"
+                    updateFunction="#{searchController.updateSearchResults}"
+                    suggestionFunction="#{searchController.suggestionsDefaultOSKernels}"
+                    id="defaultOSKernel" render="searchOutputPanel"
+                    minChars="3" />
+
+                </h:panelGrid>
+              </fieldset>
+            </h:panelGroup>
+          </h:panelGrid>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.container}" />
+            </legend>
+            <h:panelGrid columns="2" cellspacing="5"
+              columnClasses="alignright25,alignleft25">
+              <h:outputLabel value="#{msg.containerType}" />
+              <p:selectCheckboxMenu id="containerType" widgetVar="containerTypeWidget"
+                value="#{searchController.inputTextField['containerType']}"
+                label="#{searchController.isFiltered('search','containerType') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','containerType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="containerTypeConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','containerType')}" />
+                <p:ajax event="change" oncomplete="PF('containerTypeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="containerType" />
+                <p:ajax event="toggleSelect" oncomplete="PF('containerTypeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="containerType" />
+                <a4j:ajax event="change" oncomplete="PF('containerTypeWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('containerTypeWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+              
+              <h:outputLabel value="#{msg.containerName}" />
+              <boacc:inputTextSuggestionBox
+                beanProperty="#{searchController.inputTextField['container.containerName']}"
+                updateFunction="#{searchController.updateSearchResults}"
+                suggestionFunction="#{searchController.suggestionsArticleContainers}"
+                id="containerName" render="searchOutputPanel"
+                minChars="3" withCategory="true"
+                toolTip="#{searchController.containerNameToolTip}"
+                renderedCategory="true" />
+
+            </h:panelGrid>
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.location}" />
+            </legend>
+            <h:panelGrid columns="4" cellspacing="5"
+              columnClasses="alignright25,alignleft25,alignright25,alignleft25"
+              style="width:100%">
+              <h:outputLabel value="#{msg.locationType}" />
+              <p:selectCheckboxMenu id="locationType" widgetVar="locationTypeWidget"
+                value="#{searchController.inputTextField['locationType']}"
+                label="#{searchController.isFiltered('search','locationType') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','locationType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="boolConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','locationType')}" />
+                <p:ajax event="change" oncomplete="PF('locationTypeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="locationType" />
+                <p:ajax event="toggleSelect" oncomplete="PF('locationTypeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="locationType" />
+                <a4j:ajax event="change" oncomplete="PF('locationTypeWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('locationTypeWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel value="#{msg.externalLocationType}" />
+              <p:selectCheckboxMenu id="externalLocationType" widgetVar="externalLocationTypeWidget"
+                value="#{searchController.inputTextField['externalLocationType']}"
+                label="#{searchController.isFiltered('search','externalLocationType') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('search','externalLocationType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="idConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('search','externalLocationType')}" />
+                <p:ajax event="change" oncomplete="PF('externalLocationTypeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="externalLocationType" />
+                <p:ajax event="toggleSelect" oncomplete="PF('externalLocationTypeWidget').show()"
+                  listener="#{searchController.updateSearchResults}"
+                  update="externalLocationType" />
+                <a4j:ajax event="change" oncomplete="PF('externalLocationTypeWidget').show()"
+                  render="searchOutputPanel" />
+                <a4j:ajax event="toggleSelect" oncomplete="PF('externalLocationTypeWidget').show()"
+                  render="searchOutputPanel" />
+              </p:selectCheckboxMenu>
+
+              <h:outputLabel value="#{msg.locationName}" />
+              <boacc:inputTextSuggestionBox
+                beanProperty="#{searchController.inputTextField['location.locationName']}"
+                updateFunction="#{searchController.updateSearchResults}"
+                suggestionFunction="#{searchController.suggestionsArticleLocations}"
+                id="locationName" render="searchOutputPanel"
+                minChars="3" />
+
+              <h:outputLabel value="#{msg.externalLocationName}" />
+              <boacc:inputTextSuggestionBox
+                beanProperty="#{searchController.inputTextField['location.externalLocationName']}"
+                updateFunction="#{searchController.updateSearchResults}"
+                suggestionFunction="#{searchController.suggestionsArticleExternalLocations}"
+                id="externalLocationName" render="searchOutputPanel"
+                minChars="3" withCategory="true"
+                renderedCategory="#{searchController.renderedSuggestArticleExternalLocationType}" />
+
+            </h:panelGrid>
+          </fieldset>
+
+          <h:panelGrid columns="3" cellspacing="5">
+            <h:commandButton id="searchBtn" value="#{msg.search}"
+              action="#{searchController.doSearch}" />
+            <a4j:commandButton id="resetBtn" value="#{msg.reset}"
+              execute="@this" render="mainContent" oncomplete="patchModal();"
+              action="#{searchController.doResetCriteria}" />
+            <h:commandButton id="cancelBtn" value="#{msg.cancel}"
+              action="Main" />
+          </h:panelGrid>
+
+        </h:panelGroup>
+      </h:form>
+    </rich:panel>
+  </ui:define>
+</ui:composition>

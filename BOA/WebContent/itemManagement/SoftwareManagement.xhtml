@@ -1,0 +1,314 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{softwareController.createMode ? logInController.isAuthorized('SoftwareCRUD','CRUD_Create') : (softwareController.updateMode ? logInController.isAuthorized('SoftwareCRUD','CRUD_Update') : logInController.isAuthorized('SoftwareCRUD','CRUD_Read'))}" />
+    <c:set var="isKnowId"
+      value="#{softwareController.createMode or softwareController.software != null}" />
+
+    <h:outputText value="#{msg.notEnoughRightsForPage}"
+      rendered="#{not isAuthorized}" styleClass="warning-block" />
+
+    <h:outputText value="#{msg.unknownId}" rendered="#{not isKnowId}"
+      styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized and isKnowId}">
+      <f:facet name="header">
+        <h:outputText value="#{softwareController.title}" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="softwareManagementError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <div style="width: 80%">
+        <h:form id="formSoftware">
+
+          <c:set var="readonly" value="#{softwareController.readOnly}" />
+          <c:set var="updateOrCreate"
+            value="#{softwareController.updateMode or softwareController.createMode}" />
+
+          <c:if test="#{readonly}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.businessActions}" />
+              </legend>
+              <h:panelGrid columns="3" cellspacing="10">
+                <a4j:commandButton value="#{msg.modify}"
+                  action="#{softwareController.goToUpdatePage}"
+                  disabled="#{not logInController.isAuthorized('SoftwareCRUD','CRUD_Update')}">
+                </a4j:commandButton>
+                <a4j:commandButton value="#{msg.obsolescence}"
+                  action="#{softwareController.doViewObsolescence}"
+                  disabled="#{not (softwareController.hasObsoData() and logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read'))}" />
+                <a4j:commandButton value="#{msg.delete}"
+                  id="deleteSoftware"
+                  oncomplete="#{rich:component('confirmationDeleteSoftware')}.show();return false;"
+                  disabled="#{not logInController.isAuthorized('SoftwareCRUD','CRUD_Delete')}" />
+              </h:panelGrid>
+              <boa:tooltip target="deleteSoftware"
+                value="#{softwareController.getObsolescenceDataConfirmationToDelete()}" />
+            </fieldset>
+          </c:if>
+
+          <h:panelGroup rendered="#{updateOrCreate}">
+            <h:outputText value="#{msg.requiredFields}"
+              styleClass="requiredField" />
+          </h:panelGroup>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+
+            <h:panelGrid columns="3" cellspacing="0"
+              columnClasses="alignright,alignright,alignleft">
+
+              <h:outputLabel for="operatingSystem"
+                value="#{msg.operatingSystem}" />
+              <h:panelGroup />
+              <h:selectBooleanCheckbox id="operatingSystem"
+                value="#{softwareController.operatingSystem}"
+                valueChangeListener="#{softwareController.operatingSystemChanged}"
+                disabled="#{readonly}">
+                <a4j:ajax event="click" execute="@this"
+                  render="distributionLabelPanel,namePanel,kernelLabel,kernelLabelRequired,kernelInput" />
+              </h:selectBooleanCheckbox>
+
+              <h:outputLabel for="name" value="#{msg.name}" />
+              <h:panelGroup>
+                <c:if test="#{updateOrCreate}">
+                  <span class="requiredField">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup id="namePanel">
+                <c:if test="#{readonly}">
+                  <h:inputText id="name" styleClass="input30"
+                    value="#{softwareController.name}" readonly="true" />
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:autocomplete id="name" showButton="true"
+                    value="#{softwareController.name}"
+                    required="true" styleClass="input30"
+                    requiredMessage="#{msg.valueRequiredMsg}"
+                    selectFirst="false" autofill="true"
+                    autocompleteList="#{softwareController.selectNames}"
+                    validator="#{softwareController.validateName}">
+                    <f:validateLength
+                      maximum="#{DBConstants.softwareNameLength}" />
+                    <a4j:ajax event="change" execute="@this"
+                      render="distributionPanel" />
+                  </rich:autocomplete>
+                </c:if>
+                <h:graphicImage id="nameHelp"
+                  styleClass="iconClass" style="margin-left:4px"
+                  value="/resources/images/icons/help_tooltip.png" />
+                <boa:tooltip target="nameHelp"
+                  value="#{msg.softwareNameToolTip}" />
+                <rich:message for="name" />
+              </h:panelGroup>
+
+              <h:panelGroup id="distributionLabelPanel">
+                <h:outputLabel for="distribution"
+                  rendered="#{softwareController.operatingSystem}"
+                  value="#{msg.distribution}" />
+                <h:outputLabel for="distribution"
+                  rendered="#{!softwareController.operatingSystem}"
+                  value="#{msg.version}" />
+              </h:panelGroup>
+              <h:panelGroup>
+                <c:if test="#{updateOrCreate}">
+                  <span class="requiredField">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup id="distributionPanel">
+                <c:if test="#{readonly}">
+                  <h:inputText id="distribution" styleClass="input30"
+                    value="#{softwareController.distribution}"
+                    readonly="true" />
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:autocomplete id="distribution" showButton="true"
+                    value="#{softwareController.distribution}"
+                    required="true" styleClass="input30"
+                    requiredMessage="#{msg.valueRequiredMsg}"
+                    selectFirst="false" autofill="true"
+                    autocompleteList="#{softwareController.selectDistributions}"
+                    validator="#{softwareController.validateDistribution}">
+                    <f:validateLength
+                      maximum="#{DBConstants.softwareDistributionLength}" />
+                    <a4j:ajax event="change" execute="@this" />
+                  </rich:autocomplete>
+                </c:if>
+                <h:graphicImage id="distributionHelp"
+                  styleClass="iconClass" style="margin-left:4px"
+                  value="/resources/images/icons/help_tooltip.png" />
+                <boa:tooltip target="distributionHelp"
+                  value="#{msg.softwareDistributionToolTip}" />
+                <rich:message for="distribution" />
+              </h:panelGroup>
+
+              <h:panelGroup id="kernelLabel">
+                <h:outputLabel for="kernel" value="#{msg.kernel}"
+                  rendered="#{softwareController.operatingSystem}" />
+              </h:panelGroup>
+              <h:panelGroup id="kernelLabelRequired">
+                <c:if
+                  test="#{updateOrCreate} and #{softwareController.operatingSystem}">
+                  <span class="requiredField">*</span>
+                </c:if>
+              </h:panelGroup>
+              <h:panelGroup id="kernelInput">
+                <h:panelGroup columns="3"
+                  rendered="#{softwareController.operatingSystem}">
+                  <c:if test="#{readonly}">
+                    <h:inputText id="kernel" styleClass="input30"
+                      rendered="#{softwareController.operatingSystem}"
+                      value="#{softwareController.kernel}"
+                      readonly="true" />
+                  </c:if>
+                  <c:if test="#{updateOrCreate}">
+                    <h:inputText id="kernel"
+                      value="#{softwareController.kernel}"
+                      required="true" styleClass="input30"
+                      requiredMessage="#{msg.valueRequiredMsg}">
+                      <f:validateLength
+                        maximum="#{DBConstants.softwareKernelLength}" />
+                      <a4j:ajax event="change" execute="@this" />
+                    </h:inputText>
+                  </c:if>
+                  <h:graphicImage id="kernelHelp"
+                    styleClass="iconClass" style="margin-left:4px"
+                    value="/resources/images/icons/help_tooltip.png" />
+                  <boa:tooltip target="kernelHelp"
+                    value="#{msg.softwareKernelToolTip}" />
+                  <rich:message for="kernel" />
+                </h:panelGroup>
+              </h:panelGroup>
+
+              <h:outputLabel for="manufacturer"
+                value="#{msg.manufacturer} " />
+              <h:panelGroup />
+              <h:panelGroup columns="2">
+                <h:inputText id="manufacturer" styleClass="input40"
+                  value="#{softwareController.manufacturer}"
+                  readonly="#{readonly}">
+                  <f:validateLength
+                    maximum="#{DBConstants.softwareManufacturerLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="manufacturer" />
+              </h:panelGroup>
+
+              <h:outputLabel for="description"
+                value="#{msg.description}" />
+              <h:panelGroup />
+              <h:panelGroup columns="2">
+                <h:inputTextarea id="description" rows="4"
+                  styleClass="input40"
+                  value="#{softwareController.description}"
+                  readonly="#{readonly}">
+                  <f:validateLength
+                    maximum="#{DBConstants.softwareDescriptionLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputTextarea>
+                <rich:message for="description" />
+              </h:panelGroup>
+
+              <h:outputLabel for="licence" value="#{msg.licenceNumber} " />
+              <h:panelGroup />
+              <h:panelGroup columns="2">
+                <h:inputText id="licence" styleClass="input40"
+                  value="#{softwareController.licence}"
+                  readonly="#{readonly}">
+                  <f:validateLength
+                    maximum="#{DBConstants.softwareLicenceLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="licence" />
+              </h:panelGroup>
+            </h:panelGrid>
+
+          </fieldset>
+
+
+          <ui:include src="/software/EquipmentsList.xhtml">
+            <ui:param name="displayRemoveColumn"
+              value="#{updateOrCreate}" />
+          </ui:include>
+
+          <c:if test="#{updateOrCreate}">
+            <h:panelGrid cellspacing="10" columns="3">
+              <c:if test="#{softwareController.createMode}">
+                <a4j:commandButton value="#{msg.create}" execute="@form"
+                  oncomplete="if (#{facesContext.maximumSeverity==null}) {#{rich:component('confirmationCreateSoftware')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <c:if test="#{softwareController.updateMode}">
+                <a4j:commandButton value="#{msg.validate}"
+                  execute="@form"
+                  oncomplete="if (#{facesContext.maximumSeverity==null}) {#{rich:component('confirmationUpdateSoftware')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <a4j:commandButton value="#{msg.reset}"
+                action="#{softwareController.doRefresh}" execute="@this"
+                render="mainContent" oncomplete="patchModal();"/>
+              <a4j:commandButton value="#{msg.cancel}" execute="@this"
+                action="#{softwareController.doCancelUpdate}" />
+            </h:panelGrid>
+          </c:if>
+
+        </h:form>
+
+        <ui:include src="/includes/confirmation.xhtml">
+          <ui:param name="confirmationId"
+            value="confirmationCreateSoftware" />
+          <ui:param name="controller" value="#{softwareController}" />
+          <ui:param name="method" value="doCreate" />
+          <ui:param name="confirmationTitle"
+            value="#{msg.confirmCreationSoftwareText}" />
+          <ui:param name="confirmationText"
+            value="#{msg.confirmCreationSoftwareExtraText}" />
+          <ui:param name="validateButtonId" value="confirmCreateBtn" />
+          <ui:param name="cancelButtonId" value="cancelCreateBtn" />
+        </ui:include>
+
+        <ui:include src="/includes/confirmation.xhtml">
+          <ui:param name="confirmationId"
+            value="confirmationUpdateSoftware" />
+          <ui:param name="controller" value="#{softwareController}" />
+          <ui:param name="method" value="doUpdate" />
+          <ui:param name="confirmationText"
+            value="#{msg.confirmModificationSoftware}" />
+          <ui:param name="validateButtonId" value="confirmUpdateBtn" />
+          <ui:param name="cancelButtonId" value="cancelUpdateBtn" />
+        </ui:include>
+
+        <ui:include src="/includes/confirmation.xhtml">
+          <ui:param name="confirmationId"
+            value="confirmationDeleteSoftware" />
+          <ui:param name="controller" value="#{softwareController}" />
+          <ui:param name="method" value="doDelete" />
+          <ui:param name="confirmationText"
+            value="Deletion of software #{softwareController.software.completeName}" />
+          <ui:param name="validateButtonId" value="confirmDeleteBtn" />
+          <ui:param name="cancelButtonId" value="cancelDeleteBtn" />
+        </ui:include>
+
+        <ui:include src="/software/chooseEquipmentModal.xhtml" />
+
+        <a href="#top">#{msg.topPage}</a>
+
+      </div>
+    </rich:panel>
+  </ui:define>
+</ui:composition>

@@ -1,0 +1,564 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{articleController.createMode ? logInController.isAuthorized('ArticleCRUD','CRUD_Create') : (articleController.updateMode ? logInController.isAuthorized('ArticleCRUD','CRUD_Update') : logInController.isAuthorized('ArticleCRUD','CRUD_Read'))}" />
+    <c:set var="isKnowId" value="#{articleController.article != null}" />
+    <c:set var="isArchivedAuthorized" value="#{articleController.article.archived ? logInController.isAuthorized('ArchivedCRUDAuthorization') : true}" />
+      
+    <h:outputText value="#{msg.notEnoughRightsForPage}"
+      rendered="#{not isAuthorized or not isArchivedAuthorized}"
+      styleClass="warning-block" />
+
+    <h:outputText value="#{msg.unknownId}" rendered="#{not isKnowId}"
+      styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized and isArchivedAuthorized and isKnowId}">
+      <f:facet name="header">#{articleController.title}</f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="articleManagementError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="ArticleForm">
+
+        <c:set var="readonly" value="#{articleController.readOnly}" />
+        <c:set var="updateOrCreate"
+          value="#{articleController.updateMode or articleController.createMode}" />
+
+        <div style="width: 80%">
+          <c:if test="#{readonly}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.businessActions}" />
+              </legend>
+              <h:panelGrid columns="3" cellspacing="10">
+                <a4j:commandButton
+                  value="#{msg.modificationCM} #{articleController.article.name}"
+                  action="#{articleController.goToUpdatePage}"
+                  disabled="#{not logInController.isAuthorized('ArticleCRUD','CRUD_Update')}">
+                </a4j:commandButton>
+                <a4j:commandButton value="#{msg.obsolescence}"
+                  action="#{articleController.doViewObsolescence}"
+                  disabled="#{not (articleController.hasObsoData() and logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read'))}" />
+              </h:panelGrid>
+            </fieldset>
+          </c:if>
+          <h:panelGroup rendered="#{updateOrCreate}">
+            <h:outputText value="#{msg.requiredFields}"
+              style="color:red" />
+          </h:panelGroup>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+
+            <h:panelGrid columns="2" style="width:100%;"
+              columnClasses="middlehalf,middlehalf">
+
+              <h:panelGrid columns="3" style="padding-right:1px"
+                columnClasses="alignright,alignright,alignleft pcnt100">
+                <h:panelGroup>
+                  <h:outputLabel for="type" value="#{msg.type}" />
+                </h:panelGroup>
+                <h:panelGroup>
+                  <c:if test="#{updateOrCreate}">
+                    <span style="color: red;">*</span>
+                  </c:if>
+                </h:panelGroup>
+                <h:panelGroup>
+                  <c:if test="#{readonly}">
+                    <h:inputText id="type" styleClass="pcnt100"
+                      value="#{articleController.typeArticleLabel}"
+                      readonly="true" />
+                  </c:if>
+                  <c:if test="#{updateOrCreate}">
+                    <rich:select id="type" styleClass="pcnt100"
+                      value="#{articleController.typeArticleLabel}"
+                      required="true" mode="client"
+                      enableManualInput="true"
+                      disabled="#{articleController.isUpdateMode() and not logInController.isAuthorized('ArticleUpdateType')}">
+                      <f:selectItems
+                        value="#{articleController.getSelectTypeArticle()}" />
+                      <a4j:ajax event="selectitem"
+                        render="airbusPN,selectCMScode,createPN,properties,comPorts,softwares" />
+                      <a4j:ajax event="blur" execute="@this"
+                        render="airbusPN,selectCMScode,createPN,properties,comPorts,softwares" />
+                    </rich:select>
+                  </c:if>
+                </h:panelGroup>
+
+                <h:panelGroup />
+                <h:panelGroup />
+                <h:panelGroup>
+                  <c:if test="#{updateOrCreate}">
+                    <rich:message for="type" />
+                  </c:if>
+                </h:panelGroup>
+              </h:panelGrid>
+
+              <ui:insert name="SpecificIdentification">
+                <h:panelGroup />
+              </ui:insert>
+
+            </h:panelGrid>
+
+            <h:panelGrid columns="2" style="width:100%;"
+              columnClasses="tophalf,tophalf">
+              <h:panelGroup>
+                <fieldset style="height: 100%">
+                  <legend align="top">
+                    <h:outputText value="#{msg.sn} " />
+                    <c:if test="#{updateOrCreate}">
+                      <span style="color: red;">*</span>
+                    </c:if>
+                  </legend>
+                  <h:panelGrid columns="3" cellspacing="0"
+                    columnClasses="alignright,alignleft,alignleft">
+                    <h:outputLabel for="createAirbusSN"
+                      value="#{msg.airbusSN}" />
+                    <h:inputText id="createAirbusSN"
+                      readonly="#{readonly}"
+                      disabled="#{articleController.updateMode and not articleController.authorizeUpdateAirbusSN}"
+                      value="#{articleController.airbusSN}"
+                      validator="#{articleController.validateASN}">
+                      <a4j:ajax event="blur" execute="@this" />
+                      <f:validateLength
+                        maximum="#{DBConstants.articleAirbussnLength}" />
+                    </h:inputText>
+                    <rich:message for="createAirbusSN" />
+
+                    <h:outputLabel for="createManufacturerSN"
+                      value="#{msg.manufacturerSN}" />
+                    <h:inputText id="createManufacturerSN"
+                      readonly="#{readonly}"
+                      disabled="#{articleController.updateMode and not logInController.isAuthorized('ArticleUpdateManufacturerSN')}"
+                      value="#{articleController.manufacturerSN}">
+                      <a4j:ajax event="blur" execute="@this" />
+                      <f:validateLength
+                        maximum="#{DBConstants.articleManufacturersnLength}" />
+                    </h:inputText>
+                    <rich:message for="createManufacturerSN" />
+                  </h:panelGrid>
+                </fieldset>
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <fieldset>
+                  <legend align="top">
+                    <h:outputText value="#{msg.pn} " />
+                    <h:panelGroup
+                      rendered="#{articleController.PNMandatory and updateOrCreate}">
+                      <span style="color: red;">*</span>
+                    </h:panelGroup>
+                  </legend>
+                  <table>
+                    <tr>
+                      <td align="right">
+                        <h:outputLabel for="airbusPN"
+                          value="#{msg.airbusPN}" />
+                      </td>
+                      <td>
+                        <h:panelGroup>
+                          <c:if test="#{readonly}">
+                            <h:inputText id="airbusPN"
+                              value="#{articleController.airbusPNIdentifier}"
+                              readonly="true" />
+                          </c:if>
+                          <c:if test="#{updateOrCreate}">
+                            <rich:select id="airbusPN" mode="client"
+                              value="#{articleController.airbusPnId}"
+                              defaultLabel="#{msg.selectAirbusPN}">
+                              <f:selectItem
+                                itemLabel="#{msg.selectAirbusPN}" />
+                              <f:selectItems
+                                value="#{articleController.selectAirbusPN}" />
+                            </rich:select>
+                            <rich:message for="airbusPN" />
+                          </c:if>
+                        </h:panelGroup>
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td align="right">
+                        <h:outputLabel value="#{msg.cmsCode}"
+                          for="selectCMScode" />
+                      </td>
+                      <td>
+                        <h:panelGroup>
+                          <c:if test="#{readonly}">
+                            <h:inputText id="selectCMScode"
+                              value="#{articleController.cmsCode}"
+                              readonly="true" />
+                          </c:if>
+                          <c:if test="#{updateOrCreate}">
+                            <rich:autocomplete id="selectCMScode"
+                              value="#{articleController.cmsCode}"
+                              autocompleteList="#{articleController.getSuggestionCMSCode()}"
+                              showButton="true" autofill="true"
+                              mode="client" minChars="0"
+                              disabled="#{articleController.updateMode and not logInController.isAuthorized('ArticleUpdateCMSCode')}">
+                              <f:validateLength
+                                maximum="#{DBConstants.articleCmscodeLength}" />
+                              <a4j:ajax event="blur" execute="@this" />
+                            </rich:autocomplete>
+                          </c:if>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <rich:message for="selectCMScode" />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td align="right">
+                        <h:outputLabel value="#{msg.manufacturerPN}"
+                          for="manufacturerPN" />
+                      </td>
+                      <td>
+                        <h:panelGroup>
+                          <c:if test="#{readonly}">
+                            <h:inputText id="manufacturerPN"
+                              readonly="true"
+                              value="#{articleController.manufacturerPNIdentifier}" />
+                          </c:if>
+                          <c:if test="#{updateOrCreate}">
+                            <rich:autocomplete id="manufacturerPN"
+                              value="#{articleController.manufacturerPNIdentifier}"
+                              autocompleteList="#{articleController.getSuggestionManufacturerPN()}"
+                              showButton="true" autofill="true"
+                              mode="client" minChars="0">
+                              <f:validateLength
+                                maximum="#{DBConstants.manufacturerpnIdentifierLength}" />
+                              <a4j:ajax event="blur" execute="@this" />
+                            </rich:autocomplete>
+                          </c:if>
+                        </h:panelGroup>
+                      </td>
+                      <td>
+                        <rich:message for="manufacturerPN" />
+                      </td>
+                    </tr>
+                  </table>
+                </fieldset>
+              </h:panelGroup>
+
+
+            </h:panelGrid>
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.properties}" />
+            </legend>
+            <table style="width: 100%">
+              <tr>
+                <td class="middlehalf">
+                  <h:panelGrid id="properties" columns="3"
+                    cellspacing="0" columnClasses="alignright,alignleft">
+                    <h:outputLabel for="state"
+                      value="#{msg.articleState}" />
+                    <h:panelGroup>
+                      <c:if test="#{readonly}">
+                        <h:inputText id="state"
+                          value="#{articleController.stateSelected}"
+                          readonly="true" converter="stateConverter" />
+                      </c:if>
+                      <c:if test="#{updateOrCreate}">
+                        <rich:select id="state" mode="client"
+                          value="#{articleController.stateSelected}">
+                          <f:selectItems
+                            value="#{articleController.selectArticleState}" />
+                          <a4j:ajax event="selectitem"
+                            render="calendarLabel" />
+                        </rich:select>
+                      </c:if>
+                    </h:panelGroup>
+                    <rich:message for="state" />
+                    
+                    <h:outputLabel for="useState"
+                      value="#{msg.UseState}" />
+                    <h:panelGroup>
+                      <c:if test="#{readonly}">
+                        <h:inputText id="useState"
+                          value="#{articleController.useStateSelected}"
+                          readonly="true" converter="stateConverter" />
+                      </c:if>
+                      <c:if test="#{updateOrCreate}">
+                        <rich:select id="useState" mode="client"
+                          value="#{articleController.useStateSelected}">
+                          <f:selectItems
+                            value="#{articleController.selectUseState}" />
+                          <a4j:ajax event="selectitem"
+                            render="state,containerInPage,locationInPage" />
+                        </rich:select>
+                      </c:if>
+                    </h:panelGroup>
+                    <rich:message for="useState" />
+
+                    <h:outputLabel value="#{msg.activeStockControlDate}"
+                      rendered="#{articleController.showActiveStockControlDate}" />
+                    <h:panelGroup
+                      rendered="#{articleController.showActiveStockControlDate}">
+                      <c:if test="#{readonly}">
+                        <h:inputText id="activeStockControlDate"
+                          readonly="true"
+                          value="#{articleController.activeStockControlDate}">
+                          <f:convertDateTime
+                            pattern="#{articleController.getDateFormat()}"
+                            timeZone="Europe/Paris" />
+                        </h:inputText>
+                      </c:if>
+                      <c:if test="#{updateOrCreate}">
+                        <rich:calendar id="activeStockControlDate"
+                          value="#{articleController.activeStockControlDate}"
+                          locale="#{localeCtrl.locale}" popup="true"
+                          enableManualInput="true"
+                          datePattern="#{articleController.getDateFormat()}"
+                          showApplyButton="true" />
+                      </c:if>
+                    </h:panelGroup>
+                    <rich:message for="activeStockControlDate"
+                      rendered="#{articleController.showActiveStockControlDate}" />
+
+                    <h:outputLabel value="#{msg.bootloader}"
+                      rendered="#{articleController.showBootloader}" />
+                    <h:inputText id="bootloader" readonly="#{readonly}"
+                      value="#{articleController.bootloader}"
+                      rendered="#{articleController.showBootloader}">
+                      <f:validateLength
+                        maximum="#{DBConstants.boardBootloaderLength}" />
+                      <a4j:ajax event="blur" execute="@this" />
+                    </h:inputText>
+                    <rich:message for="bootloader"
+                      rendered="#{articleController.showBootloader}" />
+
+                    <h:outputLabel value="#{msg.calibration}"
+                      rendered="#{articleController.showCalibration}" />
+                    <h:selectBooleanCheckbox
+                      value="#{articleController.calibration}"
+                      rendered="#{articleController.showCalibration}" />
+                    <h:panelGroup
+                      rendered="#{articleController.showCalibration}" />
+
+                    <h:outputLabel value="#{msg.IPAddress}"
+                      rendered="#{articleController.hasIPAddress()}" />
+                    <h:inputText id="ipAdddress" readonly="#{readonly}"
+                      value="#{articleController.ipAddress}"
+                      styleClass="input20"
+                      rendered="#{articleController.hasIPAddress()}">
+                      <f:validateLength
+                        maximum="#{DBConstants.switchIpaddressLength}" />
+                      <a4j:ajax event="blur" execute="@this" />
+                    </h:inputText>
+                    <rich:message for="ipAdddress"
+                      rendered="#{articleController.hasIPAddress()}" />
+
+                    <h:outputLabel id="calendarLabel"
+                      value="#{articleController.acquisitionDateMsg}"
+                      for="acquisitionDate" />
+                    <c:if test="#{readonly}">
+                      <h:inputText id="acquisitionDate"
+                        value="#{articleController.acquisitionDate}"
+                        readonly="true">
+                        <f:convertDateTime
+                          pattern="#{articleController.getDateFormat()}"
+                          timeZone="Europe/Paris" />
+                      </h:inputText>
+                    </c:if>
+                    <c:if test="#{updateOrCreate}">
+                      <rich:calendar id="acquisitionDate"
+                        value="#{articleController.acquisitionDate}"
+                        locale="#{localeCtrl.locale}" popup="true"
+                        enableManualInput="true"
+                        datePattern="#{articleController.getDateFormat()}"
+                        showApplyButton="true"
+                        disabled="#{articleController.updateMode and not articleController.authorizeUpdateAcquisitionDate}" />
+                    </c:if>
+                    <rich:message for="acquisitionDate" />
+                  </h:panelGrid>
+                </td>
+
+                <td class="middlehalf">
+                  <table style="width: 100%">
+                    <tr>
+                      <td style="text-align: center">
+                        <h:outputLabel value="#{msg.comments}"
+                          for="CommentHistory" />
+                        <h:outputText id="nbCar"
+                          style="marging-right:5px;font-size:xx-small;white-space:nowrap"
+                          value=" #{articleController.availableChars} #{msg.character}"></h:outputText>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="width: 100%">
+                        <a4j:region>
+                          <h:inputTextarea id="CommentHistory"
+                            style="min-height:75px;height:100%;width:100%"
+                            value="#{articleController.comment}"
+                            readonly="#{readonly}">
+                            <a4j:ajax event="blur" execute="@this"
+                              render="nbCar" />
+                            <f:validateLength
+                              maximum="#{DBConstants.commentMessageLength}" />
+                          </h:inputTextarea>
+                          <rich:message for="CommentHistory" />
+                        </a4j:region>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </fieldset>
+
+          <h:panelGroup id="comPorts">
+            <h:panelGroup rendered="#{articleController.ethernetBoard}">
+              <ui:include
+                src="/itemManagement/includes/CommunicationPorts.xhtml">
+                <ui:param name="readonly" value="#{readonly}" />
+                <ui:param name="autoUpdate" value="false" />
+              </ui:include>
+            </h:panelGroup>
+          </h:panelGroup>
+
+          <h:panelGroup id="softwares">
+            <h:panelGroup rendered="#{articleController.hasSoftware()}">
+              <ui:include src="/software/InstalledSoftware.xhtml">
+                <ui:param name="softwares"
+                  value="#{articleController.softwares}" />
+                <ui:param name="modifiable" value="#{updateOrCreate}" />
+                <ui:param name="actionRemove"
+                  value="#{articleController}" />
+                <ui:param name="method" value="removeSoftware" />
+                <ui:param name="target"
+                  value="#{articleController.software}" />
+                <ui:param name="autoUpdate" value="false" />
+              </ui:include>
+            </h:panelGroup>
+          </h:panelGroup>
+
+          <ui:include src="/localization/container.xhtml">
+            <ui:param name="readonly" value="#{readonly}" />
+          </ui:include>
+
+          <ui:include src="/localization/location.xhtml">
+            <ui:param name="readonly" value="#{readonly}" />
+          </ui:include>
+
+          <div style="padding-top: 7px">
+            <rich:collapsiblePanel switchType="client"
+              header="#{msg.documents}" headerClass="collapsible-header">
+              <ui:include
+                src="/itemManagement/includes/DocumentList.xhtml">
+                <ui:param name="readonly" value="#{readonly}" />
+              </ui:include>
+            </rich:collapsiblePanel>
+          </div>
+
+          <c:if test="#{readonly}">
+            <div style="padding-top: 7px">
+              <rich:collapsiblePanel switchType="client"
+                header="#{msg.reminders}"
+                headerClass="collapsible-header">
+                <ui:include src="/reminder/ReminderList.xhtml" />
+              </rich:collapsiblePanel>
+            </div>
+
+            <ui:include src="/itemManagement/includes/History.xhtml">
+              <ui:param name="article"
+                value="#{articleController.article}" />
+            </ui:include>
+
+            <div style="padding-top: 10px">
+              <rich:collapsiblePanel switchType="client"
+                header="#{msg.billOfMaterialTitle}"
+                headerClass="collapsible-header">
+                <ui:include src="/explorer/explorerTreeView.xhtml" />
+              </rich:collapsiblePanel>
+            </div>
+          </c:if>
+
+          <c:if test="#{updateOrCreate}">
+            <h:panelGrid cellspacing="10" columns="3">
+              <c:if test="#{articleController.createMode}">
+                <a4j:commandButton value="#{msg.create}" execute="@form"
+                  oncomplete="if (#{facesContext.maximumSeverity==null or facesContext.maximumSeverity.ordinal lt 2})
+                              {#{rich:component('confirmationCreateArticle')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <c:if test="#{articleController.updateMode}">
+                <a4j:commandButton value="#{msg.validate}"
+                  execute="@form"
+                  oncomplete="if (#{facesContext.maximumSeverity==null or facesContext.maximumSeverity.ordinal lt 2})
+                              {#{rich:component('confirmationUpdateArticle')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <a4j:commandButton value="#{msg.reset}"
+                action="#{articleController.doRefresh}" execute="@this"
+                render="mainContent" oncomplete="patchModal();"/>
+              <a4j:commandButton value="#{msg.cancel}" execute="@this"
+                action="#{articleController.doCancelUpdate}" />
+            </h:panelGrid>
+          </c:if>
+
+        </div>
+
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationCreateArticle" />
+        <ui:param name="controller" value="#{articleController}" />
+        <ui:param name="method" value="doCreate" />
+        <ui:param name="confirmationText" value="#{msg.confirmCreation}" />
+        <ui:param name="validateButtonId" value="confirmCreateBtn" />
+        <ui:param name="cancelButtonId" value="cancelCreateBtn" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationUpdateArticle" />
+        <ui:param name="controller" value="#{articleController}" />
+        <ui:param name="method" value="doUpdate" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmModificationArticle}" />
+        <ui:param name="validateButtonId" value="confirmUpdateBtn" />
+        <ui:param name="cancelButtonId" value="cancelUpdateBtn" />
+        <ui:param name="showHistoryComment" value="true" />
+      </ui:include>
+
+      <ui:include src="/itemManagement/includes/PortModal.xhtml" />
+
+      <ui:include src="/software/InstallSoftwareModal.xhtml">
+        <ui:param name="actionInstall" value="#{articleController}" />
+        <ui:param name="method" value="addSoftware" />
+        <ui:param name="isPC" value="false" />
+      </ui:include>
+
+      <ui:include src="/localization/changeContainerModal.xhtml">
+        <ui:param name="controller" value="#{articleController}" />
+        <ui:param name="method" value="doChangeContainer" />
+      </ui:include>
+
+      <ui:include src="/localization/changeLocationModal.xhtml" />
+
+      <ui:include src="/itemManagement/includes/DocumentModal.xhtml" />
+
+      <ui:include src="/reminder/ReminderModal.xhtml" />
+
+      <a href="#">#{msg.topPage}</a>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

@@ -1,0 +1,39 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form>
+    <rich:popupPanel id="confirmRemoveOneToolComponentModal"
+      autosized="true" modal="true" domElementAttachment="parent">
+      <f:facet name="header">
+        <h:outputText value="#{msg.confirmUnlinkToolComponent} ?" />
+      </f:facet>
+
+      <h:panelGroup>
+        <h:graphicImage
+          url="/resources/images/icons/messagebox_warning.png"
+          styleClass="pic" />
+        <a4j:outputPanel ajaxRendered="true">
+          <h:outputText
+            value="#{msg.confirmUnlinkToolComponent} #{toolController.selectedArticle.name} ?" />
+        </a4j:outputPanel>
+        <br />
+        <h:outputText value="#{msg.warningRemoveToolComponent}"
+          styleClass="warning" />
+        <h:panelGrid columns="2" cellspacing="10">
+          <a4j:commandButton id="validateButton"
+            action="#{toolController.doRemoveArticle}"
+            value="#{msg.validate}" render="tableArticles,counts"
+            oncomplete="#{rich:component('confirmRemoveOneToolComponentModal')}.hide();return false;" />
+          <h:commandButton id="cancelButton" submitMode="none"
+            value="#{msg.cancel}"
+            onclick="#{rich:component('confirmRemoveOneToolComponentModal')}.hide();return false;" />
+        </h:panelGrid>
+      </h:panelGroup>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

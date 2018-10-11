@@ -1,0 +1,250 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- List of the found software products included by other pages -->
+  <!--
+    ret = return parameter for the item edit page
+  -->
+  <c:if test="#{empty ret}">
+    <c:set var="ret" value="LIST" />
+  </c:if>
+
+  <ui:include src="/error/errorMessages.xhtml">
+    <ui:param name="id" value="softwareListError" />
+    <ui:param name="globalOnly" value="true" />
+  </ui:include>
+
+  <h:form id="form_exportSoftwareButton">
+    <h:panelGrid columns="2" cellspacing="5">
+      <h:commandButton id="export" value="#{msg.export}"
+        action="#{searchSoftwareController.doExport}" />
+      <a4j:commandButton id="resetFilter" value="#{msg.resetFilters}"
+        execute="@this"
+        action="#{searchSoftwareController.doResetFilters}"
+        render="tableResults,dsTop,dsBottom,counts">
+      </a4j:commandButton>
+    </h:panelGrid>
+  </h:form>
+
+  <h:form id="form_softwareresults">
+
+    <h:panelGrid columns="1" cellspacing="5">
+      <h:outputText id="counts" styleClass="bigText"
+        value="#{msg.countFilteredSoftware} : #{searchSoftwareController.countFiltered}" />
+    </h:panelGrid>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsTop" for="tableResults" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+    <div class="scroll-div" style="max-height: 68%; max-height: 68vh;">
+      <rich:dataTable id="tableResults" sortMode="single" rows="30"
+        value="#{searchSoftwareController.foundSoftwares}"
+        var="software"
+        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+        rowClasses="evenRow, oddRow">
+
+        <f:facet name="header">
+          <h:outputText value="#{msg.displaySoftwareResultsTitle}" />
+        </f:facet>
+
+        <rich:column
+          rendered="#{logInController.isAuthorized('SoftwareCRUD','CRUD_Update') and searchSoftwareController.displayEditionColumn}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.actions}" />
+          </f:facet>
+          <h:outputLink id="editLabel"
+            rendered="#{logInController.isAuthorized('SoftwareCRUD','CRUD_Update')}"
+            value="${request.contextPath}/itemManagement/SoftwareManagement.faces">
+            <h:graphicImage value="/resources/images/icons/edit.gif"
+              style="border:0" />
+            <f:param name="id" value="#{software.id}" />
+            <f:param name="mode" value="UPDATE" />
+            <f:param name="ret" value="#{ret}" />
+          </h:outputLink>
+        </rich:column>
+
+        <rich:column sortBy="#{software.name}" filterType="custom"
+          filter="#{searchSoftwareController.softwareFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.name}" />
+              <br />
+              <h:inputText id="name"
+                value="#{searchSoftwareController.filterValues['name']}">
+                <a4j:ajax event="keyup"
+                  render="tableResults@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputLink id="software_id"
+            value="${request.contextPath}/itemManagement/SoftwareManagement.faces">
+            <h:outputText value="#{software.name}" />
+            <f:param name="id" value="#{software.id}" />
+            <f:param name="mode" value="READ" />
+          </h:outputLink>
+        </rich:column>
+
+        <rich:column sortBy="#{software.distribution}"
+          filterType="custom"
+          filter="#{searchSoftwareController.softwareFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.distribution}" />
+              <br />
+              <h:inputText id="distribution"
+                value="#{searchSoftwareController.filterValues['distribution']}">
+                <a4j:ajax event="keyup"
+                  render="tableResults@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{software.distribution}" />
+        </rich:column>
+
+        <rich:column sortBy="#{software.kernel}" filterType="custom"
+          filter="#{searchSoftwareController.softwareFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.kernel}" />
+              <br />
+              <h:inputText id="kernel"
+                value="#{searchSoftwareController.filterValues['kernel']}">
+                <a4j:ajax event="keyup"
+                  render="tableResults@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{software.kernel}" />
+        </rich:column>
+
+        <rich:column style="width:80px"
+          filterType="custom"
+          filter="#{searchSoftwareController.operatingSystemFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.operatingSystem}"/>
+              <p:selectCheckboxMenu id="OSColumn" widgetVar="OSColumnWidget"
+                value="#{searchSoftwareController.filterOperatingSystem}"
+                label="#{searchSoftwareController.osFiltered ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchSoftwareController.osFiltered ? 'checkboxmenured' : 'checkboxmenu'}"
+                converter="operatingSystemConverter"
+                filter="true" filterMatchMode="startsWith">
+                <f:selectItems value="#{searchSoftwareController.operatingSystems}" />
+                <a4j:ajax event="change"
+                  render="dsTop,dsBottom,counts" />
+                <p:ajax event="change" oncomplete="PF('OSColumnWidget').show()"
+                  update="tableResults" />
+                <a4j:ajax event="toggleSelect"
+                  render="dsTop,dsBottom,counts" />
+                <p:ajax event="toggleSelect" oncomplete="PF('OSColumnWidget').show()"
+                  update="tableResults" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{software.operatingSystem}"
+            converter="operatingSystemConverter" />
+        </rich:column>
+
+        <rich:column sortBy="#{software.manufacturer}"
+          filterType="custom"
+          filter="#{searchSoftwareController.softwareFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.manufacturer}" />
+              <br />
+              <h:inputText id="manufacturer"
+                value="#{searchSoftwareController.filterValues['manufacturer']}">
+                <a4j:ajax event="keyup"
+                  render="tableResults@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{software.manufacturer}" />
+        </rich:column>
+
+        <rich:column sortBy="#{software.description}"
+          filterType="custom"
+          filter="#{searchSoftwareController.softwareFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.description}" />
+              <br />
+              <h:inputText id="description"
+                value="#{searchSoftwareController.filterValues['description']}">
+                <a4j:ajax event="keyup"
+                  render="tableResults@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{software.description}" />
+        </rich:column>
+
+        <rich:column sortBy="#{software.licence}" filterType="custom"
+          filter="#{searchSoftwareController.softwareFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.licenceNumber}" />
+              <br />
+              <h:inputText id="licence"
+                value="#{searchSoftwareController.filterValues['licence']}">
+                <a4j:ajax event="keyup"
+                  render="tableResults@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{software.licence}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.quantity}" />
+              <br />
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{software.equipments.size()}" />
+        </rich:column>
+
+        <rich:column>
+
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.obsolescence}" />
+              <br />
+            </h:panelGroup>
+          </f:facet>
+
+          <h:panelGrid columns="1">
+            <a4j:commandLink id="viewObsolescenceLink"
+              action="#{searchSoftwareController.showSelectedObsoData}"
+              rendered="#{searchSoftwareController.hasObsoData(software) and logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read')}">
+              <h:graphicImage
+                value="/resources/images/icons/oldparchment.jpeg"
+                style="border:0;width:16px;height:16px"
+                alt="obsolescence link" />
+              <a4j:param name="software_id" value="#{software.id}"
+                assignTo="#{searchSoftwareController.selectedId}" />
+            </a4j:commandLink>
+          </h:panelGrid>
+        </rich:column>
+
+      </rich:dataTable>
+    </div>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsBottom" for="tableResults" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+  </h:form>
+</ui:composition>

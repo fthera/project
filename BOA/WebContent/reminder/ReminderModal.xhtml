@@ -1,0 +1,161 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Modal allowing the creation or update of a reminder. -->
+
+  <h:form id="reminderModalForm">
+    <rich:popupPanel id="reminderModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closeButtonUpdateType" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('reminderModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/edit.gif"
+            style="padding-right:5px;"
+            rendered="#{!reminderController.modalModeAdd}" />
+          <h:outputText
+            value="#{reminderController.modalModeAdd ? msg.AddReminder : msg.EditReminder}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <fieldset>
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="reminderError" />
+        </ui:include>
+
+        <h:panelGroup>
+          <h:outputText value="#{msg.requiredFields}" style="color:red" />
+        </h:panelGroup>
+
+        <a4j:outputPanel id="reminderModalPanel" ajaxRendered="true">
+          <h:panelGrid columns="3" columnClasses="middle,middle,middle">
+
+            <h:outputLabel for="reminderArticle"
+              rendered="#{reminderController.reminder.article != null}"
+              value="#{msg.reminderArticle}" />
+            <h:panelGroup
+              rendered="#{reminderController.reminder.article != null}" />
+            <h:outputLabel id="reminderArticle"
+              rendered="#{reminderController.reminder.article != null}"
+              value="#{reminderController.reminder.article.name}" />
+
+            <h:outputLabel for="reminderInstallation"
+              rendered="#{reminderController.reminder.installation != null}"
+              value="#{msg.reminderInstallation}" />
+            <h:panelGroup
+              rendered="#{reminderController.reminder.installation != null}" />
+            <h:outputLabel id="reminderInstallation"
+              rendered="#{reminderController.reminder.installation != null}"
+              value="#{reminderController.reminder.installation.name}" />
+
+            <h:outputLabel for="reminderTool"
+              rendered="#{reminderController.reminder.tool != null}"
+              value="#{msg.reminderTool}" />
+            <h:panelGroup
+              rendered="#{reminderController.reminder.tool != null}" />
+            <h:outputLabel id="reminderTool"
+              rendered="#{reminderController.reminder.tool != null}"
+              value="#{reminderController.reminder.tool.name}" />
+
+            <h:outputLabel for="reminderUser" value="#{msg.inCharge}" />
+            <span class="requiredField">*</span>
+            <h:panelGroup>
+              <rich:select id="reminderUser" styleClass="rf-sel-l"
+                value="#{reminderController.userId}" required="true"
+                requiredMessage="#{msg.valueRequiredMsg}"
+                enableManualInput="true" mode="client"
+                defaultLabel="#{msg.notFilled}">
+                <f:selectItem itemLabel="#{msg.notFilled}" />
+                <f:selectItems value="#{reminderController.selectUsers}" />
+              </rich:select>
+              <rich:message for="reminderUser" />
+            </h:panelGroup>
+
+            <h:outputLabel for="reminderTargetDate"
+              value="#{msg.targetDate}" />
+            <span class="requiredField">*</span>
+            <h:panelGroup>
+              <rich:calendar id="reminderTargetDate"
+                value="#{reminderController.reminder.targetDate}"
+                required="true" popupStyle="position:relative"
+                requiredMessage="#{msg.valueRequiredMsg}"
+                locale="#{localeCtrl.locale}" popup="true"
+                enableManualInput="true"
+                datePattern="#{reminderController.getDateFormat()}"
+                showApplyButton="true" />
+              <rich:message for="reminderTargetDate" />
+            </h:panelGroup>
+
+            <h:outputLabel for="reminderNbDaysNotification"
+              value="#{msg.forwardNotification}" />
+            <span class="requiredField">*</span>
+            <h:panelGroup>
+              <h:inputText id="reminderNbDaysNotification"
+                styleClass="input10"
+                validatorMessage="#{msg.valuePositiveInteger}"
+                converterMessage="#{msg.valuePositiveInteger}"
+                required="true"
+                requiredMessage="#{msg.valueRequiredMsg}"
+                value="#{reminderController.reminder.nbDaysNotification}">
+                <f:convertNumber integerOnly=" true" />
+                <f:validateLongRange minimum="0" />
+              </h:inputText>
+              <rich:message for="reminderNbDaysNotification" />
+            </h:panelGroup>
+
+            <h:outputLabel for="reminderStatus"
+              value="#{msg.ReminderStatus}" />
+            <h:panelGroup />
+            <rich:select id="reminderStatus" mode="client"
+              value="#{reminderController.reminder.reminderStatus}">
+              <f:selectItems
+                value="#{reminderController.selectStatusValues}" />
+            </rich:select>
+
+            <h:outputLabel for="reminderObject" value="#{msg.Object}" />
+            <span class="requiredField">*</span>
+            <h:panelGroup>
+              <h:inputTextarea id="reminderObject" style="width:100%"
+                rows="4" value="#{reminderController.reminder.object}"
+                required="true"
+                requiredMessage="#{msg.valueRequiredMsg}">
+                <f:validateLength
+                  maximum="#{DBConstants.reminderObjectLength}" />
+              </h:inputTextarea>
+              <rich:message for="reminderObject" />
+            </h:panelGroup>
+
+            <h:outputLabel for="reminderCompleted"
+              value="#{msg.Completed}" />
+            <h:panelGroup />
+            <h:selectBooleanCheckbox id="reminderCompleted"
+              value="#{reminderController.reminder.completed}" />
+
+          </h:panelGrid>
+        </a4j:outputPanel>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="confirmReminder" value="#{msg.save}"
+            action="#{reminderController.doSubmitModal}"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('reminderModal')}.hide();"
+            render="reminderList,countReminders,dsTopReminders,dsBottomReminders">
+          </a4j:commandButton>
+
+          <h:commandButton value="#{msg.cancel}" execute="@this"
+            onclick="#{rich:component('reminderModal')}.hide();return false;" />
+        </h:panelGrid>
+
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

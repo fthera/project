@@ -1,0 +1,181 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Form to update/create a suer. -->
+  <!--
+     assignRole            = boolean indicating if the role assignment section shall be displayed
+     isModal               = boolean indicating if the form is in a modal panel
+     render                = components id to render on update
+     modadPanelId          = name of the modal panel using this form; mandatory if isModal=true
+     isDisplayRequired     = boolean indicating if the required * shall be displayed
+     isDisplayPassRequired = boolean indicating if the required * shall be displayed for the password fields
+     isUpdateLastNameAuthorized	 = boolean indicating if the last name can be modified
+     isUpdateFisrtNameAuthorized = boolean indicating if the first name can be modified
+     isUpdateMailAuthorized      = boolean indicating if the mail can be modified
+     isUpdateLoginAuthorized     = boolean indicating if the login can be modified
+     isUpdatePasswordAuthorized  = boolean indicating if the password can be modified
+  -->  
+  <c:if test="#{empty isUpdateLastNameAuthorized}">
+    <c:set var="isUpdateLastNameAuthorized" value="true" />
+  </c:if>
+  <c:if test="#{empty isUpdateFisrtNameAuthorized}">
+    <c:set var="isUpdateFisrtNameAuthorized" value="true" />
+  </c:if>
+  <c:if test="#{empty isUpdateMailAuthorized}">
+    <c:set var="isUpdateMailAuthorized" value="true" />
+  </c:if>
+  <c:if test="#{empty isUpdateLoginAuthorized}">
+    <c:set var="isUpdateLoginAuthorized" value="true" />
+  </c:if>
+  <c:if test="#{empty isUpdatePasswordAuthorized}">
+    <c:set var="isUpdatePasswordAuthorized" value="true" />
+  </c:if>
+
+  <ui:include src="/error/errorMessages.xhtml">
+    <ui:param name="id" value="userFormError" />
+    <ui:param name="globalOnly" value="#{not isModal}" />
+  </ui:include>
+
+  <h:panelGroup rendered="#{isDisplayRequired}">
+    <h:outputText value="#{msg.requiredFields}" style="color:red" />
+  </h:panelGroup>
+
+  <h:panelGrid id="userForm" columns="4"
+    columnClasses="alignright,alignright,alignleft,alignleft">
+    <h:outputLabel value="#{msg.userLastname} :" />
+    <h:panelGroup>
+      <h:panelGroup rendered="#{isDisplayRequired}">
+        <span style="color: red;">*</span>
+      </h:panelGroup>
+    </h:panelGroup>
+    <h:inputText id="lastname" value="#{userController.user.lastname}"
+      required="true"
+      readonly="#{not isUpdateLastNameAuthorized}"
+      disabled="#{not isUpdateLastNameAuthorized}">
+      <f:validateLength maximum="#{DBConstants.userLastnameLength}" />
+      <a4j:ajax event="blur" execute="@this" />
+    </h:inputText>
+    <rich:message for="lastname" />
+
+    <h:outputLabel value="#{msg.userFirstname} :" />
+    <h:panelGroup>
+      <h:panelGroup rendered="#{isDisplayRequired}">
+        <span style="color: red;">*</span>
+      </h:panelGroup>
+    </h:panelGroup>
+    <h:inputText id="firstname" value="#{userController.user.firstname}"
+      required="true"
+      readonly="#{not isUpdateFisrtNameAuthorized}"
+      disabled="#{not isUpdateFisrtNameAuthorized}">
+      <f:validateLength maximum="#{DBConstants.userFirstnameLength}" />
+      <a4j:ajax event="blur" execute="@this" />
+    </h:inputText>
+    <rich:message for="firstname" />
+
+    <h:outputLabel value="#{msg.userMail} :" />
+    <h:panelGroup>
+      <h:panelGroup rendered="#{isDisplayRequired}">
+        <span style="color: red;">*</span>
+      </h:panelGroup>
+    </h:panelGroup>
+    <h:inputText id="mail" value="#{userController.user.email}"
+      required="true" validatorMessage="#{msg.validationEmail}"
+      validator="#{userController.validateEMail}"
+      readonly="#{not isUpdateMailAuthorized}"
+      disabled="#{not isUpdateMailAuthorized}">
+      <f:validateLength maximum="#{DBConstants.userEmailLength}" />
+      <a4j:ajax event="blur" execute="@this" />
+    </h:inputText>
+    <rich:message for="mail" />
+
+    <h:outputLabel value="#{msg.userLogin} :" />
+    <h:panelGroup>
+      <h:panelGroup rendered="#{isDisplayRequired}">
+        <span style="color: red;">*</span>
+      </h:panelGroup>
+    </h:panelGroup>
+    <h:inputText id="login" value="#{userController.user.login}"
+      required="true"
+      readonly="#{not isUpdateLoginAuthorized}"
+      disabled="#{not isUpdateLoginAuthorized}">
+      <f:validateLength maximum="#{DBConstants.userLoginLength}" />
+      <a4j:ajax event="blur" execute="@this" />
+    </h:inputText>
+    <rich:message for="login" />
+
+    <h:outputLabel value="#{msg.userPassword} :" />
+    <h:panelGroup>
+      <h:panelGroup rendered="#{isDisplayPassRequired}">
+        <span style="color: red;">*</span>
+      </h:panelGroup>
+    </h:panelGroup>
+    <h:inputSecret id="password" value="#{userController.password1}"
+      required="#{isDisplayPassRequired}"
+      readonly="#{not isUpdatePasswordAuthorized}"
+      disabled="#{not isUpdatePasswordAuthorized}">
+      <f:validateLength maximum="#{DBConstants.userPasswordLength}" />
+      <a4j:ajax event="blur" execute="@this" />
+    </h:inputSecret>
+    <rich:message for="password" />
+
+    <h:outputLabel value="#{msg.userRetypePassword} :" />
+    <h:panelGroup>
+      <h:panelGroup rendered="#{isDisplayPassRequired}">
+        <span style="color: red;">*</span>
+      </h:panelGroup>
+    </h:panelGroup>
+    <h:inputSecret id="password2" value="#{userController.password2}"
+      readonly="#{not isUpdatePasswordAuthorized}"
+      disabled="#{not isUpdatePasswordAuthorized}"
+      validator="#{userController.validatePassword}">
+      <f:validateLength maximum="#{DBConstants.userPasswordLength}" />
+      <a4j:ajax event="blur" execute="@this" />
+    </h:inputSecret>
+    <rich:message for="password2" />
+
+    <h:selectBooleanCheckbox id="receiveBOAMail"
+      value="#{userController.user.receiveBOAMail}" />
+    <h:panelGroup />
+    <h:outputLabel value="#{msg.userReceiveBOAMail}" />
+    <h:panelGroup />
+  </h:panelGrid>
+
+  <h:panelGroup id="roleForm" rendered="#{assignRole}">
+    <fieldset>
+      <legend>
+        #{msg.roleAssignationTitle} <span style="color: red;">*</span>
+      </legend>
+      <h:selectOneRadio id="role" layout="pageDirection"
+        value="#{userController.roleId}" required="true"
+        requiredMessage="#{msg.valueRequiredMsg}">
+        <f:selectItems value="#{userController.availableRoles}" />
+      </h:selectOneRadio>
+    </fieldset>
+  </h:panelGroup>
+
+  <h:panelGrid columns="3" cellspacing="5" styleClass="center">
+    <a4j:commandButton value="#{msg.create}"
+      rendered="#{userController.createMode}"
+      action="#{userController.doCreate}" />
+    <a4j:commandButton value="#{msg.updateUser}"
+      rendered="#{userController.updateMode and isModal}"
+      action="#{userController.doUpdateModal}" render="#{render}"
+      oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component(modadPanelId)}.hide()" />
+    <a4j:commandButton value="#{msg.updateUser}"
+      rendered="#{userController.updateMode and !isModal}"
+      action="#{userController.doUpdate}" />
+    <a4j:commandButton value="#{msg.reset}"
+      action="#{userController.doRefresh}" execute="@this"
+      render="userForm,roleForm" />
+    <a4j:commandButton value="#{msg.cancel}" rendered="#{!isModal}"
+      execute="@this" action="#{userController.doCancel}" />
+    <a4j:commandButton value="#{msg.cancel}" rendered="#{isModal}"
+      oncomplete="#{rich:component(modadPanelId)}.hide()" />
+  </h:panelGrid>
+
+</ui:composition>

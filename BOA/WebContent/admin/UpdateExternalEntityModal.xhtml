@@ -1,0 +1,76 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="UpdateExternalEntityModalForm">
+    <rich:popupPanel id="updateExternalEntityModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closeButtonUpdateExternalEntity"
+          alt="#{msg.close}" class="hidelink"
+          value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('updateExternalEntityModal')}.hide();return false;">
+        </h:graphicImage>
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/edit.gif"
+            style="padding-right:5px;" />
+          <h:outputText value="#{msg.updateExternalEntityTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <a4j:outputPanel ajaxRendered="true">
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="updateExternalEntityError" />
+        </ui:include>
+
+        <h:panelGrid columns="3" cellspacing="5">
+
+          <h:outputLabel for="updateExternalEntityType"
+            value="#{msg.type}" />
+          <rich:select id="type" mode="client"
+            value="#{externalEntityController.updateTypeId}">
+            <f:selectItems
+              value="#{externalEntityController.externalEntityTypes}" />
+          </rich:select>
+          <rich:message id="externalEntityTypeError"
+            for="externalEntityType" />
+
+          <h:outputLabel for="updateExternalEntityName"
+            value="#{msg.name}" />
+          <h:inputText id="updateExternalEntityName"
+            styleClass="input20"
+            value="#{externalEntityController.updateName}"
+            required="true"
+            validator="#{externalEntityController.validateExternalEntityName}">
+            <f:validateLength
+              maximum="#{DBConstants.externalentityNameLength}" />
+          </h:inputText>
+          <rich:message id="externalEntityNameError"
+            for="updateExternalEntityName" />
+
+        </h:panelGrid>
+      </a4j:outputPanel>
+
+      <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+        <a4j:commandButton value="#{msg.save}"
+          actionListener="#{externalEntityController.doUpdateExternalEntity}"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('updateExternalEntityModal')}.hide();return false"
+          render="externalEntityTable,dsTop,dsBottom">
+        </a4j:commandButton>
+
+        <h:commandButton value="#{msg.cancel}" immediate="true"
+          onclick="#{rich:component('updateExternalEntityModal')}.hide();return false;" />
+
+      </h:panelGrid>
+
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

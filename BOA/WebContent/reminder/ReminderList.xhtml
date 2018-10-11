@@ -1,0 +1,249 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Part containing the display of the reminders
+     and the buttons allowing to add, update and delete them. -->
+  <!--
+     Remark:
+     - The modal named 'reminderModal' must exist in the page.
+  -->
+
+  <h:outputText
+    rendered="#{not (logInController.isAuthorized('ReminderCRUD','CRUD_Read'))}"
+    value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+  <h:panelGrid columns="1" cellspacing="5"
+    rendered="#{logInController.isAuthorized('ReminderCRUD','CRUD_Read')}">
+
+    <a4j:commandButton id="addReminderButton" value="#{msg.AddReminder}"
+      action="#{reminderController.prepareAdd}"
+      rendered="#{reminderController.modeConsultationItem}"
+      disabled="#{!logInController.isAuthorized('ReminderCRUD','CRUD_Create')}"
+      execute="@this" render="reminderModal"
+      oncomplete="#{rich:component('reminderModal')}.show()" />
+
+    <a4j:commandButton id="resetFilter" value="#{msg.resetFilters}"
+      execute="@this" action="#{reminderController.doResetFilters}"
+      render="reminderList,dsTopReminders,dsBottomReminders,countReminders" />
+
+    <h:outputLabel id="countReminders"
+      value="#{msg.countFilteredReminder} : #{reminderController.countFilteredReminder}" />
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsTopReminders" for="reminderList"
+        maxPages="10" fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+    <rich:dataTable id="reminderList"
+      value="#{reminderController.reminders}" var="reminder" rows="30"
+      onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+      onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+      rowClasses="evenRow, oddRow">
+
+      <rich:column rendered="#{reminderController.modeConsultationUser}">
+        <f:facet name="header">
+          <h:outputText value="#{msg.ClassTitle}" />
+        </f:facet>
+        <h:outputText value="#{msg[reminder.article.class.simpleName]}"
+          rendered="#{reminder.article != null}" />
+        <h:outputText
+          value="#{msg[reminder.installation.class.simpleName]}"
+          rendered="#{reminder.installation != null}" />
+        <h:outputText value="#{msg[reminder.tool.class.simpleName]}"
+          rendered="#{reminder.tool != null}" />
+      </rich:column>
+
+      <rich:column sortBy="#{reminder.item.name}" filterType="custom"
+        filter="#{reminderController.reminderFilter}"
+        rendered="#{reminderController.modeConsultationUser}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.reminderItem}" />
+            <br />
+            <h:inputText id="reminderItemName"
+              value="#{reminderController.filterValues['itemName']}">
+              <a4j:ajax event="keyup"
+                render="reminderList@body,dsTopReminders,dsBottomReminders,countReminders" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputLink id="infoArticleCmd"
+          rendered="#{reminder.article != null}"
+          value="${request.contextPath}/itemManagement/${reminder.article.class.simpleName}Management.faces">
+          <h:outputText value="#{reminder.article.name}" />
+          <f:param name="id" value="#{reminder.article.id}" />
+          <f:param name="mode" value="READ" />
+        </h:outputLink>
+        <h:outputLink id="infoSimuCmd"
+          rendered="#{reminder.installation != null}"
+          value="${request.contextPath}/itemManagement/InstallationManagement.faces">
+          <h:outputText value="#{reminder.installation.name}" />
+          <f:param name="id" value="#{reminder.installation.id}" />
+          <f:param name="mode" value="READ" />
+        </h:outputLink>
+        <h:outputLink id="infoToolCmd"
+          rendered="#{reminder.tool != null}"
+          value="${request.contextPath}/itemManagement/ToolManagement.faces">
+          <h:outputText value="#{reminder.tool.name}" />
+          <f:param name="id" value="#{reminder.tool.id}" />
+          <f:param name="mode" value="READ" />
+        </h:outputLink>
+      </rich:column>
+
+      <rich:column sortBy="#{reminder.user.loginDetails}"
+        filterType="custom"
+        filter="#{reminderController.reminderFilter}"
+        rendered="#{reminderController.modeConsultationItem}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.inCharge}" />
+            <br />
+            <h:inputText id="reminderInCharge"
+              value="#{reminderController.filterValues['user']}">
+              <a4j:ajax event="keyup"
+                render="reminderList@body,dsTopReminders,dsBottomReminders,countReminders" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{reminder.user.loginDetails}" />
+      </rich:column>
+
+      <rich:column sortBy="#{reminder.object}" filterType="custom"
+        filter="#{reminderController.reminderFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.Object}" />
+            <br />
+            <h:inputText id="reminderObject"
+              value="#{reminderController.filterValues['object']}">
+              <a4j:ajax event="keyup"
+                render="reminderList@body,dsTopReminders,dsBottomReminders,countReminders" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{reminder.object}" />
+      </rich:column>
+
+      <rich:column sortBy="#{reminder.targetDate}" filterType="custom"
+        filter="#{reminderController.reminderFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.targetDate}" />
+            <br />
+            <h:inputText id="reminderTargetDate"
+              value="#{reminderController.filterValues['targetDate']}">
+              <a4j:ajax event="keyup"
+                render="reminderList@body,dsTopReminders,dsBottomReminders,countReminders" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{reminder.targetDate}">
+          <f:convertDateTime pattern="dd/MM/yyyy"
+            timeZone="Europe/Paris" />
+        </h:outputText>
+      </rich:column>
+
+      <rich:column sortBy="#{reminder.nbDaysNotification}">
+        <f:facet name="header">
+          <h:outputText value="#{msg.forwardNotification}" />
+        </f:facet>
+        <h:outputText value="#{reminder.nbDaysNotification}" />
+      </rich:column>
+
+      <rich:column sortBy="#{reminder.reminderStatus.toString()}"
+        filter="#{reminderController.statusFilter}" filterType="custom">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.ReminderStatus}" />
+            <br />
+            <h:selectOneMenu id="status"
+              value="#{reminderController.filterStatus}">
+              <f:selectItem itemLabel="#{msg.all}" />
+              <f:selectItems
+                value="#{reminderController.selectStatusValues}" />
+              <a4j:ajax event="change"
+                render="reminderList@body,dsTopReminders,dsBottomReminders,countReminders" />
+            </h:selectOneMenu>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{reminder.reminderStatus.toString()}" />
+      </rich:column>
+
+      <rich:column sortBy="#{reminder.completed}" filterType="custom"
+        filter="#{reminderController.completedFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.Completed}" />
+            <br />
+            <h:selectOneMenu id="reminderCompleted"
+              value="#{reminderController.filterCompleted}">
+              <f:selectItem itemLabel="#{msg.all}" />
+              <f:selectItems
+                value="#{reminderController.completedValues}" />
+              <a4j:ajax event="change"
+                render="reminderList@body,dsTopReminders,dsBottomReminders,countReminders" />
+            </h:selectOneMenu>
+          </h:panelGroup>
+        </f:facet>
+        <h:selectBooleanCheckbox value="#{reminder.completed}"
+          disabled="#{! (logInController.isAuthorized('ReminderCRUD','CRUD_Update') or logInController.userLogged == reminder.user)}">
+          <a4j:ajax event="click" render="reminderList"
+            listener="#{reminderController.doMergeReminder(reminder)}" />
+        </h:selectBooleanCheckbox>
+      </rich:column>
+
+      <rich:column>
+        <f:facet name="header">
+          <h:outputText value="#{msg.actions}" />
+        </f:facet>
+
+        <h:panelGrid columns="2"
+          rendered="#{logInController.isAuthorized('ReminderCRUD','CRUD_Update') or logInController.isAuthorized('ReminderCRUD','CRUD_Delete') or logInController.userLogged == reminder.user}">
+          <a4j:commandLink id="updateReminder" execute="@this"
+            rendered="#{logInController.isAuthorized('ReminderCRUD','CRUD_Update') or logInController.userLogged == reminder.user}"
+            actionListener="#{reminderController.prepareUpdate}"
+            oncomplete="#{rich:component('reminderModal')}.show()"
+            render="reminderModal">
+            <h:graphicImage value="/resources/images/icons/edit.gif"
+              style="border:0" />
+            <f:setPropertyActionListener value="#{reminder}"
+              target="#{reminderController.reminder}" />
+          </a4j:commandLink>
+
+          <a4j:commandLink id="deleteReminder"
+            onclick="if (!confirm('#{msg.deleteReminderConfirm} &quot;#{reminder.objectEscaped}&quot; ?')) return false;"
+            action="#{reminderController.doDeleteReminder}"
+            rendered="#{logInController.isAuthorized('ReminderCRUD','CRUD_Delete') or logInController.userLogged == reminder.user}"
+            render="reminderList,countReminders,dsTopReminders,dsBottomReminders">
+            <h:graphicImage value="/resources/images/icons/delete.gif"
+              style="border:0" />
+            <f:setPropertyActionListener value="#{reminder}"
+              target="#{reminderController.reminder}" />
+          </a4j:commandLink>
+
+        </h:panelGrid>
+        <boa:tooltip target="updateReminder" value="#{msg.modify}" />
+        <boa:tooltip target="deleteReminder" value="#{msg.delete}" />
+
+      </rich:column>
+
+      <f:facet name="footer">
+        <h:outputText
+          value="#{(empty reminderController.reminders? msg.noReminder:'')}" />
+      </f:facet>
+
+    </rich:dataTable>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsBottomReminders" for="reminderList"
+        maxPages="10" fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+  </h:panelGrid>
+
+</ui:composition>

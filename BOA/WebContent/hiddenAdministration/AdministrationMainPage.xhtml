@@ -1,0 +1,145 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('HiddenAdministrationSendReminders')
+                    or logInController.isAuthorized('HiddenAdministrationAutomaticUpdate')
+                    or logInController.isAuthorized('HiddenAdministrationImportDocuments')
+                    or logInController.isAuthorized('HiddenAdministrationPermissionsUpdate')
+                    or logInController.isAuthorized('HiddenAdministrationBOAParametersUpdate'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('HiddenAdministrationSendReminders')
+               or logInController.isAuthorized('HiddenAdministrationAutomaticUpdate')
+               or logInController.isAuthorized('HiddenAdministrationImportDocuments')
+               or logInController.isAuthorized('HiddenAdministrationPermissionsUpdate')
+               or logInController.isAuthorized('HiddenAdministrationBOAParametersUpdate')}">
+
+      <f:facet name="header">#{msg.AdministrationPageTitle}</f:facet>
+
+      <h:inputHidden
+        value="#{applicationController.doResetBOAParameters()}" />
+
+      <h:form id="hiddenAdminForm">
+
+        <h:outputText value="#{msg.immediateExecutionWarning}"
+          styleClass="careful" />
+      
+        <h:panelGroup
+          rendered="#{(logInController.isAuthorized('HiddenAdministrationImportDocuments')
+                        or logInController.isAuthorized('HiddenAdministrationPermissionsUpdate')
+                        or logInController.isAuthorized('HiddenAdministrationSendReminders'))}">
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.GenericAdminTasks}" />
+            </legend>
+
+            <h:panelGrid columns="2">    
+              <h:outputLabel value="#{msg.ImportDocumentsText}" />
+              <h:commandButton value="#{msg.ImportDocumentsButton}"
+                action="/hiddenAdministration/ImportDocuments.xhtml?faces-redirect=true"
+                disabled="#{not logInController.isAuthorized('HiddenAdministrationImportDocuments')}" />
+    
+              <h:outputLabel value="#{msg.ManageRightsText}" />
+              <h:commandButton value="#{msg.ManageRightsButton}"
+                action="/hiddenAdministration/PermissionManagement.xhtml?faces-redirect=true"
+                disabled="#{not logInController.isAuthorized('HiddenAdministrationPermissionsUpdate')}" />
+    
+              <h:outputLabel value="#{msg.SendRemindersText}" />
+              <h:commandButton value="#{msg.SendRemindersButton}"
+                action="/hiddenAdministration/ReminderSending.xhtml?faces-redirect=true"
+                disabled="#{not logInController.isAuthorized('HiddenAdministrationSendReminders')}" />
+            </h:panelGrid>
+          </fieldset>
+        </h:panelGroup>
+
+
+        <h:panelGroup id="sysmonPanel"
+          rendered="#{logInController.isAuthorized('HiddenAdministrationAutomaticUpdate')}">
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.SysmonUpdates}" />
+            </legend>
+            
+            <h:panelGrid columns="2">
+              <h:outputLabel value="#{msg.AutoUpdateShowLog}" />
+              <h:commandButton value="#{msg.AutoUpdateShowLogButton}"
+                action="/hiddenAdministration/SysmonLog.xhtml?faces-redirect=true"
+                disabled="#{not logInController.isAuthorized('HiddenAdministrationAutomaticUpdate')}" />
+                
+              <h:outputLabel value="#{msg.AutoUpdateText}" />
+              <a4j:commandButton value="#{msg.AutoUpdateButton}"
+                id="AutoUpdateButton"
+                action="#{autoUpdatingController.perform('')}"
+                onclick="this.disabled=true;document.getElementById('hiddenAdminForm:AutoUpdateGlobalButton').disabled=true;"
+                oncomplete="this.disabled=false;document.getElementById('hiddenAdminForm:AutoUpdateGlobalButton').disabled=false;"
+                disabled="#{not logInController.isAuthorized('HiddenAdministrationAutomaticUpdate')}" />
+    
+              <h:outputLabel value="#{msg.AutoUpdateGlobalText}" />
+              <a4j:commandButton value="#{msg.AutoUpdateGlobalButton}"
+                id="AutoUpdateGlobalButton"
+                action="#{autoUpdatingController.perform('true')}"
+                onclick="this.disabled=true;document.getElementById('hiddenAdminForm:AutoUpdateButton').disabled=true;"
+                oncomplete="this.disabled=false;document.getElementById('hiddenAdminForm:AutoUpdateButton').disabled=false;"
+                disabled="#{not logInController.isAuthorized('HiddenAdministrationAutomaticUpdate')}" />
+            </h:panelGrid>
+          </fieldset>
+        </h:panelGroup>
+
+      </h:form>
+
+      <h:form>
+
+        <h:panelGroup id="boaparameterpanel"
+          rendered="#{logInController.isAuthorized('HiddenAdministrationBOAParametersUpdate')}">
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.BOAParameters}" />
+            </legend>
+
+            <h:panelGrid columns="3" cellspacing="5"
+              columnClasses="alignright,alignleft">
+              <h:outputLabel
+                value="#{msg.BOAParametersPcdemandemailrecipient}" />
+              <h:inputText id="pcdemandemailrecipiant"
+                value="#{applicationController.pcdemandemailrecipiant.value}"
+                required="true"
+                readonly="#{not logInController.isAuthorized('HiddenAdministrationBOAParametersUpdate')}"
+                disabled="#{not logInController.isAuthorized('HiddenAdministrationBOAParametersUpdate')}">
+                <f:validateLength
+                  maximum="#{DBConstants.BOAParameterValueLength}" />
+                <a4j:ajax event="blur" execute="@this" />
+              </h:inputText>
+              <rich:message for="pcdemandemailrecipiant" />
+            </h:panelGrid>
+
+            <h:panelGrid border="0" cellpadding="5" columns="2">
+              <a4j:commandButton value="#{msg.save}"
+                render="boaparameterpanel"
+                action="#{applicationController.doUpdateBOAParameters}" />
+              <a4j:commandButton value="#{msg.reset}"
+                render="boaparameterpanel" execute="@this"
+                action="#{applicationController.doResetBOAParameters}" />
+            </h:panelGrid>
+
+          </fieldset>
+        </h:panelGroup>
+      </h:form>
+
+
+
+    </rich:panel>
+  </ui:define>
+
+</ui:composition>

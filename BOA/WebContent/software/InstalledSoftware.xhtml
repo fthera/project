@@ -1,0 +1,161 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:mj="http://mojarra.dev.java.net/mojarra_ext">
+
+  <!-- Usage of this composition -->
+  <!--
+    softwares        = the list of Softwares to display
+    modifiable       = boolean indicating if the list is in edition mode
+                         or not (read only)
+    actionRemove     = the managed bean controller on which to find
+                         'method' method
+    method           = the method name of the controller to be called as
+                         Software deletion button action
+    target           = the attribute name of the controller for setting the
+                         Software to delete
+    displayDefaultOS = [optional] boolean indicating if default Operating System
+                         is to be managed or not
+    defaultOS        = [optional] the software being the default Operating System
+    OSonly           = [optional] boolean indicating if only operating systems
+                         are to be proposed or all softwares
+    required         = [optional] boolean indicating if the legend ('*') for
+                         required fields is to be displayed or not
+    autoUpdate       = [optional, default = false]
+                         boolean indicating if the softwares may be
+                         automatically updated or not
+     
+     Remark:
+     - When modifiable is true, the modal named 'installSoftwareModal' must
+         exist in the page.
+     - When modifiable and displayDefaultOS are true, the modal named
+         'changeDefaultOSModal' must exist in the page.
+  -->
+  <a4j:region id="softwareListRegion">
+
+    <c:if test="#{empty OSonly}">
+      <c:set var="OSonly" value="false" />
+    </c:if>
+
+    <c:if test="#{empty required}">
+      <c:set var="required" value="false" />
+    </c:if>
+
+    <c:if test="#{empty displayDefaultOS}">
+      <c:set var="displayDefaultOS" value="false" />
+    </c:if>
+
+    <c:if test="#{empty defaultOS}">
+      <c:set var="defaultOS" value="null" />
+    </c:if>
+
+    <c:if test="#{empty autoUpdate}">
+      <c:set var="autoUpdate" value="false" />
+    </c:if>
+
+    <fieldset>
+      <legend align="top">
+        <h:outputText
+          value="#{OSonly ? msg.installedOses : msg.installedSoftware}" />
+        <c:if test="#{required}">
+          <span class="requiredField">*</span>
+        </c:if>
+        <c:if test="#{autoUpdate}">
+          <span class="autoUpdatedField">*</span>
+        </c:if>
+      </legend>
+
+      <h:panelGroup rendered="#{displayDefaultOS}"
+        style="display:inline-block;margin-bottom:3px;margin-left:3px;">
+        <h:outputText value="#{msg.legend}" />
+        <br />
+        <h:outputText value="#{msg.legendDefaultOperatingSystem}"
+          styleClass="boldItalic" />
+      </h:panelGroup>
+
+      <h:panelGrid id="softwareList" columns="2"
+        columnClasses="top,middle">
+        <h:panelGroup>
+          <rich:dataTable value="#{softwares}" var="soft">
+            <rich:column id="softwareName"
+              styleClass="#{(defaultOS == soft) ? 'boldItalic' : '' }">
+              <f:facet name="header">
+                <h:outputText value="#{msg.name}" />
+              </f:facet>
+              <h:outputText value="#{soft.name}" />
+            </rich:column>
+
+            <rich:column id="softwareDistribution"
+              styleClass="#{(defaultOS == soft) ? 'boldItalic' : '' }">
+              <f:facet name="header">
+                <h:outputText value="#{msg.distribution}" />
+              </f:facet>
+              <h:outputText value="#{soft.distribution}" />
+            </rich:column>
+
+            <rich:column id="softwareKernel"
+              styleClass="#{(defaultOS == soft) ? 'boldItalic' : '' }">
+              <f:facet name="header">
+                <h:outputText value="#{msg.kernel}" />
+              </f:facet>
+              <h:outputText value="#{soft.kernel}" />
+            </rich:column>
+
+            <rich:column rendered="#{!OSonly}"
+              styleClass="#{(defaultOS == soft) ? 'boldItalic' : '' }">
+              <f:facet name="header">
+                <h:outputText value="#{msg.operatingSystem}" />
+              </f:facet>
+              <h:outputText value="#{soft.operatingSystem}"
+                converter="operatingSystemConverter" />
+            </rich:column>
+
+            <rich:column id="softwareRemove" rendered="#{modifiable}">
+              <f:facet name="header">
+                <h:outputText value="#{msg.remove}" />
+              </f:facet>
+              <a4j:commandLink id="confirmDeleteSoft" execute="@this"
+                render="softwareList" action="#{actionRemove[method]}"
+                oncomplete="if (#{displayDefaultOS and actionRemove.needToSetDefaultOS})
+                #{rich:component('changeDefaultOSModal')} 
+                #{displayDefaultOS ? '.show()' : 'return false'}">
+                <h:graphicImage
+                  value="/resources/images/icons/delete.gif"
+                  style="border:0" />
+                <f:setPropertyActionListener value="#{soft}"
+                  target="#{target}" />
+              </a4j:commandLink>
+
+              <boa:tooltip target="confirmDeleteSoft"
+                value="#{msg.delete}" />
+            </rich:column>
+          </rich:dataTable>
+        </h:panelGroup>
+
+        <h:panelGrid border="0" cellpadding="0" columns="2">
+          <a4j:commandButton
+            value="#{OSonly ? msg.installOs : msg.installSoftware}"
+            rendered="#{modifiable}" render="installSoftwareModal"
+            action="#{softwareController.doPrepareInstall}"
+            oncomplete="#{rich:component('installSoftwareModal')}.show()"
+            style="margin-right:5px">
+            <f:setPropertyActionListener
+              target="#{softwareController.operatingSystem}"
+              value="#{OSonly}" />
+          </a4j:commandButton>
+          <a4j:commandButton value="#{msg.selectDefaultOS}"
+            rendered="#{modifiable and displayDefaultOS}"
+            render="changeDefaultOSModal"
+            oncomplete="#{rich:component('changeDefaultOSModal')}.show()"
+            style="margin-right:5px" />
+        </h:panelGrid>
+      </h:panelGrid>
+    </fieldset>
+
+  </a4j:region>
+</ui:composition>

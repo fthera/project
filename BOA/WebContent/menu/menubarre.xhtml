@@ -1,0 +1,341 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form>
+    <rich:toolbar id="menuBarre">
+
+      <rich:dropDownMenu label="#{msg.menuFile}"
+        disabled="#{not (logInController.isAuthorized('Import')
+                      or logInController.isAuthorized('ExportViews')
+                      or logInController.isAuthorized('ExportAll')
+                      or logInController.isAuthorized('ExportTemplate'))}">
+
+        <boa:customMenuItem title="#{msg.menuImport}"
+          disabled="#{!logInController.isAuthorized('Import')}"
+          value="${request.contextPath}/io/Import.faces"
+          icon="/resources/images/icons/kdb_table.png" />
+
+        <boa:customMenuItem title="#{msg.menuViews}"
+          disabled="#{!logInController.isAuthorized('ExportViews')}"
+          value="${request.contextPath}/view/ViewList.faces"
+          icon="/resources/images/icons/kdb_table.png" />
+
+        <rich:menuItem label="#{msg.menuExportAll}" mode="ajax"
+          disabled="#{!logInController.isAuthorized('ExportAll')}"
+          icon="/resources/images/icons/fileexport.png"
+          class="simpleMenu">
+          <!-- a4j:ajax is used to correctly autosize the popup -->
+          <a4j:ajax event="click" render="exportModal"
+            oncomplete="#{rich:component('exportModal')}.show()" />
+        </rich:menuItem>
+
+        <rich:menuItem label="#{msg.getTemplate}"
+          disabled="#{!logInController.isAuthorized('ExportTemplate')}"
+          action="#{exportController.doGenerateExcelTemplate}"
+          icon="/resources/images/icons/kdb_table.png"
+          class="simpleMenu" />
+
+      </rich:dropDownMenu>
+
+
+      <rich:dropDownMenu label="#{msg.menuCreate}"
+        disabled="#{not (logInController.isAuthorized('InstallationCRUD','CRUD_Create')
+                      or logInController.isAuthorized('ArticleCRUD','CRUD_Create')
+                      or logInController.isAuthorized('SoftwareCRUD','CRUD_Create')
+                      or logInController.isAuthorized('ToolCRUD','CRUD_Create'))}">
+
+        <boa:customMenuItem title="#{msg.menuInstallation}"
+          disabled="#{!logInController.isAuthorized('InstallationCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/InstallationManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/locations/installation32x32.png" />
+
+        <boa:customMenuItem title="#{msg.menuCabinet}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/CabinetManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/articles/32x32/cabinet32x32.png" />
+
+        <boa:customMenuItem title="#{msg.menuRack}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/RackManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/articles/16x16/rack.png" />
+
+        <boa:customMenuItem title="#{msg.menuSwitch}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/SwitchManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/articles/16x16/switch.png" />
+
+        <boa:customMenuItem title="#{msg.menuBoard}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/BoardManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/articles/16x16/board16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuVarious}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/VariousManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/articles/16x16/divers16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuPC}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/PCManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/articles/16x16/PC16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuSoftware}"
+          disabled="#{!logInController.isAuthorized('SoftwareCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/SoftwareManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/articles/16x16/software0_16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuTool}"
+          disabled="#{!logInController.isAuthorized('ToolCRUD','CRUD_Create')}"
+          value="${request.contextPath}/itemManagement/ToolManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/locations/Tool32x32.png" />
+
+      </rich:dropDownMenu>
+
+
+      <rich:dropDownMenu label="#{msg.menuQuery}"
+        disabled="#{not (logInController.isAuthorized('ArticleCRUD','CRUD_Read')
+                      or logInController.isAuthorized('SoftwareCRUD','CRUD_Read')
+                      or logInController.isAuthorized('InstallationCRUD','CRUD_Read')
+                      or logInController.isAuthorized('ToolCRUD','CRUD_Read')
+                      or logInController.isAuthorized('AdvancedSearchAll')
+                      or logInController.isAuthorized('HierarchicalSearch'))}">
+
+        <boa:customMenuItem title="#{msg.menuTreeExplorer}"
+          disabled="#{!logInController.isAuthorized('HierarchicalSearch')}"
+          value="${request.contextPath}/explorer/explorer.faces"
+          icon="/resources/images/icons/hierarchicalLayout.png" />
+
+        <rich:menuGroup label="#{msg.menuAdvancedQuery}"
+          disabled="#{not (logInController.isAuthorized('ArticleCRUD','CRUD_Read')
+                        or logInController.isAuthorized('SoftwareCRUD','CRUD_Read')
+                        or logInController.isAuthorized('AdvancedSearchAll'))}"
+          icon="/resources/images/icons/search16x16.png"
+          style="padding: 1px 1px 1px 1px !important">
+
+          <boa:customMenuItem title="#{msg.menuHardware}"
+            disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+            value="${request.contextPath}/search/SearchArticles.faces"
+            icon="/resources/images/icons/articles/article.png" />
+
+          <boa:customMenuItem title="#{msg.menuSoftware}"
+            disabled="#{!logInController.isAuthorized('SoftwareCRUD','CRUD_Read')}"
+            value="${request.contextPath}/search/SearchSoftwares.faces"
+            icon="/resources/images/icons/articles/16x16/software0_16x16.png" />
+
+          <boa:customMenuItem title="#{msg.menuAdvancedAll}"
+            disabled="#{!logInController.isAuthorized('AdvancedSearchAll')}"
+            value="${request.contextPath}/search/SearchAll.faces"
+            icon="/resources/images/icons/search16x16.png" />
+
+        </rich:menuGroup>
+
+        <boa:customMenuItem title="#{msg.menuInstallation}"
+          disabled="#{!logInController.isAuthorized('InstallationCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/InstallationList.faces"
+          icon="/resources/images/icons/locations/installation32x32.png" />
+
+        <boa:customMenuItem title="#{msg.menuCabinet}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/CabinetList.faces"
+          icon="/resources/images/icons/articles/32x32/cabinet32x32.png" />
+
+        <boa:customMenuItem title="#{msg.menuRack}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/RackList.faces"
+          icon="/resources/images/icons/articles/16x16/rack.png" />
+
+        <boa:customMenuItem title="#{msg.menuSwitch}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/SwitchList.faces"
+          icon="/resources/images/icons/articles/16x16/switch.png" />
+
+        <boa:customMenuItem title="#{msg.menuBoard}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/BoardList.faces"
+          icon="/resources/images/icons/articles/16x16/board16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuVarious}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/VariousList.faces"
+          icon="/resources/images/icons/articles/16x16/divers16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuPC}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/PCList.faces"
+          icon="/resources/images/icons/articles/16x16/PC16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuSoftware}"
+          disabled="#{!logInController.isAuthorized('SoftwareCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/SoftwareList.faces"
+          icon="/resources/images/icons/articles/16x16/software0_16x16.png" />
+
+        <boa:customMenuItem title="#{msg.menuTool}"
+          disabled="#{!logInController.isAuthorized('ToolCRUD','CRUD_Read')}"
+          value="${request.contextPath}/itemList/ToolList.faces"
+          icon="/resources/images/icons/locations/Tool32x32.png" />
+
+      </rich:dropDownMenu>
+
+
+      <rich:dropDownMenu id="menuObso" label="#{msg.menuObsolescence}"
+        disabled="#{not (logInController.isAuthorized('ObsolescenceCRUD','CRUD_Create')
+                      or logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read'))}">
+
+        <boa:customMenuItem title="#{msg.menuObsoCreate}"
+          disabled="#{!logInController.isAuthorized('ObsolescenceCRUD','CRUD_Create')}"
+          value="${request.contextPath}/obso/ObsolescenceManagement.faces?mode=CREATE"
+          icon="/resources/images/icons/oldparchment.jpeg" />
+
+        <boa:customMenuItem title="#{msg.menuObsoTable}"
+          disabled="#{!logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read')}"
+          value="${request.contextPath}/obso/ObsolescenceList.faces"
+          icon="/resources/images/icons/kexi_kexi.png" />
+
+        <boa:customMenuItem title="#{msg.menuObsoSearch}"
+          disabled="#{!logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read')}"
+          value="${request.contextPath}/obso/SearchObso.faces"
+          icon="/resources/images/icons/kexi_kexi.png" />
+
+      </rich:dropDownMenu>
+
+
+      <rich:dropDownMenu id="menuPCManagement"
+        label="#{msg.menuPCManagement}"
+        disabled="#{true}">
+
+        <boa:customMenuItem title="#{msg.menuMyPCManagement}"
+          disabled="#{not (logInController.userLogged != null and logInController.isAuthorized('ArticleCRUD','CRUD_Read'))}"
+          value="${request.contextPath}/demand/PCManagementList.faces" />
+
+        <boa:customMenuItem title="#{msg.menuNewPCDemand}"
+          disabled="#{!logInController.isAuthorized('DemandCRUD','CRUD_Create')}"
+          value="${request.contextPath}/demand/DemandManagement.faces?mode=CREATE" />
+
+        <boa:customMenuItem title="#{msg.menuPCDemands}"
+          disabled="#{not (logInController.userLogged != null and logInController.isAuthorized('DemandCRUD','CRUD_Read'))}"
+          value="${request.contextPath}/demand/UserDemandList.faces" />
+
+        <boa:customMenuItem title="#{msg.menuDemandsManagement}"
+          disabled="#{not (logInController.isAuthorized('DemandConfirm')
+                        or logInController.isAuthorized('DemandAllocate')
+                        or logInController.isAuthorized('DemandMakeAvailable'))}"
+          value="${request.contextPath}/demand/CompleteDemandList.faces" />
+
+        <boa:customMenuItem title="#{msg.menuAvailablePC}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Read')}"
+          value="${request.contextPath}/demand/AvailablePCList.faces" />
+
+      </rich:dropDownMenu>
+
+
+      <rich:dropDownMenu label="#{msg.menuAdmin}"
+        disabled="#{not (logInController.isAuthorized('UserCRUD','CRUD_Create')
+                      or logInController.isAuthorized('UserCRUD','CRUD_Read')
+                      or logInController.isAuthorized('LocationCRUD','CRUD_Read')
+                      or logInController.isAuthorized('ArticleCRUD','CRUD_Delete')
+                      or logInController.isAuthorized('ManufacturerPNCRUD','CRUD_Delete')
+                      or logInController.isAuthorized('InstallationCRUD','CRUD_Delete')
+                      or logInController.isAuthorized('ToolCRUD','CRUD_Delete')
+                      or logInController.isAuthorized('TypeCRUD','CRUD_Read')
+                      or logInController.isAuthorized('StockRead')
+                      or logInController.isAuthorized('ValuesListCRUD','CRUD_Read'))}">
+
+        <boa:customMenuItem title="#{msg.menuCreateUser}"
+          disabled="#{!logInController.isAuthorized('UserCRUD','CRUD_Create')}"
+          value="#{request.contextPath}/user/CreateUser.faces"
+          icon="/resources/images/icons/add_user.png" />
+
+        <boa:customMenuItem title="#{msg.menuShowUsers}"
+          disabled="#{!logInController.isAuthorized('UserCRUD','CRUD_Read')}"
+          value="#{request.contextPath}/user/ListUser.faces"
+          icon="/resources/images/icons/list_users.png" />
+
+        <boa:customMenuItem title="#{msg.menuGestBuilding}"
+          disabled="#{!logInController.isAuthorized('LocationCRUD','CRUD_Read')}"
+          value="${request.contextPath}/admin/BuildingGest.faces"
+          icon="/resources/images/icons/locations/Building.png" />
+
+        <boa:customMenuItem title="#{msg.menuDeleteArticle}"
+          disabled="#{!logInController.isAuthorized('ArticleCRUD','CRUD_Delete')}"
+          value="${request.contextPath}/admin/DeleteArticle.faces"
+          icon="/resources/images/icons/articles/article.png" />
+
+        <boa:customMenuItem title="#{msg.menuDeleteManufacturerPN}"
+          disabled="#{!logInController.isAuthorized('ManufacturerPNCRUD','CRUD_Delete')}"
+          value="${request.contextPath}/admin/DeleteManufacturerPN.faces"
+          icon="/resources/images/icons/articles/PartNumber.png" />
+
+        <boa:customMenuItem title="#{msg.menuDeleteInstallation}"
+          disabled="#{!logInController.isAuthorized('InstallationCRUD','CRUD_Delete')}"
+          value="${request.contextPath}/admin/DeleteInstallation.faces"
+          icon="/resources/images/icons/locations/installation32x32.png" />
+
+        <boa:customMenuItem title="#{msg.menuDeleteTool}"
+          disabled="#{!logInController.isAuthorized('ToolCRUD','CRUD_Delete')}"
+          value="${request.contextPath}/admin/DeleteTool.faces"
+          icon="/resources/images/icons/locations/Tool32x32.png" />
+
+        <boa:customMenuItem title="#{msg.menuGestType}"
+          disabled="#{!logInController.isAuthorized('TypeCRUD','CRUD_Read')}"
+          value="${request.contextPath}/type/TypeGest.faces"
+          icon="/resources/images/icons/typeManagement.png" />
+
+        <boa:customMenuItem title="#{msg.menuGestStock}"
+          disabled="#{!logInController.isAuthorized('StockRead')}"
+          value="${request.contextPath}/stock/Stock.faces"
+          icon="/resources/images/icons/package.png" />
+
+        <boa:customMenuItem title="#{msg.menuGestModifiableList}"
+          disabled="#{!logInController.isAuthorized('ValuesListCRUD','CRUD_Read')}"
+          value="${request.contextPath}/valuelist/ValueListGest.faces"
+          icon="/resources/images/icons/lists.png" />
+
+        <boa:customMenuItem title="#{msg.hiddenAdministration}"
+          rendered="#{logInController.isAuthorized('HiddenAdministrationSendReminders')
+                   or logInController.isAuthorized('HiddenAdministrationAutomaticUpdate')
+                   or logInController.isAuthorized('HiddenAdministrationImportDocuments')
+                   or logInController.isAuthorized('HiddenAdministrationPermissionsUpdate')
+                   or logInController.isAuthorized('HiddenAdministrationBOAParametersUpdate')}"
+          value="${request.contextPath}/hiddenAdministration/AdministrationMainPage.faces" />
+
+      </rich:dropDownMenu>
+
+
+      <rich:dropDownMenu label="#{msg.menuUser}"
+        disabled="#{not (logInController.isAuthorized('UserRemindersListMenu')
+                      or logInController.isAuthorized('UserProfileUpdate'))}">
+
+        <boa:customMenuItem title="#{msg.menuReminders}"
+          disabled="#{!logInController.isAuthorized('UserRemindersListMenu')}"
+          value="#{request.contextPath}/user/ListUserReminders.faces?pUserId=#{logInController.userLogged.id}" />
+
+        <boa:customMenuItem title="#{msg.menuUserProfil}"
+          disabled="#{!logInController.isAuthorized('UserProfileUpdate')}"
+          value="#{request.contextPath}/user/UpdateUser.faces"
+          icon="/resources/images/icons/kuser.png" />
+
+      </rich:dropDownMenu>
+
+
+      <rich:dropDownMenu label="#{msg.menuQuestion}" submitMode="none">
+
+        <boa:customMenuItem title="#{msg.manualBOA}" target="_blank"
+          value="#{initParam['BOA_MU_PATH']}/#{initParam['BOA_MU_NAME']}_#{initParam['BoaVersion']}.pdf"
+          icon="/resources/images/icons/man.png" />
+        <boa:customMenuItem title="#{msg.connectedUserMenu}"
+          value="#{request.contextPath}/user/whoIsOnline.faces" />
+        <rich:menuItem label="#{msg.menuAbout}" mode="ajax"
+          onclick="#{rich:component('about')}.show()"
+          icon="/resources/images/icons/info.png" class="simpleMenu" />
+
+      </rich:dropDownMenu>
+
+    </rich:toolbar>
+  </h:form>
+</ui:composition>

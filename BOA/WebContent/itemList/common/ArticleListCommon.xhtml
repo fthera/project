@@ -1,0 +1,645 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents">
+
+  <!-- List of the found articles included by other pages -->
+  <!--
+    ret = return parameter for the item edit page
+  -->
+  <c:if test="#{empty ret}">
+    <c:set var="ret" value="LIST" />
+  </c:if>
+
+  <h:form id="form_exportArticlesButton">
+    <h:panelGrid columns="2" cellspacing="5">
+      <h:commandButton id="export" value="#{msg.export}"
+        action="#{searchController.doExport}" />
+      <a4j:commandButton id="resetFilter" value="#{msg.resetFilters}"
+        execute="@this" action="#{searchController.doResetFilters}"
+        render="tableResults,dsTop,dsBottom,counts">
+      </a4j:commandButton>
+    </h:panelGrid>
+  </h:form>
+
+  <h:form id="form_results">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="articleListError" />
+      <ui:param name="globalOnly" value="true" />
+    </ui:include>
+
+    <h:panelGrid columns="1" cellspacing="5">
+      <h:outputText id="counts" styleClass="bigText"
+        value="#{msg.countFiltered} : #{searchController.articleDataModel.rowCount}" />
+    </h:panelGrid>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsTop" for="tableResults" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+    <a4j:queue requestDelay="100" ignoreDupResponses="true" />
+
+    <div class="scroll-div" style="max-height: 68%; max-height: 68vh;">
+      <rich:dataTable id="tableResults" sortMode="single" rows="30"
+        value="#{searchController.articleDataModel}" var="art"
+        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+        rowClasses="evenRow, oddRow">
+
+        <f:facet name="header">
+          <h:outputText value="#{searchController.displayResultsTitle}" />
+        </f:facet>
+
+        <rich:column
+          rendered="#{logInController.isAuthorized('ArticleCRUD','CRUD_Update') and searchController.displayEditionColumn}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.actions}" />
+          </f:facet>
+          <h:outputLink id="editLabel"
+            rendered="#{logInController.isAuthorized('ArticleCRUD','CRUD_Update')}"
+            value="${request.contextPath}/itemManagement/${art.class.simpleName}Management.faces">
+            <h:graphicImage value="/resources/images/icons/edit.gif"
+              style="border:0" />
+            <f:param name="id" value="#{art.id}" />
+            <f:param name="mode" value="UPDATE" />
+            <f:param name="ret" value="#{ret}" />
+          </h:outputLink>
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayFamilyColumn}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.ClassTitle}" />
+          </f:facet>
+          <h:outputText value="#{msg[art.class.simpleName]}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.departmentInCharge.defaultValue}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.DepartmentInCharge}" />
+              <br />
+              <p:selectCheckboxMenu id="departmentInCharge" widgetVar="departmentInChargeWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['departmentInCharge']}"
+                label="#{searchController.isFiltered('dataModel','departmentInCharge') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','departmentInCharge') ? 'checkboxmenured' : 'checkboxmenu'}"
+                converter="idConverter" rendered="#{searchController.displayPCColumns}"
+                filter="true" filterMatchMode="startsWith">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','departmentInCharge')}" />
+                <p:ajax event="change" oncomplete="PF('departmentInChargeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('departmentInChargeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText
+            value="#{art.departmentInCharge.defaultValue}" />
+        </rich:column>
+
+        <rich:column sortBy="#{art.airbusSN}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.airbusSN}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['airbusSN']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputLink id="infoArtCmd"
+            value="${request.contextPath}/itemManagement/${art.class.simpleName}Management.faces">
+            <h:outputText
+              value="#{(empty art.airbusSN)?msg.noAirbusSN:art.airbusSN}" />
+            <f:param name="id" value="#{art.id}" />
+            <f:param name="mode" value="READ" />
+          </h:outputLink>
+        </rich:column>
+
+        <rich:column rendered="#{!searchController.displayPCColumns}"
+          sortBy="#{art.airbusPN.identifier}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.airbusPN}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['airbusPN.identifier']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.airbusPN.identifier}" />
+        </rich:column>
+
+        <rich:column sortBy="#{art.manufacturerSN}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.manufacturerSN}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['manufacturerSN']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.manufacturerSN}" />
+        </rich:column>
+
+        <rich:column rendered="#{!searchController.displayPCColumns}"
+          sortBy="#{art.manufacturerPN.identifier}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.manufacturerPN}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['manufacturerPN.identifier']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.manufacturerPN.identifier}" />
+        </rich:column>
+
+        <rich:column
+          rendered="#{searchController.displayDesignationColumn}"
+          sortBy="#{art.designation}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.designation}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['designation']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.designation}"
+            rendered="#{art.class.getSimpleName() == 'Rack' or art.class.getSimpleName() == 'Cabinet'}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.name}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.name}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['name']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.name}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.productType}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.ProductType}" />
+              <br />
+              <p:selectCheckboxMenu id="productType" widgetVar="productTypeWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['productType']}"
+                label="#{searchController.isFiltered('dataModel','productType') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','productType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                converter="idConverter" rendered="#{searchController.displayPCColumns}"
+                filter="true" filterMatchMode="startsWith">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','productType')}" />
+                <p:ajax event="change" oncomplete="PF('productTypeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('productTypeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText
+            value="#{art.productType.localeValue}" />
+        </rich:column>
+
+        <rich:column sortBy="#{art.typeArticle.label}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.type}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['typeArticle.label']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.typeArticle.label}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.defaultOS}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['defaultOS.completeName']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.defaultOS.completeName}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.function}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.function}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['function']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.function}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.specificity}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['PCSpecificity']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText id="hasSpecificities" style="font-style: italic"
+            value="#{art.hasSpecificities}" />
+          <rich:tooltip target="hasSpecificities" style="min-width:200px;max-width:400px"
+            styleclass="tooltip" showDelay="750" followMouse="false" >
+            <rich:dataTable id="PCSpecificities" style="width:100%"
+              value="#{art.specificities}" var="PCSpecificity"
+              onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+              onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+              rowClasses="evenRow, oddRow">
+              <f:facet name="header">
+                <h:outputText id ="specificitiesTitle" value="#{msg.specificities}" />
+              </f:facet>
+      
+              <rich:column>
+                <f:facet name="header">
+                  <h:outputText value="#{msg.description}" />
+                </f:facet>
+                <h:outputText value="#{PCSpecificity.description}" />
+              </rich:column>
+              
+              <rich:column>
+                <f:facet name="header">
+                  <h:outputText value="#{msg.contact}" />
+                </f:facet>
+                <h:outputText value="#{PCSpecificity.contact}" />
+              </rich:column>
+            </rich:dataTable>
+          </rich:tooltip>
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.inCharge.loginDetails}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.technicalContact}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['inCharge.loginDetails']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.inCharge.loginDetails}" />
+        </rich:column>
+
+        <rich:column sortBy="#{art.state}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.articleState}" />
+              <br />
+              <p:selectCheckboxMenu id="state" widgetVar="stateWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['state']}"
+                label="#{searchController.isFiltered('dataModel','state') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','state') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="stateConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','state')}" />
+                <p:ajax event="change" oncomplete="PF('stateWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('stateWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{art.state}" converter="stateConverter" />
+        </rich:column>
+
+        <rich:column sortBy="#{art.useState}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.UseState}" />
+              <br />
+              <p:selectCheckboxMenu id="useState" widgetVar="useStateWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['useState']}"
+                label="#{searchController.isFiltered('dataModel','useState') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','useState') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="useStateConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','useState')}" />
+                <p:ajax event="change" oncomplete="PF('useStateWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('useStateWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{art.useState}" converter="useStateConverter" />
+        </rich:column>
+
+        <rich:column rendered="#{!searchController.displayPCColumns}"
+          sortBy="#{art.cmsCode}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.cmsCode}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['cmsCode']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.cmsCode}" />
+        </rich:column>
+
+        <rich:column sortBy="#{art.acquisitionDate}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.acquisitionDate}" />
+          </f:facet>
+          <h:outputText value="#{art.acquisitionDate}">
+            <f:convertDateTime
+              pattern="#{searchController.getDateFormat()}"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.hasDocuments}" />
+            <br />
+            <p:selectCheckboxMenu id="hasDocuments" widgetVar="hasDocumentsWidget"
+              value="#{searchController.articleDataModel.selectionFilterMap['hasDocuments']}"
+              label="#{searchController.isFiltered('dataModel','hasDocuments') ? msg.activeFilter : msg.noFilter}"
+              styleClass="#{searchController.isFiltered('dataModel','hasDocuments') ? 'checkboxmenured' : 'checkboxmenu'} "
+              filter="true" filterMatchMode="startsWith" converter="boolConverter">
+              <f:selectItems value="#{searchController.getFilterChoices('dataModel','hasDocuments')}" />
+              <p:ajax event="change" oncomplete="PF('hasDocumentsWidget').show()"
+                update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+              <p:ajax event="toggleSelect" oncomplete="PF('hasDocumentsWidget').show()"
+                update="tableResults,form_results:dsTop,form_results:dsBottom" />
+              <p:ajax event="change"
+                update="form_results:counts "/>
+              <p:ajax event="toggleSelect"
+                update="form_results:counts" />
+            </p:selectCheckboxMenu>
+          </f:facet>
+          
+          <h:outputText id="hasDocumentsValue" value="#{(empty art.documents)?msg.no:msg.yes}" />
+          <rich:tooltip target="hasDocumentsValue"
+            styleclass="tooltip" showDelay="750" followMouse="false" >
+            <ui:repeat value="#{art.documents}" var="doc">
+                <h:outputText value="#{doc.name}" /><br/>
+            </ui:repeat>
+          </rich:tooltip>
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.allocation}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.businessAlloc}" />
+              <br />
+              <p:selectCheckboxMenu id="allocationPC" widgetVar="allocationPCWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['allocation']}"
+                label="#{searchController.isFiltered('dataModel','allocation') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','allocation') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                rendered="#{searchController.displayPCColumns}"
+                converter="idConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','allocation')}" />
+                <p:ajax event="change" oncomplete="PF('allocationPCWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('allocationPCWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText
+            value="#{art.allocation.localeValue}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.usage}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.businessUsage}" />
+              <br />
+              <p:selectCheckboxMenu id="usagePC" widgetVar="usagePCWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['usage']}"
+                label="#{searchController.isFiltered('dataModel','usage') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','usage') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                rendered="#{searchController.displayPCColumns}"
+                converter="idConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','usage')}" />
+                <p:ajax event="change" oncomplete="PF('usagePCWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('usagePCWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText
+            value="#{art.usage.localeValue}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}"
+          sortBy="#{art.assignment}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.assignment}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['assignment']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.assignment}" />
+        </rich:column>
+
+        <rich:column
+          rendered="#{searchController.displayActiveStockColumn}"
+          sortBy="#{art.activeStockControlDate}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.activeStockControlDate}" />
+          </f:facet>
+          <h:outputText value="#{art.activeStockControlDate}"
+            rendered="#{art.class.getSimpleName() == 'Board'}">
+            <f:convertDateTime
+              pattern="#{searchController.getDateFormat()}"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.containerType}" />
+              <br />
+              <p:selectCheckboxMenu id="containerType" widgetVar="containerTypeWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['containerType']}"
+                label="#{searchController.isFiltered('dataModel','containerType') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','containerType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="containerTypeConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','containerType')}" />
+                <p:ajax event="change" oncomplete="PF('containerTypeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('containerTypeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{art.container.type.toString()}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.container}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['container.containerName']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.container.containerName}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.masterContainer}" />
+          </f:facet>
+          <h:outputText value="#{art.masterContainer.containerName}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.location}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['location.locationName']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.location.locationName}" />
+        </rich:column>
+
+        <rich:column rendered="#{searchController.displayPCColumns}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.InstallationUser}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['masterInstallation.user']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.masterInstallation.user}"
+            rendered="#{art.masterInstallation != null}">
+          </h:outputText>
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.externalLocationType}" />
+              <br />
+              <p:selectCheckboxMenu id="externalLocationType" widgetVar="externalLocationTypeWidget"
+                value="#{searchController.articleDataModel.selectionFilterMap['externalLocationType']}"
+                label="#{searchController.isFiltered('dataModel','externalLocationType') ? msg.activeFilter : msg.noFilter}"
+                styleClass="#{searchController.isFiltered('dataModel','externalLocationType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                filter="true" filterMatchMode="startsWith"
+                converter="idConverter">
+                <f:selectItems value="#{searchController.getFilterChoices('dataModel','externalLocationType')}" />
+                <p:ajax event="change" oncomplete="PF('externalLocationTypeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom"/>
+                <p:ajax event="toggleSelect" oncomplete="PF('externalLocationTypeWidget').show()"
+                  update="tableResults,form_results:dsTop,form_results:dsBottom" />
+                <p:ajax event="change"
+                  update="form_results:counts "/>
+                <p:ajax event="toggleSelect"
+                  update="form_results:counts" />
+              </p:selectCheckboxMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText
+            value="#{art.location.externalEntity.externalEntityType.localeValue}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.externalLocation}" />
+            <br />
+            <h:inputText
+              value="#{searchController.articleDataModel.selectionFilterMap['location.externalLocationName']}">
+              <a4j:ajax event="keyup"
+                render="tableResults@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </f:facet>
+          <h:outputText value="#{art.location.externalLocationName}" />
+        </rich:column>
+
+        <f:facet name="footer">
+          <h:outputText id="tableFooter"
+            value="#{(searchController.articleDataModel.rowCount == 0? msg.noArticle:'')}" />
+        </f:facet>
+
+      </rich:dataTable>
+    </div>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsBottom" for="tableResults" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+  </h:form>
+</ui:composition>
+

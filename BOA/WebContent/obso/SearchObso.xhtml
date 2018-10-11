@@ -1,0 +1,389 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read')}">
+
+      <f:facet name="header">
+        <h:outputText value="#{msg.searchObsolescenceTitle}" />
+      </f:facet>
+      <h:form id="ObsoSearchForm">
+
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="searchObsoError" />
+          <ui:param name="globalOnly" value="true" />
+        </ui:include>
+
+        <fieldset style="width: 80%">
+          <legend align="top">
+            <h:outputText value="#{msg.identification}" />
+          </legend>
+
+          <h:panelGrid columns="2" style="width:100%">
+            <h:panelGroup>
+              <h:panelGrid columns="2" style="width:100%"
+                columnClasses="alignright,alignleft">
+                <h:outputLabel for="constituantName"
+                  value="#{msg.constituantName}" styleClass="labelname" />
+                <h:inputText id="constituantName" styleClass="input40"
+                  value="#{searchObsoController.inputTextField['constituantName']}" />
+
+                <h:outputLabel for="manufacturer"
+                  value="#{msg.manufacturer}" styleClass="labelname" />
+                <h:inputText id="manufacturer" styleClass="input40"
+                  value="#{searchObsoController.inputTextField['manufacturer']}" />
+
+                <h:outputLabel for="supplier" value="#{msg.supplier}"
+                  styleClass="labelname" />
+                <h:inputText id="supplier" styleClass="input40"
+                  value="#{searchObsoController.inputTextField['supplier']}" />
+              </h:panelGrid>
+            </h:panelGroup>
+            <h:panelGroup>
+              <fieldset>
+                <legend align="top">
+                  <h:outputText value="#{msg.reference}" />
+                </legend>
+                <h:panelGrid columns="2" style="width:100%"
+                  columnClasses="pcnt50,pcnt50">
+                  <h:panelGrid columns="2" style="width:100%"
+                    columnClasses="alignright,alignleft">
+                    <h:outputLabel for="airbusPN"
+                      value="#{msg.AirbusPN}" styleClass="labelname" />
+                    <h:inputText id="airbusPN" styleClass="input30"
+                      value="#{searchObsoController.inputTextField['airbusPN']}" />
+
+                    <h:outputLabel for="manufacturerPN"
+                      value="#{msg.ManufacturerPN}"
+                      styleClass="labelname" />
+                    <h:inputText id="manufacturerPN"
+                      styleClass="input30"
+                      value="#{searchObsoController.inputTextField['manufacturerPN']}" />
+                  </h:panelGrid>
+                  <h:panelGrid columns="2" style="width:100%"
+                    columnClasses="alignright,alignleft">
+                    <h:outputLabel for="typePC" value="#{msg.type}"
+                      styleClass="labelname" />
+                    <h:inputText id="typePC" styleClass="input30"
+                      value="#{searchObsoController.inputTextField['typePC']}" />
+
+                    <h:outputLabel for="software"
+                      value="#{msg.Software}" styleClass="labelname" />
+                    <h:inputText id="software" styleClass="input30"
+                      value="#{searchObsoController.inputTextField['software']}" />
+                  </h:panelGrid>
+                </h:panelGrid>
+              </fieldset>
+            </h:panelGroup>
+          </h:panelGrid>
+        </fieldset>
+
+        <fieldset style="width: 80%">
+          <legend align="top">
+            <h:outputText value="#{msg.obsolescenceInformation}" />
+          </legend>
+
+          <h:panelGrid columns="4" style="width:70%"
+            columnClasses="alignright25,alignleft25,alignright,alignleft">
+            <h:outputLabel for="endOfOrder1"
+              value="#{msg.endOfOrder} #{msg.between}"
+              styleClass="labelname" />
+            <rich:calendar id="endOfOrder1"
+              value="#{searchObsoController.inputTextField['endOfOrderDate1']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="endOfOrder2" value="#{msg.with}"
+              styleClass="labelname" />
+            <rich:calendar id="endOfOrder2"
+              value="#{searchObsoController.inputTextField['endOfOrderDate2']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="obsolescenceDate1"
+              value="#{msg.obsolescenceDate} #{msg.between}"
+              styleClass="labelname" />
+            <rich:calendar id="obsolescenceDate1"
+              value="#{searchObsoController.inputTextField['obsolescenceDate1']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="obsolescenceDate2" value="#{msg.with} "
+              styleClass="labelname" />
+            <rich:calendar id="obsolescenceDate2"
+              value="#{searchObsoController.inputTextField['obsolescenceDate2']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="endOfSupport1"
+              value="#{msg.endOfSupport} #{msg.between}"
+              styleClass="labelname" />
+            <rich:calendar id="endOfSupport1"
+              value="#{searchObsoController.inputTextField['endOfSupportDate1']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="endOfSupport2" value="#{msg.with}"
+              styleClass="labelname" />
+            <rich:calendar id="endOfSupport2"
+              value="#{searchObsoController.inputTextField['endOfSupportDate2']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="endOfProduction1"
+              value="#{msg.endOfProduction} #{msg.between}"
+              styleClass="labelname" />
+            <rich:calendar id="endOfProduction1"
+              value="#{searchObsoController.inputTextField['endOfProductionDate1']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="endOfProduction2" value="#{msg.with} "
+              styleClass="labelname" />
+            <rich:calendar id="endOfProduction2"
+              value="#{searchObsoController.inputTextField['endOfProductionDate2']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+              
+            <h:outputLabel for="currentAction"
+              value="#{msg.currentAction}" styleClass="labelname" />
+            <p:selectCheckboxMenu id="currentAction" widgetVar="currentActionWidget"
+              value="#{searchObsoController.inputTextField['actionIds']}"
+              label="#{searchObsoController.isFiltered('actionIds') ? msg.activeFilter : msg.noFilter}"
+              styleClass="#{searchObsoController.isFiltered('actionIds') ? 'checkboxmenured' : 'checkboxmenu'}"
+              converter="idConverter"
+              filter="true" filterMatchMode="startsWith">
+              <f:selectItems value="#{searchObsoController.getFilterChoices('actionIds')}" />
+              <p:ajax event="change" oncomplete="PF('currentActionWidget').show()"
+                update="currentAction" />
+              <p:ajax event="toggleSelect" oncomplete="PF('currentActionWidget').show()"
+                update="currentAction" />
+            </p:selectCheckboxMenu>
+
+            <h:outputLabel for="strategy" value="#{msg.strategy}"
+              styleClass="labelname" />
+            <p:selectCheckboxMenu id="strategy" widgetVar="strategyWidget"
+              value="#{searchObsoController.inputTextField['strategyIds']}"
+              label="#{searchObsoController.isFiltered('strategyIds') ? msg.activeFilter : msg.noFilter}"
+              styleClass="#{searchObsoController.isFiltered('strategyIds') ? 'checkboxmenured' : 'checkboxmenu'}"
+              converter="idConverter"
+              filter="true" filterMatchMode="startsWith">
+              <f:selectItems value="#{searchObsoController.getFilterChoices('strategyIds')}" />
+              <p:ajax event="change" oncomplete="PF('strategyWidget').show()"
+                update="strategy" />
+              <p:ajax event="toggleSelect" oncomplete="PF('strategyWidget').show()"
+                update="strategy" />
+            </p:selectCheckboxMenu>
+
+            <h:outputLabel for="manufacturerStatus"
+              value="#{msg.manufacturerStatus}" styleClass="labelname" />
+            <p:selectCheckboxMenu id="manufacturerStatus" widgetVar="manufacturerStatusWidget"
+              value="#{searchObsoController.inputTextField['manufacturerStatusIds']}"
+              label="#{searchObsoController.isFiltered('manufacturerStatusIds') ? msg.activeFilter : msg.noFilter}"
+              styleClass="#{searchObsoController.isFiltered('manufacturerStatusIds') ? 'checkboxmenured' : 'checkboxmenu'}"
+              converter="idConverter"
+              filter="true" filterMatchMode="startsWith">
+              <f:selectItems value="#{searchObsoController.getFilterChoices('manufacturerStatusIds')}" />
+              <p:ajax event="change" oncomplete="PF('manufacturerStatusWidget').show()"
+                update="manufacturerStatus" />
+              <p:ajax event="toggleSelect" oncomplete="PF('manufacturerStatusWidget').show()"
+                update="manufacturerStatus" />
+            </p:selectCheckboxMenu>
+
+            <h:outputLabel for="airbusStatus"
+              value="#{msg.airbusStatus}" styleClass="labelname" />
+            <p:selectCheckboxMenu id="airbusStatus" widgetVar="airbusStatusWidget"
+              value="#{searchObsoController.inputTextField['airbusStatusIds']}"
+              label="#{searchObsoController.isFiltered('airbusStatusIds') ? msg.activeFilter : msg.noFilter}"
+              styleClass="#{searchObsoController.isFiltered('airbusStatusIds') ? 'checkboxmenured' : 'checkboxmenu'}"
+              converter="idConverter"
+              filter="true" filterMatchMode="startsWith">
+              <f:selectItems value="#{searchObsoController.getFilterChoices('airbusStatusIds')}" />
+              <p:ajax event="change" oncomplete="PF('airbusStatusWidget').show()"
+                update="airbusStatus" />
+              <p:ajax event="toggleSelect" oncomplete="PF('airbusStatusWidget').show()"
+                update="airbusStatus" />
+            </p:selectCheckboxMenu>
+
+            <h:outputLabel for="continuityDate1"
+              value="#{msg.continuityDate} #{msg.between}"
+              styleClass="labelname" />
+            <rich:calendar id="continuityDate1"
+              value="#{searchObsoController.inputTextField['continuityDate1']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="continuityDate2" value="#{msg.with} "
+              styleClass="labelname" />
+            <rich:calendar id="continuityDate2"
+              value="#{searchObsoController.inputTextField['continuityDate2']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true" />
+
+            <h:outputLabel for="lastUpdate1"
+              value="#{msg.lastUpdate} #{msg.between}"
+              styleClass="labelname" />
+            <h:panelGroup>
+              <rich:calendar id="lastUpdate1"
+                value="#{searchObsoController.inputTextField['lastObsolescenceUpdate1']}"
+                locale="#{localeCtrl.locale}" popup="true"
+                enableManualInput="true"
+                datePattern="#{searchObsoController.getDateFormat()}"
+                showApplyButton="true">
+                <a4j:ajax event="change" execute="@this"
+                  render="nextConsultingDate" />
+              </rich:calendar>
+              <rich:message for="lastUpdate1"></rich:message>
+            </h:panelGroup>
+
+            <h:outputLabel for="lastUpdate2" value="#{msg.with}"
+              styleClass="labelname" />
+            <h:panelGroup>
+              <rich:calendar id="lastUpdate2"
+                value="#{searchObsoController.inputTextField['lastObsolescenceUpdate2']}"
+                locale="#{localeCtrl.locale}" popup="true"
+                enableManualInput="true"
+                datePattern="#{searchObsoController.getDateFormat()}"
+                showApplyButton="true">
+                <a4j:ajax event="change" execute="@this"
+                  render="nextConsultingDate" />
+              </rich:calendar>
+              <rich:message for="lastUpdate2"></rich:message>
+            </h:panelGroup>
+
+            <h:outputLabel for="consultPeriod"
+              value="#{msg.consultPeriod} " styleClass="labelname" />
+            <p:selectCheckboxMenu id="consultPeriod" widgetVar="consultPeriodWidget"
+              value="#{searchObsoController.inputTextField['consultPeriodIds']}"
+              label="#{searchObsoController.isFiltered('consultPeriodIds') ? msg.activeFilter : msg.noFilter}"
+              styleClass="#{searchObsoController.isFiltered('consultPeriodIds') ? 'checkboxmenured' : 'checkboxmenu'}"
+              converter="idConverter"
+              filter="true" filterMatchMode="startsWith">
+              <f:selectItems value="#{searchObsoController.getFilterChoices('consultPeriodIds')}" />
+              <p:ajax event="change" oncomplete="PF('consultPeriodWidget').show()"
+                update="consultPeriod" />
+              <p:ajax event="toggleSelect" oncomplete="PF('consultPeriodWidget').show()"
+                update="consultPeriod" />
+              <a4j:ajax event="change" oncomplete="PF('consultPeriodWidget').show()"
+                render="nextConsultingDate" />
+              <a4j:ajax event="toggleSelect" oncomplete="PF('consultPeriodWidget').show()"
+                render="nextConsultingDate" />
+            </p:selectCheckboxMenu>
+
+            <h:panelGroup />
+            <h:panelGroup />
+
+            <h:outputLabel for="nextConsultingDate1"
+              value="#{msg.nextConsultingDate} #{msg.between}"
+              styleClass="labelname" />
+            <rich:calendar id="nextConsultingDate1"
+              value="#{searchObsoController.inputTextField['nextConsultingDate1']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true">
+              <a4j:ajax event="change" execute="@this"
+                render="nextConsultingDate1" />
+            </rich:calendar>
+
+            <h:outputLabel for="nextConsultingDate2" value="#{msg.with}"
+              styleClass="labelname" />
+            <rich:calendar id="nextConsultingDate2"
+              value="#{searchObsoController.inputTextField['nextConsultingDate2']}"
+              locale="#{localeCtrl.locale}" popup="true"
+              enableManualInput="true"
+              datePattern="#{searchObsoController.getDateFormat()}"
+              showApplyButton="true">
+              <a4j:ajax event="change" execute="@this"
+                render="nextConsultingDate2" />
+            </rich:calendar>
+          </h:panelGrid>
+
+          <h:panelGrid columns="2" style="width:70%"
+            columnClasses="alignright25,alignleft">
+            <h:outputLabel for="inChargeOf" value="#{msg.inChargeOf}"
+              styleClass="labelname" />
+            <h:inputText id="inChargeOf" styleClass="input40"
+              value="#{searchObsoController.inputTextField['personInCharge']}" />
+
+            <h:outputLabel for="comments" value="#{msg.comments}"
+              styleClass="labelname top" />
+            <h:inputText id="comments" styleClass="input40"
+              value="#{searchObsoController.inputTextField['comments']}">
+              <f:validateLength maximum="1024" />
+            </h:inputText>
+          </h:panelGrid>
+        </fieldset>
+
+        <fieldset style="width: 80%">
+          <legend align="top">
+            <h:outputText value="#{msg.UseOnInstallation}" />
+          </legend>
+
+          <h:panelGrid columns="2" style="width:70%"
+            columnClasses="alignright25,alignleft">
+            <h:outputLabel for="installation" value="#{msg.name}"
+              styleClass="labelname top" />
+            <h:inputText id="installation" styleClass="input40"
+              value="#{searchObsoController.inputTextField['installation']}" />
+
+            <h:outputLabel for="instComments" value="#{msg.comments}"
+              styleClass="labelname top" />
+            <h:inputText id="instComments" styleClass="input40"
+              value="#{searchObsoController.inputTextField['instComments']}" />
+
+            <h:outputLabel for="program" value="#{msg.program}"
+              styleClass="labelname top" />
+            <h:inputText id="program" styleClass="input40"
+              value="#{searchObsoController.inputTextField['program']}" />
+          </h:panelGrid>
+        </fieldset>
+
+        <h:panelGrid cellspacing="10" columns="3">
+          <h:commandButton value="#{msg.search}"
+            action="#{searchObsoController.doSearch}" />
+          <a4j:commandButton value="#{msg.reset}"
+            action="#{searchObsoController.doResetCriteria}"
+            immediate="true" execute="@this" render="ObsoSearchForm" />
+          <h:commandButton value="#{msg.cancel}"
+            action="#{searchObsoController.doCancel}" immediate="true" />
+        </h:panelGrid>
+
+      </h:form>
+      <div style="width: 80%" align="right">
+        <a href="#top">#{msg.topPage}</a>
+      </div>
+    </rich:panel>
+  </ui:define>
+</ui:composition>

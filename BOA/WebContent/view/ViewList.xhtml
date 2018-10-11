@@ -1,0 +1,64 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('ExportViews'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('ExportViews')}">
+      <f:facet name="header">
+        <h:outputText value="#{msg.viewListTitle}" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="listViewError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="viewTableForm">
+
+        <rich:dataTable id="viewTable"
+          value="#{viewExportController.views}" var="viewTable"
+          onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+          onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+          rowClasses="evenRow, oddRow">
+
+          <f:facet name="header">#{msg.viewListTitle}</f:facet>
+
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="#{msg.viewName}" />
+            </f:facet>
+            <h:outputText value="#{viewTable}" />
+          </rich:column>
+
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="#{msg.download}" />
+            </f:facet>
+            <h:commandButton value="#{msg.download}"
+              action="#{viewExportController.doDownloadView}">
+              <f:setPropertyActionListener value="#{viewTable}"
+                target="#{viewExportController.selectedView}" />
+            </h:commandButton>
+          </rich:column>
+
+          <f:facet name="footer">
+          #{(empty viewExportController.views? msg.noView:'')}
+        </f:facet>
+        </rich:dataTable>
+
+      </h:form>
+
+    </rich:panel>
+  </ui:define>
+
+</ui:composition>

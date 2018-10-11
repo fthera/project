@@ -1,0 +1,69 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:mj="http://mojarra.dev.java.net/mojarra_ext">
+
+  <h:form id="DatedCommentForm">
+    <rich:popupPanel id="DatedCommentModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closeDatedCommentModal" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('DatedCommentModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/list.png"
+            style="padding-right:5px;width:16px;height:16px" />
+          <h:outputText value="#{msg.AddDatedComment}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="DatedCommentModalError" />
+      </ui:include>
+
+      <h:panelGrid id="DatedCommentFormContent" columns="3"
+        columnClasses="alignright,alignright,alignleft,alignleft">
+        <h:outputLabel for="datedComment"
+          value="#{msg.comment} " styleClass="labelname" />
+        <span class="requiredField">*</span>
+        <h:inputTextarea id="datedComment" style="width:100%"
+          rows="2" title="#{msg.EntryMessageText}"
+          required="true"
+          value="#{DatedCommentController.comment}">
+          <f:validateLength
+            maximum="#{DBConstants.datedCommentLength}" />
+          <a4j:ajax event="blur" execute="@this" />
+        </h:inputTextarea>
+        <rich:message for="datedComment" />
+      </h:panelGrid>
+
+      <h:panelGrid columns="3" cellspacing="5" styleClass="center">
+        <a4j:commandButton value="#{msg.add}"
+          rendered="#{DatedCommentController.createMode}"
+          action="#{DatedCommentController.doAdd}"
+          render="DatedComments,dsBottomDatedComments"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('DatedCommentModal')}.hide();" />
+        <a4j:commandButton value="#{msg.modify}"
+          rendered="#{DatedCommentController.updateMode}"
+          action="#{DatedCommentController.doUpdate}"
+          render="DatedComments,dsBottomDatedComments"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('DatedCommentModal')}.hide();" />
+        <a4j:commandButton value="#{msg.reset}" execute="@this"
+          action="#{DatedCommentController.doReset}" render="DatedCommentFormContent" />
+        <a4j:commandButton id="cancelButton" value="#{msg.cancel}"
+          execute="@this"
+          onclick="#{rich:component('DatedCommentModal')}.hide();return false;" />
+      </h:panelGrid>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

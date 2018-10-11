@@ -1,0 +1,586 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boacc="http://java.sun.com/jsf/composite/boacc"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{obsolescenceController.createMode ? logInController.isAuthorized('ObsolescenceCRUD','CRUD_Create') : (obsolescenceController.updateMode ? logInController.isAuthorized('ObsolescenceCRUD','CRUD_Update') : logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read'))}" />
+    <c:set var="isKnowId"
+      value="#{obsolescenceController.createMode or obsolescenceController.obsoData != null}" />
+
+    <h:outputText value="#{msg.notEnoughRightsForPage}"
+      rendered="#{not isAuthorized}" styleClass="warning-block" />
+
+    <h:outputText value="#{msg.unknownId}" rendered="#{not isKnowId}"
+      styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized and isKnowId}">
+      <f:facet name="header">
+        <h:outputText value="#{obsolescenceController.title}" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="obsoManagementError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="ObsoCreateForm">
+
+        <c:set var="readonly" value="#{obsolescenceController.readOnly}" />
+        <c:set var="updateOrCreate"
+          value="#{obsolescenceController.updateMode or obsolescenceController.createMode}" />
+
+        <div style="width: 80%">
+
+          <c:if test="#{readonly}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.businessActions}" />
+              </legend>
+              <h:panelGrid columns="3" cellspacing="5">
+                <h:commandButton value="#{msg.modify}"
+                  action="#{obsolescenceController.goToUpdatePage}"
+                  disabled="#{not logInController.isAuthorized('ObsolescenceCRUD','CRUD_Update')}" />
+                <h:commandButton id="generateConstituantSheet"
+                  value="#{msg.generateConstituantForm}"
+                  action="#{obsolescenceController.doGenerateConstituantForm()}" />
+                <a4j:commandButton value="#{msg.delete}"
+                  oncomplete="#{rich:component('confirmationDeleteObso')}.show();return false;"
+                  disabled="#{not logInController.isAuthorized('ObsolescenceCRUD','CRUD_Delete')}" />
+              </h:panelGrid>
+            </fieldset>
+          </c:if>
+
+          <h:panelGroup rendered="#{updateOrCreate}">
+            <h:outputText value="#{msg.requiredFields}"
+              styleClass="requiredField" />
+          </h:panelGroup>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+
+            <h:panelGrid columns="2" style="width:100%"
+              columnClasses="pcnt50,pcnt50 middle">
+              <h:panelGroup
+                rendered="#{obsolescenceController.createMode}">
+                <fieldset>
+                  <legend align="top">
+                    <h:outputText value="#{msg.referenceChoice}" />
+                  </legend>
+
+                  <h:panelGrid columns="2" style="width:100%"
+                    columnClasses="pcnt50,pcnt50">
+                    <h:selectOneRadio
+                      value="#{obsolescenceController.referenceTypeChosen}"
+                      layout="pageDirection"
+                      valueChangeListener="#{obsolescenceController.changeReferenceTypeListener}">
+                      <f:selectItems
+                        value="#{obsolescenceController.optionsRadioReferenceType}" />
+                      <a4j:ajax event="change" execute="@this"
+                        render="constituantName,manufacturer,referencePanel" />
+                    </h:selectOneRadio>
+                    <h:panelGroup id="referencePanel">
+                      <h:panelGrid columns="1">
+                        <h:panelGroup>
+                          <boacc:inputTextSuggestionBox
+                            id="suggestionReference2"
+                            displayButton="true" minChars="0"
+                            beanProperty="#{obsolescenceController.selectedReferenceName}"
+                            updateFunction="#{obsolescenceController.changeSelectedReferenceNameListener}"
+                            suggestionFunction="#{obsolescenceController.suggestions}"
+                            render="constituantName,manufacturer,referenceTypeArticlePanel" />
+                          <span style="color: red;">*</span>
+                        </h:panelGroup>
+
+                        <h:panelGroup id="referenceTypeArticlePanel"
+                          rendered="#{obsolescenceController.referenceTypeArticleAvailable}">
+                          <rich:select id="referenceTypeArticle"
+                            mode="client"
+                            value="#{obsolescenceController.selectedTypeArticleId}"
+                            valueChangeListener="#{obsolescenceController.changeSelectedTypeArticleListener}"
+                            defaultLabel="#{msg.notFilled}">
+                            <f:selectItem itemLabel="#{msg.notFilled}" />
+                            <f:selectItems
+                              value="#{obsolescenceController.selectTypeArticles}" />
+                            <a4j:ajax event="selectitem" execute="@this"
+                              render="constituantName,manufacturer" />
+                          </rich:select>
+                          <span style="color: red;">*</span>
+                        </h:panelGroup>
+                      </h:panelGrid>
+                    </h:panelGroup>
+                  </h:panelGrid>
+                </fieldset>
+              </h:panelGroup>
+              <h:panelGrid columns="2"
+                columnClasses="alignright,alignleft">
+                <h:outputLabel for="constituantName"
+                  value="#{msg.constituantName}" styleClass="labelname" />
+                <h:inputText id="constituantName" readonly="true"
+                  value="#{obsolescenceController.constituantName}"
+                  styleClass="automaticField input50" />
+
+                <h:outputLabel for="manufacturer"
+                  value="#{msg.manufacturer}" styleClass="labelname" />
+                <h:inputText id="manufacturer" readonly="true"
+                  styleClass="automaticField input50"
+                  value="#{obsolescenceController.manufacturer}" />
+                <h:panelGroup />
+                <rich:message for="manufacturer" />
+
+                <h:outputLabel for="supplier" value="#{msg.supplier}"
+                  styleClass="labelname" />
+                <h:inputText id="supplier" styleClass="input50"
+                  value="#{obsolescenceController.supplier}">
+                  <f:validateLength
+                    maximum="#{DBConstants.obsolescencedataSupplierLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <h:panelGroup />
+                <rich:message for="supplier" />
+              </h:panelGrid>
+            </h:panelGrid>
+          </fieldset>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.obsolescenceInformation}" />
+            </legend>
+
+            <h:panelGrid columns="4" style="width:100%"
+              columnClasses="alignright25,alignleft25,alignright25,alignleft25">
+              <h:outputLabel for="endOfOrder" value="#{msg.endOfOrder}"
+                styleClass="labelname" />
+              <h:panelGroup>
+                <c:if test="#{readonly}">
+                  <h:inputText id="endOfOrder" styleClass="input20"
+                    readonly="true"
+                    value="#{obsolescenceController.endOfOrderDate}">
+                    <f:convertDateTime
+                      pattern="#{obsolescenceController.getDateFormat()}"
+                      timeZone="Europe/Paris" />
+                  </h:inputText>
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:calendar id="endOfOrder"
+                    value="#{obsolescenceController.endOfOrderDate}"
+                    locale="#{localeCtrl.locale}" popup="true"
+                    enableManualInput="true"
+                    datePattern="#{obsolescenceController.getDateFormat()}"
+                    showApplyButton="true" />
+                  <rich:message for="endOfOrder"></rich:message>
+                </c:if>
+              </h:panelGroup>
+
+              <h:outputLabel for="obsolescenceDate"
+                value="#{msg.obsolescenceDate} " styleClass="labelname" />
+              <h:panelGroup>
+                <c:if test="#{readonly}">
+                  <h:inputText id="obsolescenceDate"
+                    styleClass="input20" readonly="true"
+                    value="#{obsolescenceController.obsolescenceDate}">
+                    <f:convertDateTime
+                      pattern="#{obsolescenceController.getDateFormat()}"
+                      timeZone="Europe/Paris" />
+                  </h:inputText>
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:calendar id="obsolescenceDate"
+                    value="#{obsolescenceController.obsolescenceDate}"
+                    locale="#{localeCtrl.locale}" popup="true"
+                    enableManualInput="true"
+                    datePattern="#{obsolescenceController.getDateFormat()}"
+                    showApplyButton="true" />
+                  <rich:message for="obsolescenceDate"></rich:message>
+                </c:if>
+              </h:panelGroup>
+
+              <h:outputLabel for="endOfSupport"
+                value="#{msg.endOfSupport}" styleClass="labelname" />
+              <h:panelGroup>
+                <c:if test="#{readonly}">
+                  <h:inputText id="endOfSupport" styleClass="input20"
+                    readonly="true"
+                    value="#{obsolescenceController.endOfSupportDate}">
+                    <f:convertDateTime
+                      pattern="#{obsolescenceController.getDateFormat()}"
+                      timeZone="Europe/Paris" />
+                  </h:inputText>
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:calendar id="endOfSupport"
+                    value="#{obsolescenceController.endOfSupportDate}"
+                    locale="#{localeCtrl.locale}" popup="true"
+                    enableManualInput="true"
+                    datePattern="#{obsolescenceController.getDateFormat()}"
+                    showApplyButton="true" />
+                  <rich:message for="endOfSupport"></rich:message>
+                </c:if>
+              </h:panelGroup>
+
+              <h:outputLabel for="endOfProduction"
+                value="#{msg.endOfProduction} " styleClass="labelname" />
+              <h:panelGroup>
+                <c:if test="#{readonly}">
+                  <h:inputText id="endOfProduction" styleClass="input20"
+                    readonly="true"
+                    value="#{obsolescenceController.endOfProductionDate}">
+                    <f:convertDateTime
+                      pattern="#{obsolescenceController.getDateFormat()}"
+                      timeZone="Europe/Paris" />
+                  </h:inputText>
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:calendar id="endOfProduction"
+                    value="#{obsolescenceController.endOfProductionDate}"
+                    locale="#{localeCtrl.locale}" popup="true"
+                    enableManualInput="true"
+                    datePattern="#{obsolescenceController.getDateFormat()}"
+                    showApplyButton="true" />
+                  <rich:message for="endOfProduction"></rich:message>
+                </c:if>
+              </h:panelGroup>
+
+              <h:outputLabel for="currentAction"
+                value="#{msg.currentAction}" styleClass="labelname" />
+              <c:if test="#{readonly}">
+                <h:inputText id="currentAction" styleClass="input20"
+                  readonly="true"
+                  value="#{obsolescenceController.obsoData.currentAction.localeValue}" />
+              </c:if>
+              <c:if test="#{updateOrCreate}">
+                <rich:select id="currentAction" mode="client"
+                  value="#{obsolescenceController.actionId}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems
+                    value="#{obsolescenceController.selectAction}" />
+                </rich:select>
+              </c:if>
+
+              <h:outputLabel for="mtbf" value="#{msg.mtbf} "
+                styleClass="labelname" />
+              <h:panelGroup>
+                <h:inputText id="mtbf" styleClass="input20"
+                  readonly="#{readonly}"
+                  value="#{obsolescenceController.mtbf}">
+                </h:inputText>
+                <rich:message for="mtbf" />
+              </h:panelGroup>
+
+              <h:outputLabel for="strategy" value="#{msg.strategy}"
+                styleClass="labelname" />
+              <c:if test="#{readonly}">
+                <h:inputText id="strategy" styleClass="input20"
+                  readonly="true"
+                  value="#{obsolescenceController.obsoData.strategyKept.localeValue}" />
+              </c:if>
+              <c:if test="#{updateOrCreate}">
+                <rich:select id="strategy" mode="client"
+                  value="#{obsolescenceController.strategyId}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems
+                    value="#{obsolescenceController.selectStrategy}" />
+                </rich:select>
+              </c:if>
+
+              <h:outputLabel for="continuityDate"
+                value="#{msg.continuityDate} " styleClass="labelname" />
+              <h:panelGroup>
+                <c:if test="#{readonly}">
+                  <h:inputText id="continuityDate" styleClass="input20"
+                    readonly="true"
+                    value="#{obsolescenceControlle.continuityDate}">
+                    <f:convertDateTime
+                      pattern="#{reportingObsoController.getDateFormat()}"
+                      timeZone="Europe/Paris" />
+                  </h:inputText>
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:calendar id="continuityDate"
+                    value="#{obsolescenceController.continuityDate}"
+                    locale="#{localeCtrl.locale}" popup="true"
+                    enableManualInput="true"
+                    datePattern="#{obsolescenceController.getDateFormat()}"
+                    showApplyButton="true" />
+                  <rich:message for="continuityDate"></rich:message>
+                </c:if>
+              </h:panelGroup>
+
+              <h:outputLabel for="manufacturerStatus"
+                value="#{msg.manufacturerStatus}" styleClass="labelname" />
+              <c:if test="#{readonly}">
+                <h:inputText id="manufacturerStatus"
+                  styleClass="input20" readonly="true"
+                  value="#{obsolescenceController.obsoData.manufacturerStatus.localeValue}" />
+              </c:if>
+              <c:if test="#{updateOrCreate}">
+                <rich:select id="manufacturerStatus" mode="client"
+                  value="#{obsolescenceController.manufacturerStatusId}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems
+                    value="#{obsolescenceController.selectManufacturerStatus}" />
+                </rich:select>
+              </c:if>
+
+              <h:outputLabel for="airbusStatus"
+                value="#{msg.airbusStatus}" styleClass="labelname" />
+              <c:if test="#{readonly}">
+                <h:inputText id="airbusStatus" styleClass="input20"
+                  readonly="true"
+                  value="#{obsolescenceController.obsoData.airbusStatus.localeValue}" />
+              </c:if>
+              <c:if test="#{updateOrCreate}">
+                <rich:select id="airbusStatus" mode="client"
+                  value="#{obsolescenceController.airbusStatusId}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems
+                    value="#{obsolescenceController.selectAirbusStatus}" />
+                </rich:select>
+              </c:if>
+
+              <h:panelGroup>
+                <h:outputLabel for="lastUpdate"
+                  value="#{msg.lastUpdate}" styleClass="labelname" />
+                <span style="color: red;">*</span>
+              </h:panelGroup>
+              <h:panelGroup>
+                <c:if test="#{readonly}">
+                  <h:inputText id="lastUpdate" styleClass="input20"
+                    readonly="true"
+                    value="#{obsolescenceController.lastObsolescenceUpdate}">
+                    <f:convertDateTime
+                      pattern="#{obsolescenceController.getDateFormat()}"
+                      timeZone="Europe/Paris" />
+                  </h:inputText>
+                </c:if>
+                <c:if test="#{updateOrCreate}">
+                  <rich:calendar id="lastUpdate"
+                    value="#{obsolescenceController.lastObsolescenceUpdate}"
+                    locale="#{localeCtrl.locale}" popup="true"
+                    enableManualInput="true"
+                    datePattern="#{obsolescenceController.getDateFormat()}"
+                    showApplyButton="true" required="true"
+                    requiredMessage="#{msg.requiredDateMsg}">
+                    <a4j:ajax event="change" render="nextConsultingDate"
+                      execute="@this" />
+                  </rich:calendar>
+                  <rich:message for="lastUpdate"></rich:message>
+                </c:if>
+              </h:panelGroup>
+
+              <h:outputLabel for="consultPeriod"
+                value="#{msg.consultPeriod} " styleClass="labelname" />
+              <c:if test="#{readonly}">
+                <h:inputText id="consultPeriod" styleClass="input20"
+                  readonly="true"
+                  value="#{obsolescenceController.obsoData.consultPeriod.localeValue}" />
+              </c:if>
+              <c:if test="#{updateOrCreate}">
+                <rich:select id="consultPeriod" mode="client"
+                  value="#{obsolescenceController.consultPeriodId}"
+                  defaultLabel="#{msg.notFilled}">
+                  <f:selectItem itemLabel="#{msg.notFilled}" />
+                  <f:selectItems
+                    value="#{obsolescenceController.selectConsultPeriod}" />
+                  <a4j:ajax event="change" render="nextConsultingDate"
+                    execute="@this" />
+                </rich:select>
+              </c:if>
+
+              <h:outputLabel for="nextConsultingDate"
+                value="#{msg.nextConsultingDate}" styleClass="labelname" />
+              <h:inputText id="nextConsultingDate"
+                styleClass="automaticField input20" readonly="true"
+                value="#{obsolescenceController.computedNextConsultingDate}">
+                <f:convertDateTime
+                  pattern="#{obsolescenceController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:inputText>
+            </h:panelGrid>
+
+            <h:panelGrid columns="2" style="width:100%"
+              columnClasses="alignright25,alignleft">
+              <h:outputLabel for="inChargeOf" value="#{msg.inChargeOf}"
+                styleClass="labelname" />
+              <h:panelGroup>
+                <h:inputText id="inChargeOf" styleClass="input50"
+                  readonly="#{readonly}"
+                  value="#{obsolescenceController.personInCharge}">
+                  <f:validateLength
+                    maximum="#{DBConstants.obsolescencedataPersoninchargeLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputText>
+                <rich:message for="inChargeOf" />
+              </h:panelGroup>
+
+              <h:outputLabel for="comments" value="#{msg.comments}"
+                styleClass="labelname top" />
+              <h:panelGroup>
+                <h:inputTextarea rows="4" id="comments"
+                  styleClass="input50" readonly="#{readonly}"
+                  value="#{obsolescenceController.comments}">
+                  <f:validateLength
+                    maximum="#{DBConstants.obsolescencedataCommentonstrategyLength}" />
+                  <a4j:ajax event="blur" execute="@this" />
+                </h:inputTextarea>
+                <rich:message for="comments" />
+              </h:panelGroup>
+            </h:panelGrid>
+          </fieldset>
+
+          <h:panelGroup rendered="#{readonly}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.useInformation}" />
+              </legend>
+              <h:panelGrid columns="2" columnClasses="top,pcnt50">
+                <h:panelGrid columns="2"
+                  columnClasses="alignright,alignleft">
+                  <h:outputLabel for="numberOfArticles"
+                    value="#{msg.numberOfArticles}"
+                    styleClass="labelname" />
+                  <h:inputText id="numberOfArticles"
+                    styleClass="input10" readonly="true"
+                    value="#{obsolescenceController.obsoData.stock.quantityTotal}" />
+
+                  <h:outputLabel for="quantityUse"
+                    value="#{msg.quantityUse}" styleClass="labelname"
+                    title="#{msg.qtyUseMessageObso}" />
+                  <h:inputText id="quantityUse" styleClass="input10"
+                    readonly="true"
+                    value="#{obsolescenceController.obsoData.stock.quantityUse}" />
+
+                  <h:outputLabel for="quantityStock"
+                    value="#{msg.quantityStock}" styleClass="labelname"
+                    title="#{msg.qtyStockMessage}" />
+                  <h:inputText id="quantityStock" styleClass="input10"
+                    readonly="true"
+                    value="#{obsolescenceController.obsoData.stock.quantityStock}" />
+
+                  <h:outputLabel for="quantityOther"
+                    value="#{msg.quantityOther}" styleClass="labelname"
+                    title="#{msg.qtyOtherMessage}" />
+                  <h:inputText id="quantityOther" styleClass="input10"
+                    readonly="true"
+                    value="#{obsolescenceController.obsoData.stock.quantityOther}" />
+                  <boa:tooltip target ="quantityOther"
+                    value="#{obsolescenceController.obsoData.stock.otherDescription}"/>
+                </h:panelGrid>
+
+                <rich:dataTable id="tableInstallationsList"
+                  var="installation"
+                  value="#{obsolescenceController.obsoData.stock.repartitionMapKeys}"
+                  onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                  onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+                  sortMode="single" rows="20">
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <h:outputText value="#{msg.UseOnInstallation}" />
+                      <rich:dataScroller id="dsTopList"
+                        for="tableInstallationsList" maxPages="10"
+                        fastControls="hide" renderIfSinglePage="false" />
+                    </h:panelGroup>
+                  </f:facet>
+
+                  <rich:column sortBy="#{installation.name}" id="name">
+                    <f:facet name="header">
+                      <h:outputText styleClass="headerText"
+                        value="#{msg.Installation}" />
+                    </f:facet>
+                    <h:outputText value="#{installation.name}" />
+                  </rich:column>
+
+                  <rich:column
+                    sortBy="#{obsolescenceController.obsoData.stock.repartitionMap[installation]}"
+                    id="quantity">
+                    <f:facet name="header">
+                      <h:outputText styleClass="headerText"
+                        value="#{msg.Quantity}" />
+                    </f:facet>
+                    <h:outputText
+                      value="#{obsolescenceController.obsoData.stock.repartitionMap[installation]}" />
+                  </rich:column>
+
+                  <f:facet name="footer">
+                    <rich:dataScroller id="dsBottomList"
+                      for="tableInstallationsList" maxPages="10"
+                      fastControls="hide" renderIfSinglePage="false" />
+                  </f:facet>
+                </rich:dataTable>
+              </h:panelGrid>
+            </fieldset>
+          </h:panelGroup>
+
+          <c:if test="#{updateOrCreate}">
+            <h:panelGrid cellspacing="10" columns="3">
+              <c:if test="#{obsolescenceController.createMode}">
+                <a4j:commandButton value="#{msg.create}"
+                  oncomplete="if (#{facesContext.maximumSeverity==null}) {#{rich:component('confirmationCreateObso')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <c:if test="#{obsolescenceController.updateMode}">
+                <a4j:commandButton value="#{msg.validate}"
+                  oncomplete="if (#{facesContext.maximumSeverity==null}) {#{rich:component('confirmationUpdateObso')}.show()}
+                              else {javascript:window.scrollTo(0,0)}" />
+              </c:if>
+              <a4j:commandButton value="#{msg.reset}"
+                action="#{obsolescenceController.doRefresh}"
+                execute="@this" render="mainContent" oncomplete="patchModal();"/>
+              <a4j:commandButton value="#{msg.cancel}" execute="@this"
+                action="#{obsolescenceController.doCancelUpdate}" />
+            </h:panelGrid>
+          </c:if>
+        </div>
+
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationCreateObso" />
+        <ui:param name="controller" value="#{obsolescenceController}" />
+        <ui:param name="method" value="doCreate" />
+        <ui:param name="confirmationTitle"
+          value="#{msg.confirmCreationObsolescenceDataText}" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmCreationObsolescenceDataExtraText}" />
+        <ui:param name="validateButtonId" value="confirmCreateBtn" />
+        <ui:param name="cancelButtonId" value="cancelCreateBtn" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationUpdateObso" />
+        <ui:param name="controller" value="#{obsolescenceController}" />
+        <ui:param name="method" value="doUpdate" />
+        <ui:param name="confirmationText"
+          value="#{msg.updateObsoData} #{obsolescenceController.obsoData.constituantName}" />
+        <ui:param name="validateButtonId" value="confirmUpdateBtn" />
+        <ui:param name="cancelButtonId" value="cancelUpdateBtn" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="confirmationDeleteObso" />
+        <ui:param name="controller" value="#{obsolescenceController}" />
+        <ui:param name="method" value="doDelete" />
+        <ui:param name="confirmationText"
+          value="#{msg.delete} #{obsolescenceController.constituantName}" />
+        <ui:param name="validateButtonId" value="confirmDeleteBtn" />
+        <ui:param name="cancelButtonId" value="cancelDeleteBtn" />
+      </ui:include>
+
+      <a href="#top">#{msg.topPage}</a>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

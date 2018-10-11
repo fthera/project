@@ -1,0 +1,45 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j" lang="#{localeCtrl.locale}">
+
+<!-- Usage of this component -->
+<!--
+  title       = The text to be displayed in the menuItem
+  value      = The value page of the menuItem
+  icon        = [optional] The icon to display for the menuItem
+  rendered    = [optional] Boolean indicating if the menuItem shall be rendered
+  disabled    = [optional] Boolean indicating if the menuItem shall be disabled
+  target      = [optional] Target frame for the link
+-->
+
+  <c:if test="#{empty icon}">
+    <c:set var="icon" value="/resources/images/icons/spacer.gif" />
+  </c:if>
+
+  <c:if test="#{empty disabled}">
+    <c:set var="disabled" value="false" />
+  </c:if>
+
+  <c:if test="#{empty rendered}">
+    <c:set var="rendered" value="true" />
+  </c:if>
+
+  <c:if test="#{empty target}">
+    <c:set var="target" value="_self" />
+  </c:if>
+  
+  <rich:menuItem rendered="#{rendered}" disabled="#{disabled}">
+    <f:facet name="icon">
+      <h:outputLink disabled="#{disabled}" value="#{value}" target="#{target}">
+        <h:graphicImage value="#{icon}" style="width:16px;height:16px" />
+      </h:outputLink>
+    </f:facet>
+    <h:outputLink class="menuLink" disabled="#{disabled}" value="#{value}" target="#{target}">
+      <h:outputText value="#{title}" />
+    </h:outputLink>
+  </rich:menuItem>
+</ui:composition>

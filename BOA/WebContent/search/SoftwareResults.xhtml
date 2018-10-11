@@ -1,0 +1,25 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('SoftwareCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel id="softwareList"
+      rendered="#{logInController.isAuthorized('SoftwareCRUD','CRUD_Read')}">
+      <f:facet name="header">#{msg.displaySoftwareResultsTitle}</f:facet>
+      <ui:include src="/itemList/common/SoftwareListCommon.xhtml">
+        <ui:param name="ret" value="RESULT" />
+      </ui:include>
+    </rich:panel>
+
+  </ui:define>
+
+</ui:composition>

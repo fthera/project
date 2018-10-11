@@ -1,0 +1,38 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{reminderController.user != null and logInController.userLogged != null and logInController.userLogged.id == reminderController.user.id and logInController.isAuthorized('UserRemindersListPage')}" />
+
+    <h:outputText rendered="#{not isAuthorized}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized}">
+      <f:facet name="header">
+        <h:outputText value="#{msg.reminders}" />
+      </f:facet>
+
+      <h:form id="remindersForm">
+
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="remindersError" />
+          <ui:param name="globalOnly" value="true" />
+        </ui:include>
+
+        <ui:include src="/reminder/ReminderList.xhtml" />
+
+      </h:form>
+
+      <ui:include src="/reminder/ReminderModal.xhtml" />
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

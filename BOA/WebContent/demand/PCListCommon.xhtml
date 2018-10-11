@@ -1,0 +1,412 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- List of the available PC included by other pages -->
+
+  <div style="overflow-x: auto;">
+
+    <h:form id="actionform_pcresults">
+      <a4j:commandButton id="resetFilter" value="#{msg.resetFilters}"
+        execute="@this" action="#{PCDemandController.doResetFilters}"
+        render="tableResults,dsTop,dsBottom,counts">
+      </a4j:commandButton>
+    </h:form>
+
+    <h:form id="form_pcresults">
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="PCListError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:panelGrid columns="1" cellspacing="5">
+        <h:outputText id="counts" styleClass="bigText"
+          value="#{msg.countFilteredPC} : #{searchController.articleDataModel.rowCount}" />
+      </h:panelGrid>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsTop" for="tableResults" maxPages="10"
+          fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+      <a4j:region>
+        <a4j:queue eventsQueue="tableQueue" requestDelay="100"
+          ignoreDupResponses="true" />
+
+        <div class="scroll-div"
+          style="max-height: 68%; max-height: 68vh;">
+          <rich:dataTable value="#{searchController.articleDataModel}"
+            var="pc" render="dsBottom,dsTop,counts,tableFooter"
+            layout="block" id="tableResults" sortMode="single" rows="30"
+            selectionMode="single" rowClasses="evenRow, oddRow">
+
+            <f:facet name="header">
+              <h:outputText value="#{msg.availablePCTableTitle}" />
+            </f:facet>
+
+            <rich:column
+              rendered="#{PCDemandController.actionAvailable}">
+              <f:facet name="header">#{msg.actions}</f:facet>
+
+              <a4j:commandLink id="selectLink"
+                value="#{msg.selectPCForAllocation}" execute="@this"
+                rendered="#{PCDemandController.allocationToDemandMode}"
+                render="selectedPCPanel"
+                action="#{demandController.doSelectPC}">
+                <f:setPropertyActionListener value="#{pc.id}"
+                  target="#{demandController.selectedPCId}" />
+              </a4j:commandLink>
+
+              <h:panelGroup
+                rendered="#{PCDemandController.PCManagementMode and (!pc.available) and (pc.replacementDemand == null)}">
+                <h:outputLink
+                  value="${request.contextPath}/demand/DemandManagement.faces">
+                  <h:outputText value="#{msg.replacePC}" />
+                  <f:param name="pcToReplaceId" value="#{pc.id}" />
+                  <f:param name="mode" value="CREATE" />
+                </h:outputLink>
+                <br />
+              </h:panelGroup>
+
+              <h:panelGroup
+                rendered="#{PCDemandController.PCManagementMode and (!pc.available) and (pc.replacementDemand == null or pc.replacementDemand.ended)}">
+                <a4j:commandLink id="freeLink" value="#{msg.freePC}"
+                  execute="@this"
+                  oncomplete="#{rich:component('confirmationFreePC')}.show();return false;">
+                  <f:setPropertyActionListener value="#{pc.id}"
+                    target="#{PCDemandController.pcToFreeId}" />
+                </a4j:commandLink>
+                <br />
+              </h:panelGroup>
+
+              <h:panelGroup
+                rendered="#{PCDemandController.PCManagementMode and (pc.availabilityStatus.toString()=='Free') and (pc.allocatedToDemand==null)}">
+                <a4j:commandLink id="undofreeLink"
+                  value="#{msg.undoFreePC}" execute="@this"
+                  oncomplete="#{rich:component('confirmationUnFreePC')}.show();return false;">
+                  <f:setPropertyActionListener value="#{pc.id}"
+                    target="#{PCDemandController.pcToFreeId}" />
+                </a4j:commandLink>
+                <br />
+              </h:panelGroup>
+
+              <a4j:commandLink id="editLink" value="#{msg.edit}"
+                execute="@this"
+                render="confirmationEditPCAvailabilityDate"
+                rendered="#{PCDemandController.PCManagementMode and (pc.available)}"
+                oncomplete="#{rich:component('confirmationEditPCAvailabilityDate')}.show();return false;">
+                <f:setPropertyActionListener value="#{pc.id}"
+                  target="#{PCDemandController.pcToEditId}" />
+              </a4j:commandLink>
+              <boa:tooltip target="editLink"
+                value="#{msg.editPCAvailabilityDateToolTip}" />
+            </rich:column>
+
+            <rich:column sortBy="#{pc.airbusSN}">
+              <f:facet name="header">
+                <h:outputText value="#{msg.airbusSN}" />
+                <br />
+                <h:inputText
+                  value="#{searchController.articleDataModel.selectionFilterMap['airbusSN']}">
+                  <a4j:ajax event="keyup"
+                    render="tableResults@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </f:facet>
+              <h:outputLink
+                value="${request.contextPath}/itemManagement/PCManagement.faces">
+                <h:outputText value="#{pc.airbusSN}" />
+                <f:param name="id" value="#{pc.id}" />
+                <f:param name="mode" value="READ" />
+              </h:outputLink>
+            </rich:column>
+
+            <rich:column sortBy="#{pc.productType}">
+              <f:facet name="header">
+                <h:panelGroup>
+                  <h:outputText value="#{msg.ProductType}" />
+                  <br />
+                  <p:selectCheckboxMenu id="productType" widgetVar="productTypeWidget"
+                    value="#{searchController.articleDataModel.selectionFilterMap['productType']}"
+                    label="#{searchController.isFiltered('dataModel','productType') ? msg.activeFilter : msg.noFilter}"
+                    styleClass="#{searchController.isFiltered('dataModel','productType') ? 'checkboxmenured' : 'checkboxmenu'}"
+                    converter="idConverter"
+                    filter="true" filterMatchMode="startsWith">
+                    <f:selectItems value="#{searchController.getFilterChoices('dataModel','productType')}" />
+                    <p:ajax event="change" oncomplete="PF('productTypeWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom"/>
+                    <p:ajax event="toggleSelect" oncomplete="PF('productTypeWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom" />
+                    <p:ajax event="change"
+                      update="form_pcresults:counts "/>
+                    <p:ajax event="toggleSelect"
+                      update="form_pcresults:counts" />
+                  </p:selectCheckboxMenu>
+                </h:panelGroup>
+              </f:facet>
+              <h:outputText
+                value="#{pc.productType.localeValue}" />
+            </rich:column>
+
+            <rich:column sortBy="#{pc.typeArticle.label}">
+              <f:facet name="header">
+                <h:outputText value="#{msg.type}" />
+                <br />
+                <h:inputText
+                  value="#{searchController.articleDataModel.selectionFilterMap['typeArticle.label']}">
+                  <a4j:ajax event="keyup"
+                    render="tableResults@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </f:facet>
+              <h:outputText value="#{pc.typeArticle.label}" />
+            </rich:column>
+
+            <rich:column>
+              <f:facet name="header">
+                <h:outputText value="#{msg.operatingSystem}" />
+                <br />
+                <h:inputText
+                  value="#{searchController.articleDataModel.selectionFilterMap['operatingSystemsNames']}">
+                  <a4j:ajax event="keyup"
+                    render="tableResults@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </f:facet>
+              <h:outputText value="#{pc.operatingSystemsNames}" />
+            </rich:column>
+
+            <rich:column sortBy="#{pc.nbScreens}">
+              <f:facet name="header">
+                <h:outputText value="#{msg.PCNbScreens}" />
+                <br />
+                <h:inputText
+                  value="#{searchController.articleDataModel.selectionFilterMap['nbScreens']}">
+                  <a4j:ajax event="keyup"
+                    render="tableResults@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </f:facet>
+              <h:outputText value="#{pc.nbScreens}" />
+            </rich:column>
+
+            <rich:column>
+              <f:facet name="header">
+                <h:outputText value="#{msg.location}" />
+                <br />
+                <h:inputText
+                  value="#{searchController.articleDataModel.selectionFilterMap['location.locationName']}">
+                  <a4j:ajax event="keyup"
+                    render="tableResults@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </f:facet>
+              <h:outputText value="#{pc.location.locationName}" />
+            </rich:column>
+
+            <rich:column sortBy="#{pc.inCharge.loginDetails}"
+              rendered="#{PCDemandController.personInChargeToDisplay}">
+              <f:facet name="header">
+                <h:outputText value="#{msg.technicalContact}" />
+                <br />
+                <h:inputText
+                  value="#{searchController.articleDataModel.selectionFilterMap['inCharge.loginDetails']}">
+                  <a4j:ajax event="keyup"
+                    render="tableResults@body,dsTop,dsBottom,counts" />
+                </h:inputText>
+              </f:facet>
+              <h:outputText value="#{pc.inCharge.loginDetails}" />
+            </rich:column>
+
+            <rich:column sortBy="#{pc.state}">
+              <f:facet name="header">
+                <h:panelGroup>
+                  <h:outputText value="#{msg.articleState}" />
+                  <br />
+                  <p:selectCheckboxMenu id="state" widgetVar="stateWidget"
+                    value="#{searchController.articleDataModel.selectionFilterMap['state']}"
+                    label="#{searchController.isFiltered('dataModel','state') ? msg.activeFilter : msg.noFilter}"
+                    styleClass="#{searchController.isFiltered('dataModel','state') ? 'checkboxmenured' : 'checkboxmenu'}"
+                    filter="true" filterMatchMode="startsWith"
+                    converter="stateConverter">
+                    <f:selectItems value="#{searchController.getFilterChoices('dataModel','state')}" />
+                    <p:ajax event="change" oncomplete="PF('stateWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom"/>
+                    <p:ajax event="toggleSelect" oncomplete="PF('stateWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom" />
+                    <p:ajax event="change"
+                      update="form_pcresults:counts "/>
+                    <p:ajax event="toggleSelect"
+                      update="form_pcresults:counts" />
+                  </p:selectCheckboxMenu>
+                </h:panelGroup>
+              </f:facet>
+              <h:outputText value="#{pc.state}"
+                converter="stateConverter" />
+            </rich:column>
+
+            <rich:column sortBy="#{pc.useState}">
+              <f:facet name="header">
+                <h:panelGroup>
+                  <h:outputText value="#{msg.UseState}" />
+                  <br />
+                  <p:selectCheckboxMenu id="useState" widgetVar="useStateWidget"
+                    value="#{searchController.articleDataModel.selectionFilterMap['useState']}"
+                    label="#{searchController.isFiltered('dataModel','useState') ? msg.activeFilter : msg.noFilter}"
+                    styleClass="#{searchController.isFiltered('dataModel','useState') ? 'checkboxmenured' : 'checkboxmenu'}"
+                    filter="true" filterMatchMode="startsWith"
+                    converter="useStateConverter">
+                    <f:selectItems value="#{searchController.getFilterChoices('dataModel','useState')}" />
+                    <p:ajax event="change" oncomplete="PF('useStateWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom"/>
+                    <p:ajax event="toggleSelect" oncomplete="PF('useStateWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom" />
+                    <p:ajax event="change"
+                      update="form_pcresults:counts "/>
+                    <p:ajax event="toggleSelect"
+                      update="form_pcresults:counts" />
+                  </p:selectCheckboxMenu>
+                </h:panelGroup>
+              </f:facet>
+              <h:outputText value="#{pc.useState}"
+                converter="useStateConverter" />
+            </rich:column>
+
+            <rich:column
+              rendered="#{PCDemandController.endOfSupportToDisplay}">
+              <f:facet name="header">
+                <h:outputText value="#{msg.endOfSupport}" />
+              </f:facet>
+              <h:outputText
+                value="#{pc.typeArticle.obsolescenceData.endOfSupportDate}"
+                style="#{reportingObsoController.colorationDate(pc.typeArticle.obsolescenceData.endOfSupportDate)}">
+                <f:convertDateTime
+                  pattern="#{searchController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:outputText>
+            </rich:column>
+
+            <rich:column sortBy="#{pc.availabilityStatus}">
+              <f:facet name="header">
+                <h:panelGroup>
+                  <h:outputText value="#{msg.AvailabilityStatus}" />
+                  <br />
+                  <p:selectCheckboxMenu id="availabilityStatus" widgetVar="availabilityStatusWidget"
+                    value="#{searchController.articleDataModel.selectionFilterMap['availabilityStatus']}"
+                    label="#{searchController.isFiltered('dataModel','availabilityStatus') ? msg.activeFilter : msg.noFilter}"
+                    styleClass="#{searchController.isFiltered('dataModel','availabilityStatus') ? 'checkboxmenured' : 'checkboxmenu'}"
+                    filter="true" filterMatchMode="startsWith"
+                    converter="availabilityStatusConverter">
+                    <f:selectItems value="#{searchController.getFilterChoices('dataModel','availabilityStatus')}" />
+                    <p:ajax event="change" oncomplete="PF('availabilityStatusWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom"/>
+                    <p:ajax event="toggleSelect" oncomplete="PF('availabilityStatusWidget').show()"
+                      update="tableResults,form_pcresults:dsTop,form_pcresults:dsBottom" />
+                    <p:ajax event="change"
+                      update="form_pcresults:counts "/>
+                    <p:ajax event="toggleSelect"
+                      update="form_pcresults:counts" />
+                  </p:selectCheckboxMenu>
+                </h:panelGroup>
+              </f:facet>
+              <h:outputText value="#{pc.availabilityStatus.toString()}" />
+            </rich:column>
+
+            <rich:column sortBy="#{pc.availabilityDate}">
+              <f:facet name="header">
+                <h:outputText value="#{msg.availabilityDate}" />
+              </f:facet>
+              <h:outputText value="#{pc.availabilityDate}">
+                <f:convertDateTime
+                  pattern="#{searchController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:outputText>
+            </rich:column>
+
+            <rich:column>
+              <f:facet name="header">
+                <h:outputText value="#{msg.Demands}" />
+              </f:facet>
+
+              <h:panelGroup>
+                <h:outputText
+                  value="#{(pc.replacementDemand!=null) ? msg.replacementDemand :''} " />
+                <h:outputLink id="replacementDemandLink"
+                  value="${request.contextPath}/demand/DemandManagement.faces">
+                  <h:outputText value="#{pc.replacementDemand}" />
+                  <f:param name="id" value="#{pc.replacementDemand.id}" />
+                  <f:param name="mode" value="READ" />
+                </h:outputLink>
+                <boa:tooltip target="replacementDemandLink"
+                  value="#{pc.replacementDemand.toolTipDetails}" />
+              </h:panelGroup>
+              <br />
+
+              <h:panelGroup>
+                <h:outputText
+                  value="#{(pc.allocatedToDemand!=null)? msg.allocatedToDemand :''} " />
+                <h:outputLink id="allocatedToDemandLink"
+                  value="${request.contextPath}/demand/DemandManagement.faces">
+                  <h:outputText value="#{pc.allocatedToDemand}" />
+                  <f:param name="id" value="#{pc.allocatedToDemand.id}" />
+                  <f:param name="mode" value="READ" />
+                </h:outputLink>
+                <boa:tooltip target="allocatedToDemandLink"
+                  value="#{pc.allocatedToDemand.toolTipDetails}" />
+              </h:panelGroup>
+
+            </rich:column>
+
+            <f:facet name="footer">
+              <h:outputText id="tableFooter"
+                value="#{(searchController.articleDataModel.rowCount == 0? msg.noPC:'')}" />
+            </f:facet>
+          </rich:dataTable>
+        </div>
+      </a4j:region>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsBottom" for="tableResults"
+          maxPages="10" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+
+    </h:form>
+
+    <ui:include src="/includes/confirmation.xhtml">
+      <ui:param name="confirmationId" value="confirmationUnFreePC" />
+      <ui:param name="controller" value="#{PCDemandController}" />
+      <ui:param name="method" value="doUnFreePC" />
+      <ui:param name="confirmationText" value="#{msg.confirmUnFreePC}" />
+      <ui:param name="render" value="tableResults" />
+    </ui:include>
+
+    <ui:include src="/demand/PCAvailabilityDateModal.xhtml">
+      <ui:param name="confirmationId" value="confirmationFreePC" />
+      <ui:param name="confirmationText" value="#{msg.confirmFreePC}" />
+      <ui:param name="availabilityDateToDisplay" value="true" />
+      <ui:param name="availabilityDateText"
+        value="#{msg.freePCAvailabilityDateToFill}" />
+      <ui:param name="availabilityDateValue"
+        value="#{PCDemandController.pcToFreeAvailabilityDate}" />
+      <ui:param name="controller" value="#{PCDemandController}" />
+      <ui:param name="validateMethod" value="doFreePC" />
+      <ui:param name="render" value="tableResults" />
+    </ui:include>
+
+    <ui:include src="/demand/PCAvailabilityDateModal.xhtml">
+      <ui:param name="confirmationId"
+        value="confirmationEditPCAvailabilityDate" />
+      <ui:param name="confirmationText"
+        value="#{msg.confirmEditPCAvailabilityDate}" />
+      <ui:param name="availabilityDateToDisplay" value="true" />
+      <ui:param name="availabilityDateText"
+        value="#{msg.editPCAvailabilityDateToFill}" />
+      <ui:param name="availabilityDateValue"
+        value="#{PCDemandController.pcToEditAvailabilityDate}" />
+      <ui:param name="controller" value="#{PCDemandController}" />
+      <ui:param name="validateMethod" value="doEditPC" />
+      <ui:param name="render" value="tableResults" />
+    </ui:include>
+
+  </div>
+</ui:composition>

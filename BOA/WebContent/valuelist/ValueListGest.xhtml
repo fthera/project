@@ -1,0 +1,199 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:p="http://primefaces.org/ui"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('ValuesListCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('ValuesListCRUD','CRUD_Read')}">
+      <f:facet name="header">
+        <h:outputText value="#{msg.valueListGestTitle}" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="valueListError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="valueListForm">
+        <table>
+          <tbody>
+            <tr>
+              <td style="vertical-align: top;">
+                <fieldset>
+                  <legend>#{msg.modifiableList}</legend>
+                  <h:selectOneListbox
+                    value="#{valueListController.valueListNameSelected}"
+                    valueChangeListener="#{valueListController.listNameChanged}"
+                    immediate="true">
+                    <f:selectItems
+                      value="#{valueListController.valueListNames}" />
+                    <a4j:ajax event="change"
+                      render="tableValueLists,fieldSetTitle,colorOrMonthItem" />
+
+                  </h:selectOneListbox>
+                </fieldset>
+              </td>
+              <td class="top">
+                <fieldset id="updateSection" style="min-width:110%">
+                  <legend>
+                    <a4j:outputPanel ajaxRendered="true">
+                      <h:outputText id="fieldsetTitle"
+                        value="#{msg[valueListController.valueListNameSelected]}" />
+                    </a4j:outputPanel>
+                  </legend>
+
+                  <div class="scroll-div"
+                    style="max-height: 60%; max-height: 60vh; width: 100%">
+                    <div>
+                      <rich:dataTable id="tableValueLists"
+                        value="#{valueListController.dataValueLists}"
+                        var="v" style="width: 100%"
+                        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+                        sortMode="single" rows="30" selectionMode="single"
+                        ajaxKeys="#{valueListController.keys}"
+                        rowKeyVar="row" rowClasses="evenRow, oddRow">
+  
+                        <f:facet name="header">
+                          <h:outputText
+                            value="#{msg[valueListController.valueListNameSelected]}" />
+                          <a4j:commandLink id="addValueListButton"
+                            actionListener="#{valueListController.prepareAdd}"
+                            render="ValueListModal" execute="@this"
+                            rendered="#{logInController.isAuthorized('ValuesListCRUD','CRUD_Create')}"
+                            oncomplete="#{rich:component('ValueListModal')}.show()">
+                              <h:graphicImage value="/resources/images/icons/add.png"
+                                style="border:0px;margin-left:10px;vertical-align:bottom" />
+                            </a4j:commandLink>
+                        </f:facet>
+  
+                        <rich:column sortBy="#{v.defaultValue}" id="defaultValue" >
+                          <f:facet name="header">
+                            <h:outputText styleClass="headerText"
+                              value="#{valueListController.renderFrenchItem ? msg.engColumn : msg.value}" />
+                          </f:facet>
+                          <h:outputText value="#{v.defaultValue}" />
+                        </rich:column>
+  
+                        <rich:column sortBy="#{v.frenchValue}" id="fraCol"
+                          rendered="#{valueListController.renderFrenchItem}">
+                          <f:facet name="header">
+                            <h:outputText styleClass="headerText"
+                              value="#{msg.fraColumn}" />
+                          </f:facet>
+                          <h:outputText value="#{v.frenchValue}" />
+                        </rich:column>
+  
+                        <rich:inputNumberSlider/><!-- Patch for sourcing js to use this component in the modal window -->
+                        
+                        <rich:column sortBy="#{v.monthNumber}"
+                          rendered="#{valueListController.renderMonthNumberItem}">
+                          <f:facet name="header">
+                            <h:outputText styleClass="headerText"
+                              value="#{msg.monthNumberValue}" />
+                          </f:facet>
+                          <h:outputText value="#{v.monthNumber}" />
+                        </rich:column>
+  
+                        <rich:column sortBy="#{v.level}"
+                          rendered="#{valueListController.renderLevelItem}">
+                          <f:facet name="header">
+                            <h:outputText styleClass="headerText"
+                              value="#{msg.levelValue}" />
+                          </f:facet>
+                          <h:outputText value="#{v.level}" />
+                        </rich:column>
+  
+                        <rich:column sortBy="#{v.defaultValue}"
+                          style="background-color:#{v.colorHex};"
+                          rendered="#{valueListController.renderColorItem}">
+                          <f:facet name="header">
+                            <h:outputText styleClass="headerText"
+                              value="#{msg.colorValue}" />
+                          </f:facet>
+                          <h:outputText value="#{v.colorHex}" />
+                        </rich:column>
+  
+                        <rich:column sortBy="#{v.description}"
+                          rendered="#{valueListController.renderDescriptionItem}">
+                          <f:facet name="header">
+                            <h:outputText styleClass="headerText"
+                              value="#{msg.description}" />
+                          </f:facet>
+                          <h:outputText value="#{v.description}" />
+                        </rich:column>
+  
+                        <rich:column
+                          rendered="#{logInController.isAuthorized('ValuesListCRUD','CRUD_Update') or logInController.isAuthorized('ValuesListCRUD','CRUD_Delete')}">
+                          <f:facet name="header">
+                            <h:outputText value="#{msg.actions}" />
+                          </f:facet>
+  
+                          <h:panelGrid columns="2" cellspacing="5">
+  
+                            <a4j:commandLink id="editValueList"
+                              disabled="#{!logInController.isAuthorized('ValuesListCRUD','CRUD_Update')}"
+                              rendered="#{v.modifiable}" execute="@this"
+                              render="ValueListModal"
+                              actionListener="#{valueListController.prepareUpdate}"
+                              oncomplete="#{rich:component('ValueListModal')}.show()">
+                              <h:graphicImage
+                                value="/resources/images/icons/edit.gif"
+                                style="border:0" />
+                              <f:setPropertyActionListener value="#{v}"
+                                target="#{valueListController.selection}" />
+                            </a4j:commandLink>
+  
+                            <a4j:commandLink id="confirmDeleteValueList"
+                              disabled="#{!logInController.isAuthorized('ValuesListCRUD','CRUD_Delete')}"
+                              rendered="#{v.deletable}"
+                              render="tableValueLists"
+                              action="#{valueListController.doDelete()}"
+                              onclick="if(confirm('#{msg.deleteValueListConfirm} #{v.defaultValue} ?')) return true; else return false;">
+                              <h:graphicImage
+                                value="/resources/images/icons/delete.gif"
+                                style="border:0" />
+                              <a4j:ajax event="complete"
+                                render="tableValueLists" />
+                            </a4j:commandLink>
+                          </h:panelGrid>
+  
+                          <boa:tooltip target="addValueListButton"
+                            value="#{msg.add} #{msg[valueListController.valueListNameSelected]}" />
+                          <boa:tooltip target="editValueList"
+                            value="#{msg.modify} #{v.defaultValue}" />
+                          <boa:tooltip target="confirmDeleteValueList"
+                            value="#{msg.delete} #{v.defaultValue}" />
+  
+                        </rich:column>
+  
+                      </rich:dataTable>
+                    </div>
+                  </div>
+
+                </fieldset>
+
+              </td>
+            </tr>
+
+          </tbody>
+        </table>
+
+      </h:form>
+      <ui:include src="/valuelist/ValueListModal.xhtml" />
+      <div align="right">
+        <a href="#top">#{msg.topPage}</a>
+      </div>
+    </rich:panel>
+  </ui:define>
+</ui:composition>

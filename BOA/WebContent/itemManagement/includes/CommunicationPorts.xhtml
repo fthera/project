@@ -1,0 +1,139 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:mj="http://mojarra.dev.java.net/mojarra_ext">
+
+  <!-- Part containing the display of the communication ports
+     and the fields and buttons allowing to manage them. -->
+  <!--
+     readonly = [optional, default = true]
+                boolean indicating if the the section is readonly or not
+     autoUpdate = [optional, default = false]
+                    boolean indicating if the communication ports may be
+                    automatically updated or not
+     
+     Remark:
+     - The modal named 'portModal' must exist in the page.
+  -->
+  <c:if test="#{empty readonly}">
+    <c:set var="readonly" value="true" />
+  </c:if>
+
+  <c:if test="#{empty autoUpdate}">
+    <c:set var="autoUpdate" value="false" />
+  </c:if>
+
+  <fieldset>
+    <legend align="top">
+      <h:outputText value="#{msg.commPorts}" />
+      <c:if test="#{autoUpdate}">
+        <span class="autoUpdatedField">*</span>
+      </c:if>
+    </legend>
+
+    <a4j:region id="comPortRegion">
+
+      <h:outputText id="NbPortsPC" styleClass="labelname"
+        style="display:inline-block;margin-bottom:3px;margin-left:3px;"
+        value="#{msg.nbPorts} : #{comPortController.ports.size()}" />
+
+      <h:panelGrid columns="2" id="portsList" columnClasses="top,middle">
+        <rich:dataTable value="#{comPortController.dataPortList}"
+          var="port" id="portsTable"
+          onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+          onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+          sortMode="single" rows="10"
+          ajaxKeys="#{comPortController.keys}" rowKeyVar="row">
+
+          <rich:column id="portName" sortBy="#{port.name}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.name}" />
+            </f:facet>
+            <h:outputText id="name" value="#{port.name}" />
+          </rich:column>
+          <rich:column id="IPAddress" sortBy="#{port.ipAddress}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.IPAddress}" />
+            </f:facet>
+            <h:outputText value="#{port.ipAddress}" />
+          </rich:column>
+          <rich:column id="mask" sortBy="#{port.mask}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.mask}" />
+            </f:facet>
+            <h:outputText value="#{port.mask}" />
+          </rich:column>
+          <rich:column id="MACAddress" sortBy="#{port.macAddress}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.MACAddress}" />
+            </f:facet>
+            <h:outputText value="#{port.macAddress}" />
+          </rich:column>
+          <rich:column id="FixedIP" sortBy="#{port.fixedIP}" style="text-align: center;">
+            <f:facet name="header">
+              <h:outputText value="#{msg.FixedIP}" />
+            </f:facet>
+            <h:selectBooleanCheckbox disabled="true" value="#{port.fixedIP}" />
+          </rich:column>
+          <rich:column id="network" sortBy="#{port.network}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.network}" />
+            </f:facet>
+            <h:outputText
+              value="#{port.network.localeValue}" />
+          </rich:column>
+          <rich:column id="socket" sortBy="#{port.socket}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.socket}" />
+            </f:facet>
+            <h:outputText value="#{port.socket}" />
+          </rich:column>
+          <rich:column id="comment" sortBy="#{port.comment}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.comment}" />
+            </f:facet>
+            <h:outputText value="#{port.comment}" />
+          </rich:column>
+
+          <rich:column rendered="#{not readonly}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.actions}" />
+            </f:facet>
+
+            <a4j:commandLink id="editPort" execute="@this"
+              actionListener="#{comPortController.prepareUpdate}"
+              render="portModal"
+              oncomplete="#{rich:component('portModal')}.show()">
+              <h:graphicImage value="/resources/images/icons/edit.gif"
+                style="border:0" />
+            </a4j:commandLink>
+            <boa:tooltip target="editPort" value="#{msg.updatePort}" />
+
+            <a4j:commandLink id="confirmDeletePort" execute="@this"
+              action="#{comPortController.doDelete}"
+              render="portsList, NbPortsPC">
+              <h:graphicImage value="/resources/images/icons/delete.gif"
+                style="border:0" />
+            </a4j:commandLink>
+            <boa:tooltip target="confirmDeletePort"
+              value="#{msg.delete}" />
+          </rich:column>
+        </rich:dataTable>
+
+        <h:panelGroup style="padding-left:5px">
+          <a4j:commandButton value="#{msg.AddPort}"
+            rendered="#{not readonly}" render="portModal"
+            disabled="#{comPortController.ports.size() >= comPortController.nbMaxPorts}"
+            actionListener="#{comPortController.prepareAdd}"
+            oncomplete="#{rich:component('portModal')}.show()">
+          </a4j:commandButton>
+        </h:panelGroup>
+      </h:panelGrid>
+    </a4j:region>
+  </fieldset>
+</ui:composition>

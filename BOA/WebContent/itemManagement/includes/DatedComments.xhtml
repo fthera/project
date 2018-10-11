@@ -1,0 +1,111 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Part containing the display of the article dated comments
+     and the buttons allowing to add and delete them. -->
+
+  <!-- Usage of this composition -->
+  <!--
+    readonly = [optional] boolean indicating if the composition is in readonly
+                 mode or not (default false)
+    
+     Remark:
+     - The modal named 'DatedCommentModal' must exist in the page when
+         readonly is false.
+  -->
+
+  <c:if test="#{empty readonly}">
+    <c:set var="readonly" value="#{false}" />
+  </c:if>
+
+  <h:panelGrid cellpadding="0" cellspacing="0" style="width:100%">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="DatedCommentsError" />
+    </ui:include>
+
+    <h:panelGroup>
+      <rich:dataTable id="DatedComments" style="width:100%"
+        value="#{DatedCommentController.datedComments}" var="DatedComment" rows="5"
+        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+        rowClasses="evenRow, oddRow">
+        
+        <f:facet name="header">
+          <h:outputText id ="datedCommentsTitle" value="#{msg.datedComments}" />
+          <a4j:commandLink id="addDatedCommentButton" rendered="#{!readonly}"
+            action="#{DatedCommentController.prepareAdd}"
+            render="DatedCommentModal" execute="@this"
+            oncomplete="#{rich:component('DatedCommentModal')}.show()">
+              <h:graphicImage value="/resources/images/icons/add.png"
+                style="border:0px;margin-left:10px;vertical-align:bottom" />
+            </a4j:commandLink>
+        </f:facet>
+
+        <rich:column headerClass="input80">
+          <f:facet name="header">
+            <h:outputText value="#{msg.comment}" />
+          </f:facet>
+          <h:outputText value="#{DatedComment.comment}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.user}" />
+          </f:facet>
+          <h:outputText value="#{DatedComment.user.loginDetails}" />
+        </rich:column>
+
+        <rich:column>
+          <f:facet name="header">
+            <h:outputText value="#{msg.date}" />
+          </f:facet>
+          <h:outputText value="#{DatedComment.date}">
+            <f:convertDateTime pattern="dd/MM/yyyy HH:mm"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+        <rich:column rendered="#{!readonly and  DatedCommentController.isModificationAuthorized(DatedComment)}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.actions}" />
+          </f:facet>
+
+          <a4j:commandLink id="updateDatedComment" execute="@this"
+            action="#{DatedCommentController.prepareUpdate}"
+            render="DatedCommentModal"
+            oncomplete="#{rich:component('DatedCommentModal')}.show()">
+            <h:graphicImage value="/resources/images/icons/edit.gif"
+              style="border:0" />
+            <f:setPropertyActionListener value="#{DatedComment}"
+              target="#{DatedCommentController.datedComment}" />
+          </a4j:commandLink>
+
+          <a4j:commandLink id="deleteDatedComment" execute="@this"
+            action="#{DatedCommentController.doDelete}"
+            render="DatedComments,dsBottomDatedComments">
+            <h:graphicImage value="/resources/images/icons/delete.gif"
+              style="border:0" />
+            <f:setPropertyActionListener value="#{DatedComment}"
+              target="#{DatedCommentController.datedComment}" />
+          </a4j:commandLink>
+
+          <boa:tooltip target="deleteDatedComment" value="#{msg.delete}" />
+
+        </rich:column>
+      </rich:dataTable>
+
+      <h:panelGroup style="display:block;text-align:center">
+        <rich:dataScroller id="dsBottomDatedComments" for="DatedComments"
+          maxPages="5" fastControls="hide" renderIfSinglePage="false" />
+      </h:panelGroup>
+    </h:panelGroup>
+  </h:panelGrid>
+
+</ui:composition>

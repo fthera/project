@@ -1,0 +1,60 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+  <h:form id="exportBuildingsForm">
+    <rich:popupPanel id="exportBuildingsModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeExportBuildingsModal"
+          alt="#{msg.close}" class="hidelink"
+          value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('exportBuildingsModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage
+            value="/resources/images/icons/locations/Building.png"
+            style="padding-right:5px;width:16px;height:16px;" />
+          <h:outputText value="#{msg.export}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="exportBuildingsError" />
+      </ui:include>
+      <h:panelGroup>
+        <fieldset>
+          <legend>#{msg.selectBuilding}</legend>
+
+          <rich:pickList value="#{buildingController.selectedBuildings}"
+            var="building" listHeight="150" listWidth="130"
+            sourceCaption="#{msg.availableBuildings}"
+            targetCaption="#{msg.selectedBuildings}" immediate="true"
+            addText="#{msg.addText}"
+            addAllText="#{msg.addAllText}"
+            removeText="#{msg.removeText}"
+            removeAllText="#{msg.removeAllText}"
+            converter="buildingConverter">
+            <f:selectItems value="#{buildingController.dynamicColumns}" />
+            <rich:column>
+              <h:outputText value="#{building.name}"></h:outputText>
+            </rich:column>
+          </rich:pickList>
+
+          <h:panelGrid columns="2" styleClass="center" cellspacing="5">
+            <h:commandButton value="#{msg.export}"
+              action="#{buildingController.doExport}" />
+            <h:commandButton value="#{msg.cancel}" immediate="true"
+              onclick="#{rich:component('exportBuildingsModal')}.hide();return false;" />
+          </h:panelGrid>
+
+        </fieldset>
+      </h:panelGroup>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

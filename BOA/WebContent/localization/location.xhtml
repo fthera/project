@@ -1,0 +1,131 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Part containing the display of the location
+     and the button allowing to change it. -->
+  <!--
+     readonly = [optional, default= true]
+                  boolean indicating if the location is in read only mode
+     
+     Remark:
+     - When readonly is false, the modal named 'changeLocationModal' must
+         exist in the page.
+  -->
+
+  <div style="width: 100%">
+    <a4j:region renderRegionOnly="false">
+
+      <c:if test="#{empty readonly}">
+        <c:set var="readonly" value="true" />
+      </c:if>
+
+      <h:panelGroup id="locationInPage">
+        <fieldset>
+          <legend align="top">
+            <h:outputText value="#{msg.location}" />
+            <h:panelGroup rendered="#{not readonly}">
+              <span style="color: red;">*</span>
+            </h:panelGroup>
+          </legend>
+
+          <h:panelGroup
+            rendered="#{not empty locationController.warningMessage}">
+            <h:outputText id="warningMessage"
+              value="#{locationController.warningMessage}"
+              styleClass="warning" />
+            <br />
+          </h:panelGroup>
+
+          <h:panelGrid columns="2" cellspacing="0" style="width:80%;"
+            rowClasses="top">
+
+            <h:panelGroup>
+              <a4j:commandButton value="#{msg.changeLocation}"
+                style="margin-bottom:5"
+                oncomplete="#{rich:component('changeLocationModal')}.show();return false;"
+                rendered="#{not readonly}" execute="@this">
+                <f:setPropertyActionListener
+                  target="#{locationController.selectedClass}"
+                  value="Place" />
+              </a4j:commandButton>
+
+              <h:panelGrid columns="2" cellspacing="0">
+
+                <h:outputLabel value="#{msg.inheritedLocation}"
+                  rendered="#{locationController.inheritedLocationAvailable}"
+                  styleClass="labelname" />
+                <h:selectBooleanCheckbox
+                  value="#{locationController.location.inherited}"
+                  rendered="#{locationController.inheritedLocationAvailable}"
+                  disabled="true" />
+
+                <h:outputLabel value="#{msg.locationName}"
+                  styleClass="labelname" />
+                <h:panelGroup>
+                  <h:outputLabel id="locationName" style="vertical-align: middle"
+                    styleClass="#{locationController.locationStyleClass}"
+                    value="#{locationController.location.locationDetailedName}" />
+                  <h:graphicImage id="locationHelp"
+                    rendered="#{not empty locationController.location.toolTip}"
+                    styleClass="iconClass" style="margin-left:4px"
+                    value="/resources/images/icons/help_tooltip.png" />
+                  <boa:tooltip target="locationHelp"
+                    rendered="#{not empty locationController.location.toolTip}"
+                    value="#{locationController.location.toolTip}" />
+                </h:panelGroup>
+
+                <h:outputLabel value="#{msg.precisionPlace}"
+                  rendered="#{locationController.showPrecision}"
+                  styleClass="labelname" />
+                <h:outputLabel
+                  rendered="#{locationController.showPrecision}"
+                  value="#{locationController.location.precision}" />
+
+              </h:panelGrid>
+            </h:panelGroup>
+
+            <h:panelGroup
+              rendered="#{locationController.externalLocationPossible}">
+
+              <a4j:commandButton value="#{msg.changeExternalLocation}"
+                style="margin-bottom:5"
+                rendered="#{locationController.location != null and (not readonly)}"
+                oncomplete="#{rich:component('changeLocationModal')}.show();return false;"
+                execute="@this">
+                <f:setPropertyActionListener
+                  target="#{locationController.selectedClass}"
+                  value="ExternalEntity" />
+              </a4j:commandButton>
+
+              <h:panelGrid columns="2" cellspacing="0"
+                rendered="#{locationController.location.externalLocated}">
+
+                <h:outputLabel value="#{msg.externalLocationType}"
+                  styleClass="labelName" />
+                <h:outputLabel
+                  value="#{locationController.location.externalEntity.externalEntityType.localeValue}" />
+
+                <h:outputLabel value="#{msg.externalLocationName}"
+                  styleClass="labelname" />
+                <h:outputLabel id="externalLocationName"
+                  value="#{locationController.location.externalLocationName}" />
+
+              </h:panelGrid>
+
+            </h:panelGroup>
+
+          </h:panelGrid>
+
+        </fieldset>
+      </h:panelGroup>
+
+    </a4j:region>
+  </div>
+
+</ui:composition>

@@ -1,0 +1,67 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <rich:panel>
+      <f:facet name="header">
+        <h:outputText value="#{msg.connectedUsers}"></h:outputText>
+      </f:facet>
+              
+        #{msg.connectedUserSession} : <h:outputText
+        value="#{applicationController.unconnectedUsersCount}" />
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="whoIsOnlineError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <br />
+      <br />
+
+      <h:form id="userTableForm">
+
+        <rich:dataTable id="userTable"
+          value="#{applicationController.connectedUsers}" var="user"
+          onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+          onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+          rowClasses="evenRow, oddRow" rows="30">
+
+
+          <f:facet name="header">#{msg.connectedUsers}</f:facet>
+
+          <rich:column sortBy="#{user.login}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.userLogin}" />
+            </f:facet>
+            <h:outputText value="#{user.login}" />
+          </rich:column>
+
+          <rich:column sortBy="#{user.lastname}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.userLastname}" />
+            </f:facet>
+            <h:outputText value="#{user.lastname}" />
+          </rich:column>
+
+          <rich:column sortBy="#{user.firstname}">
+            <f:facet name="header">
+              <h:outputText value="#{msg.userFirstname}" />
+            </f:facet>
+            <h:outputText value="#{user.firstname}" />
+          </rich:column>
+          <f:facet name="footer">
+	            #{(empty applicationController.connectedUsers? msg.connectedUserListNone:'')}
+	          </f:facet>
+        </rich:dataTable>
+
+      </h:form>
+    </rich:panel>
+  </ui:define>
+
+</ui:composition>

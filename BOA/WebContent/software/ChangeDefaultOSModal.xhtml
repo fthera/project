@@ -1,0 +1,60 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Usage of this modal -->
+  <!--
+    beanProperty     = the selection binding bean property for default OS Id
+    operatingSystems = the list of available Operating Systems in select items
+  -->
+
+  <h:form id="ChangeDefaultOSForm">
+    <rich:popupPanel id="changeDefaultOSModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closeChangeDefaultOS" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('changeDefaultOSModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/list.png"
+            style="padding-right:5px;width:16px;height:16px" />
+          <h:outputText value="#{msg.selectDefaultOS}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="changeDefaultOSError" />
+      </ui:include>
+
+      <fieldset style="min-width: 190px">
+        <legend>
+          <h:outputText value="#{msg.selectDefaultOS}" />
+        </legend>
+
+        <a4j:outputPanel ajaxRendered="true">
+          <h:selectOneRadio id="defaultOS" layout="pageDirection"
+            value="#{beanProperty}">
+            <f:selectItems value="#{operatingSystems}" />
+          </h:selectOneRadio>
+        </a4j:outputPanel>
+
+        <h:panelGrid border="0" cellpadding="5" columns="2">
+          <a4j:commandButton value="#{msg.validate}" execute="@form"
+            id="changeDefaultOSButton" render="softwareList"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('changeDefaultOSModal')}.hide();return false;" />
+          <a4j:commandButton id="cancelButton" value="#{msg.cancel}"
+            onclick="#{rich:component('changeDefaultOSModal')}.hide();return false;" />
+        </h:panelGrid>
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

@@ -1,0 +1,406 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('TypeCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('TypeCRUD','CRUD_Read')}">
+      <f:facet name="header">#{msg.typeManagementTitle}</f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="typeListError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form>
+        <h:panelGrid columns="2" cellspacing="5">
+          <a4j:commandButton execute="@this"
+            disabled="#{not logInController.isAuthorized('TypeCRUD','CRUD_Create')}"
+            value="#{msg.addNewTypeTitle}"
+            oncomplete="#{rich:component('addNewTypeModal')}.show();"
+            render="addNewTypeModal">
+            <f:setPropertyActionListener value=""
+              target="#{typeController.newTypeName}" />
+            <f:setPropertyActionListener value=""
+              target="#{typeController.newTypeManufacturer}" />
+            <f:setPropertyActionListener value="false"
+              target="#{typeController.createObso}" />
+          </a4j:commandButton>
+          <a4j:commandButton id="resetFilter"
+            value="#{msg.resetFilters}" execute="@this"
+            action="#{typeController.doResetFilters}"
+            render="gestionType">
+          </a4j:commandButton>
+        </h:panelGrid>
+      </h:form>
+
+      <h:form id="gestionType">
+
+        <h:panelGrid columns="1" cellspacing="5">
+          <h:outputText id="counts" styleClass="bigText"
+            value="#{msg.countTypeFiltered} : #{typeController.countFiltered}" />
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" columnClasses="top, top"
+          cellspacing="5">
+
+          <h:panelGroup>
+            <fieldset>
+              <legend>#{msg.typeTableTitle} </legend>
+
+              <h:panelGroup style="display:block;text-align:center">
+                <rich:dataScroller id="dsTop" for="typeTable"
+                  maxPages="5" fastControls="hide"
+                  renderIfSinglePage="false" />
+              </h:panelGroup>
+
+              <div class="scroll-div"
+                style="max-height: 68%; max-height: 68vh;">
+                <rich:dataTable id="typeTable"
+                  value="#{typeController.types}" var="type"
+                  onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                  onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+                  sortMode="single" rows="30"
+                  ajaxKeys="#{typeController.keys}" rowKeyVar="row">
+
+                  <a4j:ajax event="rowclick"
+                    render="listPN,dsTopListPN,labelType,createPN"
+                    listener="#{typeController.doSelectType(type.id)}">
+                  </a4j:ajax>
+
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <h:outputText value="Types" />
+                    </h:panelGroup>
+                  </f:facet>
+
+                  <rich:column
+                    sortBy="#{msg[type.class.simpleName]}"
+                    filterType="custom"
+                    filter="#{typeController.typeArticleFilter}">
+                    <f:facet name="header">
+                      <h:panelGroup>
+                        <h:outputText value="#{msg.ClassTitle}" />
+                        <br />
+                        <h:inputText styleClass="input10"
+                          id="family"
+                          value="#{typeController.filterValues['classe']}">
+                          <a4j:ajax event="keyup"
+                            render="typeTable@body,dsTop,dsBottom,counts" />
+                        </h:inputText>
+                      </h:panelGroup>
+                    </f:facet>
+                    <h:outputText
+                      value="#{msg[type.class.simpleName]}" />
+                  </rich:column>
+
+                  <rich:column sortBy="#{type.label}"
+                    filterType="custom"
+                    filter="#{typeController.typeArticleFilter}">
+                    <f:facet name="header">
+                      <h:panelGroup>
+                        <h:outputText value="#{msg.type}" />
+                        <br />
+                        <h:inputText id="labelType"
+                          value="#{typeController.filterValues['label']}">
+                          <a4j:ajax event="keyup"
+                            render="typeTable@body,dsTop,dsBottom,counts" />
+                        </h:inputText>
+                      </h:panelGroup>
+                    </f:facet>
+                    <h:outputText id="labelValue"
+                      value="#{type.label}" />
+                  </rich:column>
+
+                  <rich:column sortBy="#{type.manufacturer}"
+                    filterType="custom"
+                    filter="#{typeController.typeArticleFilter}">
+                    <f:facet name="header">
+                      <h:panelGroup>
+                        <h:outputText value="#{msg.manufacturer}" />
+                        <br />
+                        <h:inputText id="manufacturer"
+                          value="#{typeController.filterValues['manufacturer']}">
+                          <a4j:ajax event="keyup"
+                            render="typeTable@body,dsTop,dsBottom,counts" />
+                        </h:inputText>
+                      </h:panelGroup>
+                    </f:facet>
+                    <h:outputText id="manufacturerValue"
+                      value="#{type.manufacturer}" />
+                  </rich:column>
+
+                  <rich:column id="apnCountCol" filterType="custom"
+                    sortBy="#{type.listAirbusPN.size()}"
+                    filter="#{typeController.typeArticleFilter}">
+                    <f:facet name="header">
+                      <h:panelGroup>
+                        <h:outputText value="#{msg.airbusPNCount}"
+                          styleClass="wrapTitle" />
+                        <br />
+                        <h:inputText styleClass="input10"
+                          id="airbusPNCount"
+                          value="#{typeController.filterValues['airbusPNCount']}">
+                          <a4j:ajax event="keyup"
+                            render="typeTable@body,dsTop,dsBottom,counts" />
+                        </h:inputText>
+                      </h:panelGroup>
+                    </f:facet>
+                    <h:outputText
+                      value="#{type.listAirbusPN.size()}" />
+                  </rich:column>
+
+                  <rich:column filterType="custom"
+                    sortBy="#{type.listManufacturerPN.size()}"
+                    filter="#{typeController.typeArticleFilter}">
+                    <f:facet name="header">
+                      <h:panelGroup>
+                        <h:outputText
+                          value="#{msg.manufacturerPNCount}"
+                          styleClass="wrapTitle" />
+                        <br />
+                        <h:inputText styleClass="input10"
+                          id="manufacturerPNCount"
+                          value="#{typeController.filterValues['manufacturerPNCount']}">
+                          <a4j:ajax event="keyup"
+                            render="typeTable@body,dsTop,dsBottom,counts" />
+                        </h:inputText>
+                      </h:panelGroup>
+                    </f:facet>
+                    <h:outputText
+                      value="#{type.listManufacturerPN.size()}" />
+                  </rich:column>
+
+                  <rich:column
+                    rendered="#{logInController.isAuthorized('TypeCRUD','CRUD_Update') or logInController.isAuthorized('TypeCRUD','CRUD_Delete')}">
+                    <f:facet name="header">
+                      <h:outputText value="#{msg.actions}" />
+                    </f:facet>
+                    <h:panelGrid columns="3">                                                  
+                      <a4j:commandLink id="updateLabel"
+                        rendered="#{logInController.isAuthorized('TypeCRUD','CRUD_Update')}"
+                        execute="@this" render="updateTypeModal"
+                        oncomplete="#{rich:component('updateTypeModal')}.show()">
+                        <h:graphicImage
+                          value="/resources/images/icons/edit.gif"
+                          style="border:0" />
+                        <f:setPropertyActionListener value="#{type}"
+                          target="#{typeController.selectedType}" />
+                        <f:setPropertyActionListener value="#{row}"
+                          target="#{typeController.currentRow}" />
+                        <f:setPropertyActionListener
+                          value="#{type.label}"
+                          target="#{typeController.newTypeName}" />
+                        <f:setPropertyActionListener
+                          value="#{type.manufacturer}"
+                          target="#{typeController.newTypeManufacturer}" />
+                      </a4j:commandLink>
+
+                      <a4j:commandLink id="deleteType"
+                        rendered="#{logInController.isAuthorized('TypeCRUD','CRUD_Delete')}"
+                        execute="@this" render="confirmationDeleteType"
+                        oncomplete="#{rich:component('confirmationDeleteType')}.show()">
+                        <h:graphicImage
+                          value="/resources/images/icons/delete.gif"
+                          style="border:0" />
+                        <f:setPropertyActionListener value="#{type}"
+                          target="#{typeController.selectedType}" />
+                        <f:setPropertyActionListener value="#{row}"
+                          target="#{typeController.currentRow}" />
+                      </a4j:commandLink>
+                      
+                      <a4j:commandLink id="viewObsolescenceLink"
+                        rendered="#{typeController.pcHasObsoData(type) and logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read')}"
+                        execute="@this" action="#{typeController.showPCObsoData(type)}">
+                        <h:graphicImage
+                          value="/resources/images/icons/oldparchment.jpeg"
+                          style="border:0;width:16px;height:16px"
+                          alt="obsolescence link" />
+                      </a4j:commandLink>
+                    </h:panelGrid>
+                    
+                    <boa:tooltip target="updateLabel"
+                      value="#{msg.updateTypeTitle}" />
+                    <boa:tooltip target="deleteType"
+                      value="#{typeController.getObsolescenceDataConfirmationToDelete(type)}" />
+                  </rich:column>
+                </rich:dataTable>
+              </div>
+
+              <h:panelGroup style="display:block;text-align:center">
+                <rich:dataScroller id="dsBottom" for="typeTable"
+                  maxPages="5" fastControls="hide"
+                  renderIfSinglePage="false" />
+              </h:panelGroup>
+
+            </fieldset>
+          </h:panelGroup>
+
+          <h:panelGroup>
+
+            <fieldset>
+              <legend>#{msg.selectedTypeTitle}</legend>
+              
+              <h:panelGroup style="display:block;text-align:center;margin:5px">
+                <a4j:commandButton id="createPN"
+                  value="#{msg.createAirbusPN}"
+                  disabled="#{typeController.selectedType == null}"
+                  oncomplete="#{rich:component('createPNModal')}.show()"
+                  render="createPNModal,listPN">
+                  <f:setPropertyActionListener value="false"
+                    target="#{typeController.createObso}" />
+                </a4j:commandButton>
+              </h:panelGroup>
+
+              <h:panelGroup style="display:block;text-align:center">
+                <rich:dataScroller id="dsTopListPN" for="listPN"
+                  maxPages="5" fastControls="hide"
+                  renderIfSinglePage="false" />
+              </h:panelGroup>
+
+              <div class="scroll-div"
+                style="max-height: 68%; max-height: 68vh;">
+                <rich:dataTable id="listPN"
+                  value="#{typeController.allPNs}" var="pn"
+                  sortMode="single" rows="30"
+                  onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                  onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+                  ajaxKeys="#{typeController.pnKeys}"
+                  rowKeyVar="pnRow">
+                  <f:facet name="header">
+                    <h:outputText id="selectedTypeTitle"
+                      value="#{typeController.selectedTypeTitle}" />
+                  </f:facet>
+                  <rich:column sortBy="#{msg[pn.class.simpleName]}">
+                    <f:facet name="header">#{msg.ClassTitle}</f:facet>
+                    <h:outputText id="pnClass"
+                      value="#{msg[pn.class.simpleName]}" />
+                  </rich:column>
+
+                  <rich:column sortBy="#{pn.identifier}">
+                    <f:facet name="header">#{msg.name}</f:facet>
+                    <h:outputText id="pnIdentifier"
+                      value="#{pn.identifier}" />
+                  </rich:column>
+
+                  <rich:column
+                    rendered="#{logInController.isAuthorized('AirbusPNCRUD','CRUD_Update') or logInController.isAuthorized('AirbusPNCRUD','CRUD_Delete') or logInController.isAuthorized('ManufacturerPNCRUD','CRUD_Update')}">
+                    <f:facet name="header">
+                      <h:outputText value="#{msg.actions}" />
+                    </f:facet>
+                    <h:panelGrid columns="3">
+                      <a4j:commandLink id="updateAirbusPN"
+                        rendered="#{pn.class.simpleName=='AirbusPN' and logInController.isAuthorized('TypeCRUD','CRUD_Update')}"
+                        execute="@this" render="updatePNModal"
+                        oncomplete="#{rich:component('updatePNModal')}.show()">
+                        <h:graphicImage
+                          value="/resources/images/icons/edit.gif"
+                          style="border:0" />
+                        <f:setPropertyActionListener value="#{pn}"
+                          target="#{typeController.selectedPN}" />
+                        <f:setPropertyActionListener
+                          value="#{pn.identifier}"
+                          target="#{typeController.updateIdentifier}" />
+                        <f:setPropertyActionListener
+                          value="#{typeController.selectedTypeTitle}"
+                          target="#{typeController.movedToTypeLabel}" />
+                      </a4j:commandLink>
+
+                      <a4j:commandLink id="updateManufacturerPN"
+                        rendered="#{pn.class.simpleName=='ManufacturerPN' and logInController.isAuthorized('ManufacturerPNCRUD','CRUD_Update')}"
+                        execute="@this" render="updatePNModal"
+                        oncomplete="#{rich:component('updatePNModal')}.show()">
+                        <h:graphicImage
+                          value="/resources/images/icons/edit.gif"
+                          style="border:0" />
+                        <f:setPropertyActionListener value="#{pn}"
+                          target="#{typeController.selectedPN}" />
+                        <f:setPropertyActionListener
+                          value="#{pn.identifier}"
+                          target="#{typeController.updateIdentifier}" />
+                        <f:setPropertyActionListener
+                          value="#{typeController.selectedTypeTitle}"
+                          target="#{typeController.movedToTypeLabel}" />
+                      </a4j:commandLink>
+
+                      <a4j:commandLink id="deleteAirbusPN" 
+                        rendered="#{pn.class.simpleName=='AirbusPN' and logInController.isAuthorized('AirbusPNCRUD','CRUD_Delete')}"
+                        execute="@this" render="updatePNModal,confirmationDeletePN"
+                        oncomplete="#{rich:component('confirmationDeletePN')}.show()">
+                        <h:graphicImage
+                          value="/resources/images/icons/delete.gif"
+                          style="border:0" />
+                        <f:setPropertyActionListener value="#{pn}"
+                          target="#{typeController.selectedPN}" />
+                      </a4j:commandLink>
+                      
+                      <a4j:commandLink id="viewObsolescenceLink"
+                        rendered="#{typeController.hasObsoData(pn) and logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read')}"
+                        execute="@this" action="#{typeController.showPNObsoData(pn)}">
+                        <h:graphicImage
+                          value="/resources/images/icons/oldparchment.jpeg"
+                          style="border:0;width:16px;height:16px"
+                          alt="obsolescence link" />
+                      </a4j:commandLink>
+
+                    </h:panelGrid>
+                    
+                    <boa:tooltip target="updateAirbusPN"
+                      rendered="#{pn.class.simpleName=='AirbusPN'}"
+                      value="#{msg.updatePNmsg}" />
+                    <boa:tooltip target="updateManufacturerPN"
+                      rendered="#{pn.class.simpleName=='ManufacturerPN'}"
+                      value="#{msg.updatePNmsg}" />
+                    <boa:tooltip target="deleteAirbusPN"
+                      value="#{typeController.getObsolescenceDataConfirmationToDelete(pn)}" />
+                  </rich:column>
+                </rich:dataTable>
+              </div>
+
+              <h:panelGroup style="display:block;text-align:center">
+                <rich:dataScroller id="dsBottomListPN" for="listPN"
+                  maxPages="5" fastControls="hide"
+                  renderIfSinglePage="false" />
+              </h:panelGroup>
+            </fieldset>
+
+          </h:panelGroup>
+        </h:panelGrid>
+      </h:form>
+
+      <ui:include src="/type/AddNewTypeModal.xhtml" />
+      <ui:include src="/type/UpdateType.xhtml" />
+      <ui:include src="/type/CreatePN.xhtml" />
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationDeleteType" />
+        <ui:param name="controller" value="#{typeController}" />
+        <ui:param name="method" value="doDeleteType" />
+        <ui:param name="confirmationText"
+          value="#{typeController.deleteTypeConfirmationMessage}" />
+        <ui:param name="render" value="gestionType" />
+      </ui:include>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationDeletePN" />
+        <ui:param name="controller" value="#{typeController}" />
+        <ui:param name="method" value="doDeletePN" />
+        <ui:param name="confirmationText"
+          value="#{typeController.deletePNConfirmationMessage}" />
+        <ui:param name="render" value="gestionType" />
+      </ui:include>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

@@ -1,0 +1,38 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Insertion de la fenetre about -->
+  <rich:popupPanel id="about" autosized="true" resizeable="false"
+    modal="true">
+    <f:facet name="controls">
+      <h:graphicImage id="closeButton" alt="#{msg.close}"
+        class="hidelink" value="/resources/images/icons/close.png"
+        style="cursor:pointer"
+        onclick="#{rich:component('about')}.hide();return false;" />
+    </f:facet>
+    <f:facet name="header">
+      <h:outputText value="#{msg.about}" />
+    </f:facet>
+    <h:panelGrid columnClasses="text-center">
+      <h:graphicImage value="/resources/images/logo/AIRBUS_3D_Blue.png"
+        alt="logo_airbus" />
+      <h:outputText styleClass="bigText"
+        value="Airbus (#{initParam['BoaYearRelease']})" />
+      <h:outputText styleClass="bigText text-center"
+        value="Version : #{initParam['BoaVersion']}" />
+
+      <h:outputText
+        value="#{msg.databaseName}: #{applicationController.databaseName}" />
+      <h:outputText
+        value="#{msg.databaseHostname}: #{applicationController.databaseHostname}" />
+
+      <a4j:commandLink value="OK"
+        onclick="#{rich:component('about')}.hide();return false" />
+    </h:panelGrid>
+  </rich:popupPanel>
+</ui:composition>

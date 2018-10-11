@@ -1,0 +1,101 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('HierarchicalSearch'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('HierarchicalSearch')}">
+      <f:facet name="header">
+        <h:outputText value="#{msg.explorerTitle}" />
+      </f:facet>
+      <div>
+        <h:form id="explorerForm">
+
+          <fieldset style="width: 80%">
+            <table>
+
+              <tr>
+                <td align="right">
+                  <h:outputLabel value="#{msg.categoryChoice}"></h:outputLabel>
+                </td>
+                <td>
+                  <rich:select mode="client"
+                    value="#{explorerSearchController.selectedFamily}"
+                    defaultLabel="#{msg.chooseFamily}">
+                    <f:selectItem itemLabel="#{msg.chooseFamily}" />
+                    <f:selectItems
+                      value="#{explorerSearchController.families}" />
+                    <a4j:ajax event="selectitem" execute="@this"
+                      render="suggestionArticle" />
+                  </rich:select>
+                </td>
+                <td>
+                  <rich:autocomplete id="suggestionArticle" mode="ajax"
+                    value="#{explorerSearchController.suggestionValue}"
+                    autocompleteMethod="#{explorerSearchController.suggestions}"
+                    var="suggestion" showButton="true" minChars="0"
+                    fetchValue="#{explorerSearchController.selectedFamilyPlace ? suggestion.completeName : suggestion.name}">
+                    <h:outputText
+                      value="#{explorerSearchController.selectedFamilyPlace ? suggestion.completeName : suggestion.name}" />
+                    <a4j:ajax event="selectitem" execute="@this"
+                      listener="#{explorerSearchController.doShowNode}"
+                      render="treeViewPanel">
+                    </a4j:ajax>
+                    <a4j:ajax event="change" execute="@this"/>
+                  </rich:autocomplete>
+                </td>
+              </tr>
+
+              <tr>
+                <td>
+                  <a4j:commandButton id="searchButton"
+                    value="#{msg.search}" execute="@this"
+                    action="#{explorerSearchController.doSearch}"
+                    render="treeViewPanel">
+                  </a4j:commandButton>
+                </td>
+              </tr>
+
+            </table>
+
+          </fieldset>
+
+          <h:panelGroup id="treeViewPanel">
+            <fieldset style="width: 80%">
+
+              <h:panelGroup id="searchTypeText">
+                <h:panelGroup
+                  rendered="#{not empty explorerSearchController.searchInfoText}">
+                  <h:graphicImage
+                    url="/resources/images/icons/messagebox_info.png"
+                    styleClass="pic" />
+                  <h:outputText
+                    value="#{explorerSearchController.searchInfoText}"
+                    styleClass="info" />
+                  <br />
+                </h:panelGroup>
+              </h:panelGroup>
+
+              <ui:include src="/explorer/explorerTreeView.xhtml">
+                <ui:param value="#{explorerSearchController}"
+                  name="instanceExplorerController" />
+              </ui:include>
+
+            </fieldset>
+          </h:panelGroup>
+        </h:form>
+
+      </div>
+
+    </rich:panel>
+
+  </ui:define>
+</ui:composition>

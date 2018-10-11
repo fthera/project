@@ -1,0 +1,62 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="loginForm">
+    <rich:popupPanel id="loginUserPanel" autosized="true" modal="true"
+      domElementAttachment="parent">
+      <f:facet name="header">#{msg.LoginUserTitle}</f:facet>
+      <f:facet name="controls">
+        <h:graphicImage value="/resources/images/icons/delete.gif"
+          style="cursor:pointer"
+          onclick="#{rich:component('loginUserPanel')}.hide()" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="loginError" />
+      </ui:include>
+
+      <rich:hotKey selector="#loginUserPanel" key="esc" enabledInInput="true">
+        <rich:componentControl target="loginUserPanel" operation="hide" />
+      </rich:hotKey>
+      <rich:hotKey selector="#loginUserPanel" key="return" enabledInInput="true">
+        <rich:componentControl target="loginBtn" operation="click" />
+      </rich:hotKey>
+
+      <h:panelGrid columns="2">
+        <h:outputLabel value="#{msg.userLogin}" />
+        <h:inputText id="login" value="#{logInController.login}"
+          required="true" />
+        <h:panelGroup />
+        <rich:message for="login" />
+
+        <h:outputLabel value="#{msg.userPassword}" />
+        <h:inputSecret id="password" value="#{logInController.password}"
+          required="true">
+        </h:inputSecret>
+        <h:panelGroup />
+        <rich:message for="password" style="display:block" />
+
+        <!-- TODO en utilisant les cookies  
+        <empty></empty>
+        <h:panelGroup>
+          <h:selectBooleanCheckbox id="rememberMe"></h:selectBooleanCheckbox>
+          <h:outputLabel for="rememberMe"
+            value="#{msg.userRememberMe}" />
+        </h:panelGroup>
+        -->
+      </h:panelGrid>
+      <h:panelGrid columns="1" styleClass="center">
+        <a4j:commandButton id="loginBtn" value="#{msg.login}"
+          action="#{logInController.doLogin}" render="top,mainContent"
+          oncomplete="if (#{logInController.userLogged != null}) #{rich:component('loginUserPanel')}.hide();patchModal();" />
+      </h:panelGrid>
+
+    </rich:popupPanel>
+  </h:form>
+
+</ui:composition>

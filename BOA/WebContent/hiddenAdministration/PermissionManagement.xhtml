@@ -1,0 +1,186 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('HiddenAdministrationPermissionsUpdate'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('HiddenAdministrationPermissionsUpdate')}">
+      <f:facet name="header">
+        <h:outputText value="#{msg.rightsUpdateTitle}" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="permissionsError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <div style="overflow-x: auto;">
+
+        <h:form>
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="Actions" />
+            </legend>
+            <h:panelGrid columns="3" cellspacing="5">
+
+              <h:commandButton value="#{msg.save}"
+                action="#{permissionController.doUpdatePermissions}" />
+
+              <h:commandButton value="#{msg.reset}"
+                action="#{permissionController.doRefresh}"
+                immediate="true" />
+
+              <h:commandButton value="#{msg.cancel}" action="Main"
+                immediate="true" />
+
+            </h:panelGrid>
+          </fieldset>
+
+          <div class="scroll-div"
+            style="max-height: 37%; max-height: 37vh;">
+            <rich:dataTable
+              value="#{permissionController.categoriesCRUD}"
+              var="category" layout="block" id="permissionsCRUDTable"
+              rowClasses="oddRow, evenRow"
+              onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+              onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'">
+
+              <f:facet name="header">
+                <rich:columnGroup>
+
+                  <rich:column rowspan="2">
+                    <h:outputText value="#{msg.RightsOn}" />
+                  </rich:column>
+
+                  <rich:column
+                    colspan="#{permissionController.masksCRUD.size()}">
+                    <h:outputText
+                      value="#{permissionController.anonymous.localeValue}" />
+                  </rich:column>
+
+                  <c:forEach items="#{permissionController.roles}"
+                    var="role">
+                    <rich:column
+                      colspan="#{permissionController.masksCRUD.size()}">
+                      <h:outputText
+                        value="#{role.localeValue}" />
+                    </rich:column>
+                  </c:forEach>
+
+                  <c:forEach items="#{permissionController.masksCRUD}"
+                    var="mask" varStatus="status">
+                    <rich:column breakRowBefore="${status.first}">
+                      <h:outputText value="#{mask.toString()}" />
+                    </rich:column>
+                  </c:forEach>
+
+                  <c:forEach items="#{permissionController.roles}"
+                    var="role">
+                    <c:forEach items="#{permissionController.masksCRUD}"
+                      var="mask">
+                      <rich:column>
+                        <h:outputText value="#{mask.toString()}" />
+                      </rich:column>
+                    </c:forEach>
+                  </c:forEach>
+
+                </rich:columnGroup>
+              </f:facet>
+
+              <rich:column>
+                <h:outputText value="#{category.toString()}" />
+              </rich:column>
+
+              <c:forEach items="#{permissionController.masksCRUD}"
+                var="mask">
+                <rich:column style="text-align: center;">
+                  <h:selectBooleanCheckbox
+                    value="#{permissionController.booleansCRUDMap[category][permissionController.anonymous][mask]}" />
+                </rich:column>
+              </c:forEach>
+
+              <c:forEach items="#{permissionController.roles}"
+                var="role">
+                <c:forEach items="#{permissionController.masksCRUD}"
+                  var="mask">
+                  <rich:column style="text-align: center;">
+                    <h:selectBooleanCheckbox
+                      disabled="#{permissionController.superAdminRole.equals(role)}"
+                      value="#{permissionController.booleansCRUDMap[category][role][mask]}" />
+                  </rich:column>
+                </c:forEach>
+              </c:forEach>
+
+            </rich:dataTable>
+          </div>
+
+          <div class="scroll-div"
+            style="max-height: 37%; max-height: 37vh;">
+            <rich:dataTable value="#{permissionController.masksAction}"
+              var="mask" layout="block" id="permissionsActionTable"
+              rowClasses="oddRow, evenRow"
+              onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+              onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'">
+
+              <f:facet name="header">
+                <rich:columnGroup>
+
+                  <rich:column>
+                    <h:outputText value="#{msg.RightsFor}" />
+                  </rich:column>
+
+                  <rich:column>
+                    <h:outputText
+                      value="#{permissionController.anonymous.localeValue}" />
+                  </rich:column>
+
+                  <c:forEach items="#{permissionController.roles}"
+                    var="role">
+                    <rich:column>
+                      <h:outputText
+                        value="#{role.localeValue}" />
+                    </rich:column>
+                  </c:forEach>
+
+                </rich:columnGroup>
+              </f:facet>
+
+              <rich:column>
+                <h:outputText value="#{mask.toString()}" />
+              </rich:column>
+
+              <rich:column style="text-align: center;">
+                <h:selectBooleanCheckbox
+                  value="#{permissionController.booleansActionMap[mask.category][permissionController.anonymous][mask]}" />
+              </rich:column>
+
+              <c:forEach items="#{permissionController.roles}"
+                var="role">
+                <rich:column style="text-align: center;">
+                  <h:selectBooleanCheckbox
+                    disabled="#{permissionController.superAdminRole.equals(role)}"
+                    value="#{permissionController.booleansActionMap[mask.category][role][mask]}" />
+                </rich:column>
+              </c:forEach>
+
+            </rich:dataTable>
+          </div>
+
+        </h:form>
+
+      </div>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

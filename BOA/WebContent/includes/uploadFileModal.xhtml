@@ -1,0 +1,107 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Usage of this modal -->
+  <!--
+    modalId             = the id of the modal
+    modalTitle          = the title of the modal
+    uploadText          = the text to display
+    controller          = the controller to be used
+    validateMethod      = the method name of the controller to be called as
+                            validate button action
+    fileUploadListener  = the listener method name of the controller to be
+                            called as a file is uploaded
+    validateButtonId    = [optional] the validate button id
+    cancelButtonId      = [optional] the cancel button id
+    validateButtonLabel = [optional] the validate button label
+    maxFilesQuantity    = [optional] the maximum number of files (default 1)
+    immediateUpload     = [optional] boolean indicating if upload is immediate
+                            (default false)
+    render            = [optional] the render attribute for validate button
+  
+    Remark:
+    - This modal contains a form and must be included out of the form of the
+        page including it.
+  -->
+
+  <c:if test="#{empty validateButtonId}">
+    <c:set var="validateButtonId" value="validateButton" />
+  </c:if>
+
+  <c:if test="#{empty cancelButtonId}">
+    <c:set var="cancelButtonId" value="cancelButton" />
+  </c:if>
+
+  <c:if test="#{empty validateButtonLabel}">
+    <c:set var="validateButtonLabel" value="#{msg.validate}" />
+  </c:if>
+
+  <c:if test="#{empty maxFilesQuantity}">
+    <c:set var="maxFilesQuantity" value="1" />
+  </c:if>
+
+  <c:if test="#{empty immediateUpload}">
+    <c:set var="immediateUpload" value="#{false}" />
+  </c:if>
+
+  <c:choose>
+    <c:when test="#{empty render}">
+      <c:set var="render" value="uploadFile" />
+    </c:when>
+    <c:otherwise>
+      <c:set var="render" value="uploadFile,#{render}" />
+    </c:otherwise>
+  </c:choose>
+
+  <h:form id="#{modalId}Form">
+    <rich:popupPanel id="#{modalId}" autosized="true" modal="true"
+      domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="#{modalId}CloseButton" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component(modalId)}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:outputText value="#{modalTitle}"
+          style="vertical-align:bottom;" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="#{modalId}Error" />
+      </ui:include>
+
+      <h:outputText value="#{uploadText}" />
+
+      <rich:fileUpload id="uploadFile"
+        fileUploadListener="#{controller[fileUploadListener]}"
+        maxFilesQuantity="#{maxFilesQuantity}" execute="@this"
+        immediateUpload="#{immediateUpload}"
+        addLabel="#{msg.addFileLabel}"
+        clearAllLabel="#{msg.clearAllLabel}"
+        clearLabel="#{msg.clearLabel}"
+        deleteLabel="#{msg.cancelEntryLabel}"
+        uploadLabel="#{msg.uploadLabel}">
+        <f:facet name="label">
+          <h:outputText
+            value="{_KB}KB from {KB}KB uploaded --- {mm}:{ss}" />
+        </f:facet>
+        <a4j:ajax event="clear" render="uploadFile" />
+      </rich:fileUpload>
+
+      <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+        <a4j:commandButton id="#{validateButtonId}"
+          action="#{controller[validateMethod]}"
+          value="#{validateButtonLabel}" render="#{render}"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component(modalId)}.hide();" />
+        <a4j:commandButton id="#{cancelButtonId}" value="#{msg.cancel}"
+          execute="@this" onclick="#{rich:component(modalId)}.hide();" />
+      </h:panelGrid>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

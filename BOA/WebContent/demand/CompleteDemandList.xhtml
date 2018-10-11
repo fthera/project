@@ -1,0 +1,30 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:c="http://java.sun.com/jstl/core"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{logInController.isAuthorized('DemandCRUD','CRUD_Read')
+        and (logInController.isAuthorized('DemandConfirm')
+        or logInController.isAuthorized('DemandAllocate')
+        or logInController.isAuthorized('DemandMakeAvailable'))}" />
+
+    <h:outputText rendered="#{not isAuthorized}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized}">
+      <f:facet name="header">#{msg.listDemandTitle}</f:facet>
+
+      <h:inputHidden
+        value="#{searchDemandController.doListAllDemands()}" />
+
+      <ui:include src="/demand/DemandListCommon.xhtml" />
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

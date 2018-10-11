@@ -1,0 +1,57 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Usage of this component -->
+  <!--
+    globalOnly = Boolean indicating that global messages shall be displayed
+  -->
+
+  <c:if test="#{empty globalOnly}">
+    <c:set var="globalOnly" value="false" />
+  </c:if>
+
+  <!-- Temp message to dispatch errors from server -->
+  <rich:message id="#{id}" rendered="false" />
+
+  <!-- Global messages -->
+
+  <rich:messages globalOnly="true" rendered="#{globalOnly}">
+    <f:facet name="errorMarker">
+      <h:graphicImage
+        url="/resources/images/icons/messagebox_critical.png"
+        styleClass="pic" />
+    </f:facet>
+    <f:facet name="infoMarker">
+      <h:graphicImage url="/resources/images/icons/messagebox_info.png"
+        styleClass="pic" />
+    </f:facet>
+    <f:facet name="warnMarker">
+      <h:graphicImage
+        url="/resources/images/icons/messagebox_warning.png"
+        styleClass="pic" />
+    </f:facet>
+  </rich:messages>
+
+  <!-- Messages retrieve from the above temp rich:message -->
+  <rich:messages for="#{id}">
+    <f:facet name="errorMarker">
+      <h:graphicImage
+        url="/resources/images/icons/messagebox_critical.png"
+        styleClass="pic" />
+    </f:facet>
+    <f:facet name="infoMarker">
+      <h:graphicImage url="/resources/images/icons/messagebox_info.png"
+        styleClass="pic" />
+    </f:facet>
+    <f:facet name="warnMarker">
+      <h:graphicImage
+        url="/resources/images/icons/messagebox_warning.png"
+        styleClass="pic" />
+    </f:facet>
+  </rich:messages>
+</ui:composition>

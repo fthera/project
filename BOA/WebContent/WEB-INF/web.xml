@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+  <display-name>BOA</display-name>
+
+  <context-param>
+    <param-name>BoaVersion</param-name>
+    <param-value>V4.1</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>BoaYearRelease</param-name>
+    <param-value>2016</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>BoaProductionDatabaseHostname</param-name>
+    <param-value>Varana</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>BoaViewDatabaseName</param-name>
+    <param-value>BOA_VIEW</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>ReminderURLMailer</param-name>
+    <param-value>http://simlx20:8080/send_notification.php</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>ReminderEmailFrom</param-name>
+    <param-value>noreply.boa@airbus.com</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>SupportEmail</param-name>
+    <param-value>support-tools-simu@sii.fr</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>AutoUpdatingLogFile</param-name>
+    <param-value>/home/CrossTools/ENABLING_TOOLS/BOA/LOGS/AutoUpdating.log</param-value>
+  </context-param>
+
+  <context-param>
+    <description>Timeout for connection to PC and SYSMON execution (in seconds)</description>
+    <param-name>SysmonTimeout</param-name>
+    <param-value>60</param-value>
+  </context-param>
+
+  <context-param>
+    <description>chemin pour trouver le manuel (sur l'intranet)</description>
+    <param-name>BOA_MU_PATH</param-name>
+    <param-value>http://avsim.fr.eu.airbus.corp:8870/SIMU_FRAMEWORK/ETOOLS/BOA/documents</param-value>
+  </context-param>
+
+  <context-param>
+    <description>nom du manuel utilisateur (sans version et sans extension)</description>
+    <param-name>BOA_MU_NAME</param-name>
+    <param-value>SF_904_MAN_BOA</param-value>
+  </context-param>
+
+  <context-param>
+    <description>Path for Airbus logo to use for Obsolescence forms generation</description>
+    <param-name>LOGO_RELATIVE_PATH</param-name>
+    <param-value>/resources/images/logo/AIRBUS_BLK_Reduced.jpg</param-value>
+  </context-param>
+
+  <context-param>
+    <description>date limite dépassée (rouge)</description>
+    <param-name>PASSED_DATE_COLOR</param-name>
+    <param-value>#ff0000</param-value>
+  </context-param>
+
+  <context-param>
+    <description>date approchée sous 45 jours inclus (orange)</description>
+    <param-name>0_TO_45_DAYS_COLOR</param-name>
+    <param-value>#FFBF00</param-value>
+  </context-param>
+
+  <context-param>
+    <description>date limite approchée entre 45 et 90 jours (jaune)</description>
+    <param-name>45_TO_90_DAYS_COLOR</param-name>
+    <param-value>#FFFF00</param-value>
+  </context-param>
+
+  <context-param>
+    <description>limite du nombre de resultats retournées depuis une recherche pour une modale
+      Si QUERY_MAX_RESULTS vaut 0 alors il n'y a pas de limite.
+    </description>
+    <param-name>QUERY_MAX_RESULTS</param-name>
+    <param-value>300</param-value>
+  </context-param>
+
+  <context-param>
+    <description>definit le nombre de ligne avec la validation automatique pour les champs du fichier
+      fichier d'import soumis à validation de données. 
+      Si la valeur n'est pas numérique et supérieure à zéro alors la construction des listes de valeurs 
+      excels est désactivée.  
+    </description>
+    <param-name>NUMBER_ROW_DATA_VALIDATION_IMPORT_TEMPLATE</param-name>
+    <param-value>200</param-value>
+  </context-param>
+
+  <context-param>
+    <description>State saving method: 'client' or 'server' (=default). See JSF Specification 2.5.2</description>
+    <param-name>javax.faces.STATE_SAVING_METHOD</param-name>
+    <param-value>server</param-value>
+  </context-param>
+
+  <!-- Plugging the "Blue Sky" skin into the project -->
+  <context-param>
+    <param-name>org.richfaces.skin</param-name>
+    <!-- <param-value>blueSky</param-value> -->
+    <param-value>airbus</param-value>
+  </context-param>
+
+  <!-- Making the RichFaces skin spread to standard HTML controls -->
+  <context-param>
+    <param-name>org.richfaces.enableControlSkinning</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  
+  <context-param>
+    <param-name>org.richfaces.enableControlSkinningClasses</param-name>
+    <param-value>true</param-value>
+  </context-param>
+  
+  <!-- Sets Primefaces theme to match Richface's -->
+  <context-param>
+    <param-name>primefaces.THEME</param-name>
+    <param-value>aristo</param-value>
+  </context-param>
+
+  <context-param>
+    <description>Defintion du suffixe par defaut pour les templates</description>
+    <param-name>javax.faces.DEFAULT_SUFFIX</param-name>
+    <param-value>.xhtml</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>org.ajax4jsf.VIEW_HANDLERS</param-name>
+    <param-value>com.sun.facelets.FaceletViewHandler</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>javax.faces.CONFIG_FILES</param-name>
+    <param-value>/WEB-INF/faces-config.xml</param-value>
+  </context-param>
+
+  <!-- Change this value from "Development" to "Production" for deployment -->
+  <context-param>
+    <param-name>javax.faces.PROJECT_STAGE</param-name>
+    <param-value>Production</param-value>
+  </context-param>
+
+  <context-param>
+    <description>configuration pour le developpement/debug
+      Interception aussi des messages d'erreur
+    </description>
+    <param-name>facelets.DEVELOPMENT</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+  <context-param>
+    <description>retrait des commentaires </description>
+    <param-name>javax.faces.FACELETS_SKIP_COMMENTS</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+  <context-param>
+    <description>A Ne pas utiliser en PRODUCTION</description>
+    <param-name>javax.faces.FACELETS_REFRESH_PERIOD</param-name>
+    <param-value>5</param-value>
+  </context-param>
+
+  <context-param>
+    <description>facelets.tag.component
+      facelets.RECREATE_VALUE_EXPRESSION_ON_BUILD_BEFORE_RESTORE is set to 'true' 
+      but facelets.BUILD_BEFORE_RESTORE is set to 'false' or unset. 
+      To use facelets.RECREATE_VALUE_EXPRESSION_ON_BUILD_BEFORE_RESTORE 
+      you must also set facelets.BUILD_BEFORE_RESTORE to 'true'
+    </description>
+    <param-name>facelets.BUILD_BEFORE_RESTORE</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>javax.faces.DISABLE_FACELET_JSF_VIEWHANDLER</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>javax.faces.FACELETS_LIBRARIES</param-name>
+    <param-value>/WEB-INF/BoaComponents.taglib.xml</param-value>
+  </context-param>
+
+  <context-param>
+    <!-- gestion de l'expiration de la session -->
+    <param-name>org.ajax4jsf.handleViewExpiredOnClient</param-name>
+    <param-value>true</param-value>
+  </context-param>
+
+  <context-param>
+    <param-name>org.richfaces.LoadScriptStrategy</param-name>
+    <param-value>ALL</param-value>
+  </context-param>
+  
+  <filter>
+    <filter-name>CustomFilter</filter-name>
+    <filter-class>com.airbus.boa.util.CustomFilter</filter-class>
+  </filter>
+  <filter-mapping>
+    <filter-name>CustomFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+  </filter-mapping>
+
+  <!-- Defining the listener to jsf -->
+  <listener>
+    <listener-class>com.sun.faces.config.ConfigureListener</listener-class>
+  </listener>
+  <listener>
+    <listener-class>com.airbus.boa.util.SessionCounterListener</listener-class>
+  </listener>
+
+  <servlet>
+    <servlet-name>Faces Servlet</servlet-name>
+    <servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+    <load-on-startup>1</load-on-startup>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>*.faces</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>/faces/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>*.jsf</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>Faces Servlet</servlet-name>
+    <url-pattern>*.xhtml</url-pattern>
+  </servlet-mapping>
+
+  <session-config>
+    <!-- User session persistence delay: 60 min -->
+    <session-timeout>60</session-timeout>
+  </session-config>
+
+  <error-page>
+    <exception-type>javax.faces.application.ViewExpiredException</exception-type>
+    <location>/error/viewExpirationException.xhtml</location>
+  </error-page>
+
+  <security-constraint>
+    <display-name>interdiction d'accès direct aux fichiers d'extension
+      .XHTML</display-name>
+    <web-resource-collection>
+      <web-resource-name>XHTML</web-resource-name>
+      <url-pattern>*.xhtml</url-pattern>
+    </web-resource-collection>
+    <auth-constraint />
+  </security-constraint>
+
+  <login-config>
+    <auth-method>BASIC</auth-method>
+  </login-config>
+
+</web-app>

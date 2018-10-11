@@ -1,0 +1,198 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('ArticleCRUD','CRUD_Delete'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('ArticleCRUD','CRUD_Delete')}">
+      <f:facet name="header">#{msg.deleteArticleTitle}
+			</f:facet>
+      <style type="text/css">
+.pcolumn {
+  vertical-align: top;
+}
+</style>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="deleteArticleError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="deleteArticle">
+        <h:panelGrid columns="3" cellpadding="5">
+          <h:outputLabel value="#{msg.serialNumber}" />
+          <h:inputText id="serialNumber"
+            value="#{deleteController.serialNumber}"
+            validator="#{deleteController.validateExistSN}">
+            <a4j:ajax event="blur" execute="@this"
+              render="panelChildren,chosenArticle,confirm,confirmationDeleteArticle" />
+          </h:inputText>
+          <rich:message for="serialNumber" />
+        </h:panelGrid>
+
+        <fieldset>
+          <legend align="top">
+            <h:outputText value="#{msg.identification}" />
+          </legend>
+          <h:panelGrid id="chosenArticle" columns="2">
+            <h:outputText styleClass="labelname" value="Article :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.article.getName()}" />
+
+            <h:outputText styleClass="labelname" value="Type :" />
+            <h:outputText styleClass="boldItalic"
+              value="#{deleteController.article.typeArticle.label}" />
+          </h:panelGrid>
+        </fieldset>
+
+        <h:panelGrid columns="2" cellpadding="5">
+          <a4j:commandButton id="confirm" value="#{msg.validateDelete}"
+            oncomplete="#{rich:component('confirmationDeleteArticle')}.show();return false;"
+            tabindex="0" disabled="#{empty deleteController.article}" />
+          <h:commandButton value="#{msg.cancel}" action="Main"
+            immediate="true" tabindex="1" />
+        </h:panelGrid>
+
+        <h:panelGroup id="panelChildren">
+
+          <rich:panel rendered="#{not empty deleteController.children}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText value="#{msg.warningDeleteArticle}"
+                styleClass="warning" />
+              <h:outputText value="#{deleteController.serialNumber}"
+                styleClass="warning" />
+              <br />
+              <h:outputText value="#{msg.warningDeleteContainer2}"
+                styleClass="warning" />
+            </h:panelGroup>
+
+            <rich:list id="childrenList"
+              value="#{deleteController.children}" var="art">
+
+              <h:outputLink
+                value="${request.contextPath}/itemManagement/${art.class.simpleName}Management.faces">
+                <h:outputText value="#{art.name}" />
+                <f:param name="id" value="#{art.id}" />
+                <f:param name="mode" value="READ" />
+              </h:outputLink>
+              <h:outputText value=" #{art.airbusPN.identifier}" />
+              <h:outputText value=" #{art.typeArticle.label}" />
+              <br />
+              <h:outputText value="#{msg.location} : " />
+              <h:outputText value="#{art.location.locationName}" />
+              <br />
+              <h:outputText value="#{msg.externalLocation} : " />
+              <h:outputText value="#{art.location.externalLocationName}" />
+              <br />
+              <h:outputText value="#{msg.container} : " />
+              <h:outputText
+                value="(#{art.container.type}) #{art.container.containerName}" />
+
+            </rich:list>
+
+          </rich:panel>
+
+          <rich:panel
+            rendered="#{not empty deleteController.articleReminders}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText value="#{msg.warningDeleteArticleReminders}"
+                styleClass="warning" />
+              <h:outputText value="#{deleteController.serialNumber}"
+                styleClass="warning" />
+              <br />
+              <h:outputText value="#{msg.warningDeleteRelatedReminders}"
+                styleClass="warning" />
+            </h:panelGroup>
+
+            <rich:list id="remindersList"
+              value="#{deleteController.articleReminders}"
+              var="reminder">
+
+              <h:outputText value="#{reminder.object}" />
+              <br />
+              <h:outputText value="#{msg.targetDate} : " />
+              <h:outputText value="#{reminder.targetDate}">
+                <f:convertDateTime
+                  pattern="#{deleteController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:outputText>
+              <br />
+              <h:outputText value="#{msg.technicalContact} : " />
+              <h:outputText value="#{reminder.user.loginDetails}" />
+
+            </rich:list>
+          </rich:panel>
+
+          <rich:panel
+            rendered="#{not empty deleteController.articleDocuments}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText value="#{msg.warningDeleteArticleDocuments}"
+                styleClass="warning" />
+              <h:outputText value="#{deleteController.serialNumber}"
+                styleClass="warning" />
+              <br />
+              <h:outputText value="#{msg.warningDeleteRelatedDocuments}"
+                styleClass="warning" />
+            </h:panelGroup>
+
+            <rich:list id="documentsList"
+              value="#{deleteController.articleDocuments}"
+              var="document">
+
+              <h:outputText value="#{document.name}" />
+              <br />
+              <h:outputText value="#{msg.UploadDate} : " />
+              <h:outputText value="#{document.uploadDate}">
+                <f:convertDateTime
+                  pattern="#{deleteController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:outputText>
+
+            </rich:list>
+          </rich:panel>
+        </h:panelGroup>
+
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationDeleteArticle" />
+        <ui:param name="controller" value="#{deleteController}" />
+        <ui:param name="method" value="doRemove" />
+        <ui:param name="confirmationText"
+          value="Suppression de #{deleteController.article.getName()}" />
+        <ui:param name="render" value="mainContent" />
+      </ui:include>
+
+    </rich:panel>
+  </ui:define>
+
+
+</ui:composition>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jsp/jstl/core"
+  xmlns:p="http://primefaces.org/ui"
+  xmlns:a4j="http://richfaces.org/a4j" lang="#{localeCtrl.locale}">
+
+<f:view locale="#{localeCtrl.locale}">
+  <h:head>
+
+    <title><ui:insert name="title">#{msg.ApplicationTitle} #{initParam['BoaVersion']}</ui:insert>
+    </title>
+    <link rel="shortcut icon"
+      href="#{facesContext.externalContext.requestContextPath}/resources/images/logo/favicon.ico" />
+    <link rel="icon"
+      href="#{facesContext.externalContext.requestContextPath}/resources/images/logo/favicon.ico" />
+  </h:head>
+
+  <h:body id="pageBody">
+    <h:panelGroup id="page" layout="block">
+      <ui:include src="/includes/modalPanels.xhtml" />
+
+      <h:panelGroup id="top" layout="block" class="fixed_top">
+        <h:panelGroup id="header" layout="block">
+          <ui:insert name="header">
+            <ui:include src="/includes/header.xhtml">
+              <ui:param name="loginVisible" value="true"></ui:param>
+            </ui:include>
+          </ui:insert>
+        </h:panelGroup>
+
+
+        <h:panelGroup id="menus" layout="block">
+          <ui:insert name="nav_menu">
+            <ui:include src="/menu/menubarre.xhtml" />
+          </ui:insert>
+        </h:panelGroup>
+      </h:panelGroup>
+
+      <h:panelGroup id="mainContent" layout="block">
+        <ui:insert name="content">
+          <h3>Contenu</h3>
+        </ui:insert>
+        <!-- RAJOUTER UN PUSH -->
+      </h:panelGroup>
+
+      <!-- 
+      <h:panelGroup id="footer" layout="block">
+        <ui:insert name="footer">
+          <p>Copyright (c) 2016</p>
+        </ui:insert>
+      </h:panelGroup>
+      -->
+    </h:panelGroup>
+    <!-- page end -->
+
+  </h:body>
+  <h:outputStylesheet name="css/boa.css" />
+  <h:outputScript name="scripts/boa.js" target="body" />
+  <h:outputScript name="jquery/jquery-plugins.js" library="primefaces"
+    target="body" />
+</f:view>
+</html>

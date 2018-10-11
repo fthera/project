@@ -1,0 +1,54 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+  <h:form id="exportForm">
+    <rich:popupPanel id="exportModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeButton" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('exportModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/kdb_table.png"
+            style="padding-right:5px;" />
+          <h:outputText value="#{msg.fileExportTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <rich:panel id="exportModalPanel">
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="exportError" />
+        </ui:include>
+        <h:panelGrid columns="2">
+
+          <h:outputLabel for="filename" value="#{msg.exportFilename}" />
+          <h:inputText id="filename"
+            value="#{exportController.filename}" required="true" />
+
+          <h:outputLabel for="historyExport"
+            value="#{msg.exportHistory}" />
+          <h:selectBooleanCheckbox id="historyExport"
+            value="#{exportController.historyExported}" />
+
+        </h:panelGrid>
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <h:commandButton value="#{msg.generateExport}"
+            action="#{exportController.doGenerateExport}"
+            onclick="#{rich:component('exportModal')}.hide()" />
+          <h:commandButton value="#{msg.cancel}" type="reset"
+            onclick="#{rich:component('exportModal')}.hide();return false;" />
+        </h:panelGrid>
+      </rich:panel>
+
+    </rich:popupPanel>
+  </h:form>
+
+</ui:composition>

@@ -1,0 +1,23 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel id="obsoResults"
+      rendered="#{logInController.isAuthorized('ObsolescenceCRUD','CRUD_Read')}">
+      <f:facet name="header">#{msg.reportingObsoResultsTitle}</f:facet>
+      <ui:include src="/obso/ObsoListCommon.xhtml" />
+    </rich:panel>
+
+  </ui:define>
+</ui:composition>

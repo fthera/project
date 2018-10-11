@@ -1,0 +1,264 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- List of the found tools included by other pages -->
+
+  <h:form id="ToolListExport_form">
+    <h:panelGrid columns="2" cellspacing="5">
+      <h:commandButton id="export" value="#{msg.export}"
+        action="#{searchController.doExportTool}" />
+      <a4j:commandButton id="resetFilter" value="#{msg.resetFilters}"
+        execute="@this" action="#{searchController.doToolResetFilters}"
+        render="Table,dsTop,dsBottom,counts,designation,name,location">
+      </a4j:commandButton>
+    </h:panelGrid>
+  </h:form>
+
+  <h:form id="ToolList_form">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="toolListError" />
+      <ui:param name="globalOnly" value="true" />
+    </ui:include>
+
+    <h:panelGrid columns="1" cellspacing="5">
+      <h:outputText id="counts" styleClass="bigText"
+        value="#{msg.countFilteredTool} : #{searchController.countFilteredTool}" />
+    </h:panelGrid>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsTop" for="Table" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+    <div class="scroll-div" style="max-height: 68%; max-height: 68vh;">
+      <rich:dataTable id="Table" sortMode="single" rows="30"
+        value="#{searchController.foundTools}" var="tool"
+        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+        rowClasses="evenRow, oddRow">
+
+        <f:facet name="header">#{msg.Tools}</f:facet>
+
+        <rich:column
+          rendered="#{logInController.isAuthorized('ToolCRUD','CRUD_Update') and searchController.displayEditionColumn}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.actions}" />
+          </f:facet>
+          <h:outputLink id="editLabel"
+            rendered="#{logInController.isAuthorized('ToolCRUD','CRUD_Update')}"
+            value="${request.contextPath}/itemManagement/ToolManagement.faces">
+            <h:graphicImage value="/resources/images/icons/edit.gif"
+              style="border:0" />
+            <f:param name="id" value="#{tool.id}" />
+            <f:param name="mode" value="UPDATE" />
+            <f:param name="ret" value="LIST" />
+          </h:outputLink>
+        </rich:column>
+
+        <rich:column sortBy="#{tool.name}" filterType="custom"
+          filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.name}" />
+              <br />
+              <h:inputText id="name"
+                value="#{searchController.toolFilterValues['name']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputLink id="infoToolCmd"
+            value="${request.contextPath}/itemManagement/ToolManagement.faces">
+            <h:outputText value="#{tool.name}" />
+            <f:param name="id" value="#{tool.id}" />
+            <f:param name="mode" value="READ" />
+          </h:outputLink>
+        </rich:column>
+
+
+        <rich:column sortBy="#{tool.designation}" filterType="custom"
+          filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.designation}" />
+              <br />
+              <h:inputText id="designation"
+                value="#{searchController.toolFilterValues['designation']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tDesignation" value="#{tool.designation}" />
+        </rich:column>
+
+        <rich:column sortBy="#{tool.personInCharge}" filterType="custom"
+          filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.technicalContact}" />
+              <br />
+              <h:inputText id="personInCharge"
+                value="#{searchController.toolFilterValues['personInCharge']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tPersonInCharge"
+            value="#{tool.personInCharge}" />
+        </rich:column>
+
+        <rich:column sortBy="#{tool.loanDate}" filterType="custom"
+          filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.LoanDate}" />
+              <br />
+              <h:inputText id="loanDate"
+                value="#{searchController.toolFilterValues['loanDate']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tLoanDate" value="#{tool.loanDate}">
+            <f:convertDateTime
+              pattern="#{searchController.getDateFormat()}"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+        <rich:column sortBy="#{tool.loanDueDate}" filterType="custom"
+          filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.LoanDueDate}" />
+              <br />
+              <h:inputText id="loanDueDate"
+                value="#{searchController.toolFilterValues['loanDueDate']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tLoanDueDate" value="#{tool.loanDueDate}">
+            <f:convertDateTime
+              pattern="#{searchController.getDateFormat()}"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+
+        <rich:column sortBy="#{tool.container.type.toString()}"
+          filterType="custom"
+          filter="#{searchController.toolContainerTypeFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.containerType}" />
+              <br />
+              <h:selectOneMenu id="containerType"
+                value="#{searchController.toolFilterContainerType}">
+                <f:selectItem itemValue="all" itemLabel="#{msg.all}" />
+                <f:selectItem itemValue="notContained"
+                  itemLabel="#{msg.notContained}" />
+                <f:selectItems
+                  value="#{searchController.toolContainerTypes}" />
+                <a4j:ajax event="change"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:selectOneMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{tool.container.type.toString()}" />
+        </rich:column>
+
+        <rich:column sortBy="#{tool.container.containerName}"
+          filterType="custom" filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.container}" />
+              <br />
+              <h:inputText id="container"
+                value="#{searchController.toolFilterValues['containerName']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{tool.container.containerName}" />
+        </rich:column>
+
+        <rich:column sortBy="#{tool.location.locationName}"
+          filterType="custom" filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.location}" />
+              <br />
+              <h:inputText id="location"
+                value="#{searchController.toolFilterValues['locationName']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{tool.location.locationName}" />
+        </rich:column>
+
+        <rich:column filterType="custom"
+          sortBy="#{tool.location.externalEntity.externalEntityType.localeValue}"
+          filter="#{searchController.toolExternalLocationTypeFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.externalLocationType}" />
+              <br />
+              <h:selectOneMenu id="externalLocationType"
+                value="#{searchController.toolFilterExternalLocationType}">
+                <f:selectItem itemValue="all" itemLabel="#{msg.all}" />
+                <f:selectItem itemValue="notSent"
+                  itemLabel="#{msg.notSent}" />
+                <f:selectItems
+                  value="#{searchController.toolExternalLocationTypes}" />
+                <a4j:ajax event="change"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:selectOneMenu>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText
+            value="#{tool.location.externalEntity.externalEntityType.localeValue}" />
+        </rich:column>
+
+        <rich:column sortBy="#{tool.location.externalLocationName}"
+          filterType="custom" filter="#{searchController.toolFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.externalLocation}" />
+              <br />
+              <h:inputText id="externalLocation"
+                value="#{searchController.toolFilterValues['externalLocationName']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText value="#{tool.location.externalLocationName}" />
+        </rich:column>
+
+
+        <f:facet name="footer">#{(empty searchController.foundTools? msg.noTool:'')}</f:facet>
+
+      </rich:dataTable>
+    </div>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsBottom" for="Table" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+  </h:form>
+</ui:composition>

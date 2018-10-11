@@ -1,0 +1,216 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('UserCRUD','CRUD_Read'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('UserCRUD','CRUD_Read')}">
+      <f:facet name="header">
+        <h:outputText value="#{msg.userListTitle}"></h:outputText>
+      </f:facet>
+
+      <h:inputHidden value="#{searchUserController.doListUsers()}" />
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="listUserError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="form_hbutton">
+        <h:panelGrid columns="2" cellspacing="5">
+          <h:commandButton id="export" value="#{msg.export}"
+            action="#{searchUserController.doExport}" />
+          <a4j:commandButton id="resetFilter"
+            value="#{msg.resetFilters}" execute="@this"
+            action="#{searchUserController.doResetFilter}"
+            render="userTable,dsTop,dsBottom,counts">
+          </a4j:commandButton>
+        </h:panelGrid>
+      </h:form>
+
+      <h:form id="userTableForm">
+
+        <h:panelGrid columns="1" cellspacing="5">
+          <h:outputText id="counts" styleClass="bigText"
+            value="#{msg.countFilteredUser} : #{searchUserController.countFiltered}" />
+        </h:panelGrid>
+
+        <a4j:region id="userRegion">
+          <h:panelGrid columns="1" cellpadding="0" cellspacing="0">
+
+            <h:panelGroup style="display:block;text-align:center">
+              <rich:dataScroller id="dsTop" for="userTable"
+                maxPages="10" fastControls="hide"
+                renderIfSinglePage="false" />
+            </h:panelGroup>
+
+            <h:panelGroup class="scroll-div"
+              style="max-height:68%;max-height:68vh;">
+              <rich:dataTable id="userTable"
+                value="#{searchUserController.userList}" var="user"
+                onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+                onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+                rowClasses="evenRow, oddRow" rows="30">
+
+                <f:facet name="header">#{msg.userListTitle}</f:facet>
+
+                <rich:column sortBy="#{user.login}" filterType="custom"
+                  filter="#{searchUserController.userFilter}">
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <h:outputText value="#{msg.userLogin}" />
+                      <br />
+                      <h:inputText styleClass="input10" id="userLogin"
+                        value="#{searchUserController.filterValues['login']}">
+                        <a4j:ajax event="keyup"
+                          render="userTable@body,dsTop,dsBottom,counts" />
+                      </h:inputText>
+                    </h:panelGroup>
+                  </f:facet>
+                  <h:outputText value="#{user.login}" />
+                </rich:column>
+
+                <rich:column sortBy="#{user.lastname}"
+                  filterType="custom"
+                  filter="#{searchUserController.userFilter}">
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <h:outputText value="#{msg.userLastname}" />
+                      <br />
+                      <h:inputText id="userLastname"
+                        value="#{searchUserController.filterValues['lastname']}">
+                        <a4j:ajax event="keyup"
+                          render="userTable@body,dsTop,dsBottom,counts" />
+                      </h:inputText>
+                    </h:panelGroup>
+                  </f:facet>
+                  <h:outputText value="#{user.lastname}" />
+                </rich:column>
+
+                <rich:column sortBy="#{user.firstname}"
+                  filterType="custom"
+                  filter="#{searchUserController.userFilter}">
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <h:outputText value="#{msg.userFirstname}" />
+                      <br />
+                      <h:inputText id="userFirstname"
+                        value="#{searchUserController.filterValues['firstname']}">
+                        <a4j:ajax event="keyup"
+                          render="userTable@body,dsTop,dsBottom,counts" />
+                      </h:inputText>
+                    </h:panelGroup>
+                  </f:facet>
+                  <h:outputText value="#{user.firstname}" />
+                </rich:column>
+
+                <rich:column sortBy="#{user.email}" filterType="custom"
+                  filter="#{searchUserController.userFilter}">
+                  <f:facet name="header">
+                    <h:panelGroup>
+                      <h:outputText value="#{msg.userMail}" />
+                      <br />
+                      <h:inputText styleClass="input20" id="userEmail"
+                        value="#{searchUserController.filterValues['email']}">
+                        <a4j:ajax event="keyup"
+                          render="userTable@body,dsTop,dsBottom,counts" />
+                      </h:inputText>
+                    </h:panelGroup>
+                  </f:facet>
+                  <h:outputText value="#{user.email}" />
+                </rich:column>
+
+                <rich:column id="roles">
+                  <f:facet name="header">#{msg.userRoles}</f:facet>
+                  <h:outputText
+                    value="#{user.role.localeValue}" />
+                </rich:column>
+
+                <rich:column sortBy="#{user.lastLoggedIn}">
+                  <f:facet name="header">#{msg.userLastLoginDate}</f:facet>
+                  <h:outputText value="#{user.lastLoggedIn}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm"
+                      timeZone="Europe/Paris" />
+                  </h:outputText>
+                </rich:column>
+
+                <rich:column
+                  rendered="#{logInController.isAuthorized('UserCRUD','CRUD_Update') or logInController.isAuthorized('UserCRUD','CRUD_Delete')}">
+                  <f:facet name="header">#{msg.actions}</f:facet>
+                  <h:panelGrid columns="2" cellspacing="5">
+                    <a4j:commandLink id="updateUser" execute="@this"
+                      rendered="#{logInController.isAuthorized('UserCRUD','CRUD_Update')}"
+                      oncomplete="#{rich:component('updateUserModal')}.show()"
+                      render="updateUserModal">
+                      <h:graphicImage
+                        value="/resources/images/icons/edit.gif"
+                        style="border:0" />
+                      <f:setPropertyActionListener value="#{user}"
+                        target="#{userController.user}" />
+                    </a4j:commandLink>
+
+                    <a4j:commandLink id="confirmDeleteUser"
+                      oncomplete="#{rich:component('deleteUserModal')}.show();"
+                      rendered="#{logInController.isAuthorized('UserCRUD','CRUD_Delete')}"
+                      execute="@this" render="deleteUserModal">
+                      <h:graphicImage
+                        value="/resources/images/icons/delete.gif"
+                        style="border:0" />
+                      <f:setPropertyActionListener value="#{user.id}"
+                        target="#{searchUserController.userIdToDelete}" />
+                    </a4j:commandLink>
+
+                  </h:panelGrid>
+
+                  <boa:tooltip target="confirmDeleteUser"
+                    value="#{msg.delete}" />
+                  <boa:tooltip target="editUserProfil"
+                    value="#{msg.editUserProfil}" />
+                </rich:column>
+
+                <f:facet name="footer">
+	                #{(empty searchUserController.userList? msg.noUsers:'')}
+	              </f:facet>
+              </rich:dataTable>
+            </h:panelGroup>
+
+            <h:panelGroup style="display:block;text-align:center">
+              <rich:dataScroller id="dsBottom" for="userTable"
+                maxPages="10" fastControls="hide"
+                renderIfSinglePage="false" />
+            </h:panelGroup>
+
+          </h:panelGrid>
+        </a4j:region>
+
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId" value="deleteUserModal" />
+        <ui:param name="controller" value="#{searchUserController}" />
+        <ui:param name="method" value="doDeleteUser" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmDeletionUser} #{searchUserController.userLoginToDelete}?" />
+        <ui:param name="warningText"
+          value="#{msg.warningDeleteUserReminders}" />
+        <ui:param name="displayWarningText"
+          value="#{not empty searchUserController.userReminders}" />
+        <ui:param name="render" value="userTableForm" />
+      </ui:include>
+
+      <ui:include src="/admin/UpdateUserModal.xhtml" />
+
+    </rich:panel>
+  </ui:define>
+
+</ui:composition>

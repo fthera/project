@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<faces-config version="2.0" xmlns="http://java.sun.com/xml/ns/javaee"
+  xmlns:xi="http://www.w3.org/2001/XInclude" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_2_0.xsd">
+  <name>facesConfigBOA</name>
+  
+  <factory>
+    <exception-handler-factory>com.airbus.boa.util.CustomExceptionHandlerFactory</exception-handler-factory>
+  </factory>
+  
+  <render-kit>
+    <renderer>
+      <component-family>javax.faces.Input</component-family>
+      <renderer-type>org.richfaces.AutocompleteRenderer</renderer-type>
+      <renderer-class>com.airbus.boa.util.ZeroCharsFixAutocompleteRenderer</renderer-class>
+    </renderer>
+  </render-kit>
+
+  <navigation-rule>
+    <from-view-id>*</from-view-id>
+    <navigation-case>
+      <from-outcome>Main</from-outcome>
+      <to-view-id>/main.xhtml</to-view-id>
+      <redirect />
+    </navigation-case>
+  </navigation-rule>
+
+  <application>
+    <locale-config>
+      <default-locale>en</default-locale>
+      <supported-locale>en</supported-locale>
+      <supported-locale>fr</supported-locale>
+    </locale-config>
+    <message-bundle>com.airbus.boa.view.MessageRessources</message-bundle>
+    <resource-bundle>
+      <base-name>com.airbus.boa.view.MessageRessources</base-name>
+      <var>msg</var>
+    </resource-bundle>
+  </application>
+</faces-config>

@@ -1,0 +1,72 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <c:if test="#{empty instanceExplorerController}">
+    <c:set var="instanceExplorerController"
+      value="#{explorerController}" />
+  </c:if>
+
+  <h:panelGroup
+    rendered="#{instanceExplorerController.showLegendInherited}">
+    <h:outputText value="#{msg.legend}" />
+    <br />
+    <h:outputText value="#{msg.legendInherited}" styleClass="inherited" />
+  </h:panelGroup>
+
+  <h:panelGrid columns="3" cellspacing="5">
+
+    <a4j:commandLink id="expandAll" render="myTree" execute="@this"
+      action="#{instanceExplorerController.expandAll}">
+      <h:graphicImage value="/resources/images/icons/expandall.png"
+        style="border:0" />
+    </a4j:commandLink>
+    <a4j:commandLink id="collapseAll" render="myTree" execute="@this"
+      action="#{instanceExplorerController.collapseAll}">
+      <h:graphicImage value="/resources/images/icons/collapseall.png"
+        style="border:0" />
+    </a4j:commandLink>
+
+    <h:commandButton id="exportButton" immediate="true"
+      value="#{msg.export}"
+      action="#{instanceExplorerController.doExportExplorer()}">
+      <boa:tooltip id="exportTip" value="#{msg.exportTreeExcel}" />
+
+    </h:commandButton>
+
+  </h:panelGrid>
+  <boa:tooltip value="#{msg.expandAll}" target="expandAll" />
+  <boa:tooltip value="#{msg.collapseAll}" target="collapseAll" />
+
+  <rich:tree id="myTree" value="#{instanceExplorerController.rootNode}"
+    toggleType="ajax" var="itemNode"
+    binding="#{instanceExplorerController.treeBinding}">
+
+    <rich:treeNode icon="#{itemNode.icon}"
+      iconLeaf="#{itemNode.leafIcon}"
+      iconCollapsed="#{itemNode.leafIcon}"
+      iconExpanded="#{itemNode.leafIcon}"
+      expanded="#{itemNode.expanded}">
+      <h:panelGroup id="itemNode">
+        <h:outputText value="#{itemNode.name}"
+          styleClass="#{itemNode.styleClass} tree-node" />
+        <h:outputLink rendered="#{itemNode.id != null}"
+          value="${request.contextPath}/itemManagement/${itemNode.itemClassName}Management.faces">
+          <h:graphicImage value="/resources/images/icons/search.png"
+            style="border:0;width:16px;height:16px" />
+          <f:param name="id" value="#{itemNode.id}" />
+          <f:param name="mode" value="READ" />
+        </h:outputLink>
+      </h:panelGroup>
+      <boa:tooltip target="itemNode" value="#{itemNode.description}"
+        rendered="#{not empty itemNode.description}" />
+    </rich:treeNode>
+  </rich:tree>
+
+
+</ui:composition>

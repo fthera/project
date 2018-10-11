@@ -1,0 +1,80 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Usage of this component -->
+  <!--
+  loginVisible	= Boolean if the login link shall be displayed
+-->
+
+  <h:panelGrid id="headerId" columns="4" cellpadding="2"
+    style="width:100%"
+    columnClasses="thirtypercent,thirtypercent,tenpercent,thirtypercent right">
+
+    <h:panelGrid columns="2" styleClass="pcnt100"
+      columnClasses="middlehalf,middlehalf">
+      <h:graphicImage id="logoAirbus"
+        value="/resources/images/logo/AIRBUS_3D_Blue.png" />
+
+      <h:outputLink value="#{supportURLController.supportURL}"
+        target="_blank">
+        <h:panelGroup>
+          <h:graphicImage id="bugIcon"
+            value="/resources/images/icons/bug.png"
+            styleClass="ie6transparency"
+            style="border:0px;width:16px;height:16px;padding-right:3px;vertical-align:middle;"></h:graphicImage>
+          <h:outputText value="#{msg.ContactSupport}" />
+        </h:panelGroup>
+      </h:outputLink>
+    </h:panelGrid>
+
+    <h:panelGroup>
+      <h:outputText styleClass="title"
+        value="#{msg.ApplicationTitle} #{initParam['BoaVersion']}" />
+      <br />
+      <h:outputText value="#{applicationController.testsDatabaseString}"
+        styleClass="bigText error" style="color:red;" />
+    </h:panelGroup>
+
+    <a4j:status id="stateStatus">
+      <f:facet name="start">
+        <h:graphicImage value="/resources/images/icons/ajax-loader.gif" />
+      </f:facet>
+    </a4j:status>
+
+    <h:panelGrid columns="2">
+      <h:form id="logForm" rendered="#{loginVisible}">
+        <h:panelGroup id="login">
+          <h:commandLink id="logoutLink"
+            rendered="#{logInController.userLogged != null}"
+            value="#{msg.logout} #{logInController.userLogged.lastname}"
+            action="#{logInController.doDisconnect}" />
+          <a4j:commandLink id="loginLink" value="${msg.login}"
+            rendered="#{logInController.userLogged == null}"
+            onclick="#{rich:component('loginUserPanel')}.show();#{rich:element('loginForm:login')}.focus();return false;" />
+        </h:panelGroup>
+      </h:form>
+
+      <h:form id="localeForm">
+        <h:panelGroup id="langues" columns="2">
+          <a4j:commandLink action="#{localeCtrl.doChangeLocaleEN}"
+            render="top,mainContent" oncomplete="patchModal();">
+            <h:graphicImage value="/resources/images/langue/EN.png"
+              height="17" />
+          </a4j:commandLink>
+          <a4j:commandLink action="#{localeCtrl.doChangeLocaleFR}"
+            render="top,mainContent" oncomplete="patchModal();">
+            <h:graphicImage value="/resources/images/langue/FR.png"
+              height="17" />
+          </a4j:commandLink>
+        </h:panelGroup>
+      </h:form>
+    </h:panelGrid>
+
+  </h:panelGrid>
+
+</ui:composition>

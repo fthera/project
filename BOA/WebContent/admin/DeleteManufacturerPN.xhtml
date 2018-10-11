@@ -1,0 +1,80 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('ManufacturerPNCRUD','CRUD_Delete'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('ManufacturerPNCRUD','CRUD_Delete')}">
+      <f:facet name="header">#{msg.deleteManufacturerPNTitle}
+			</f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="deleteManufacturerPNError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="deleteManufacturerPN">
+
+        <h:panelGrid columns="3" cellpadding="5">
+          <h:outputLabel value="#{msg.ManufacturerPN}" />
+          <h:inputText id="manufacturerPN"
+            value="#{typeController.manufacturerPN}"
+            validator="#{typeController.validateExistPN}">
+            <a4j:ajax event="blur" execute="@this"
+              render="panelChildren,obso,confirm,confirmationDeleteManufacturerPN" />
+          </h:inputText>
+          <rich:message for="manufacturerPN" />
+
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" cellpadding="5">
+          <a4j:commandButton id="confirm" value="#{msg.validateDelete}"
+            oncomplete="#{rich:component('confirmationDeleteManufacturerPN')}.show();return false;"
+            tabindex="0" disabled="#{empty typeController.selectedPN}">
+          </a4j:commandButton>
+          <h:commandButton value="#{msg.cancel}" action="Main"
+            immediate="true" tabindex="1">
+          </h:commandButton>
+        </h:panelGrid>
+
+        <h:panelGroup id="panelChildren">
+
+          <rich:panel id="obso"
+            rendered="#{typeController.hasObsoData(typeController.selectedPN)}">
+            <div>
+              <b>#{msg.beCareful}</b>
+            </div>
+            <h:panelGroup>
+              <h:graphicImage
+                url="/resources/images/icons/messagebox_warning.png"
+                styleClass="pic" />
+              <h:outputText value="#{msg.warningDeletePN}"
+                styleClass="warning" />
+            </h:panelGroup>
+          </rich:panel>
+        </h:panelGroup>
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationDeleteManufacturerPN" />
+        <ui:param name="controller" value="#{typeController}" />
+        <ui:param name="method" value="doDeletePN" />
+        <ui:param name="confirmationText"
+          value="Suppression de #{typeController.selectedPN.getIdentifier()}" />
+      </ui:include>
+
+    </rich:panel>
+  </ui:define>
+
+
+</ui:composition>

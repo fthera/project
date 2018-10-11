@@ -1,0 +1,109 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Usage of this modal -->
+  <!--
+    actionInstall = the controller to be used
+    method        = the method name of the controller to be called as
+                      validate button action
+    OSonly        = [optional] boolean indicating if only operating systems
+                      are to be proposed or all softwares
+    isPC          = [optional] boolean indicating if the software ins being installed on a PC
+  -->
+  <c:if test="#{empty OSonly}">
+    <c:set var="OSonly" value="false" />
+  </c:if>
+  <c:if test="#{empty isPC}">
+    <c:set var="isPC" value="false" />
+  </c:if>
+
+  <h:form id="InstallSoftwareForm">
+    <rich:popupPanel id="installSoftwareModal" autosized="true"
+      modal="true" domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closeInstallSoftware" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('installSoftwareModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/list.png"
+            style="padding-right:5px;width:16px;height:16px" />
+          <h:outputText
+            value="#{OSonly ? msg.installOs : msg.installSoftware}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="installSoftwareError" />
+      </ui:include>
+
+      <fieldset>
+        <legend>
+          <h:outputText
+            value="#{OSonly ? msg.installedOses : msg.installedSoftware}" />
+        </legend>
+
+        <h:panelGrid columns="2" columnClasses="alignright,alignleft">
+
+          <h:outputLabel for="name" value="#{msg.name}"
+            styleClass="labelname" />
+          <rich:select id="name" mode="client"
+            value="#{softwareController.name}" enableManualInput="true">
+            <f:selectItems
+              value="#{softwareController.getSelectNames(OSonly)}" />
+            <a4j:ajax event="selectitem"
+              render="distribution,selectedSoftware" />
+          </rich:select>
+
+          <h:outputLabel for="distribution" value="#{msg.distribution}"
+            styleClass="labelname" />
+          <rich:select id="distribution" mode="client"
+            value="#{softwareController.distribution}"
+            enableManualInput="true">
+            <f:selectItems
+              value="#{softwareController.getSelectDistributions(OSonly)}" />
+            <a4j:ajax event="selectitem"
+              render="kernel,selectedSoftware" />
+          </rich:select>
+
+          <h:outputLabel for="kernel" value="#{msg.kernel}"
+            styleClass="labelname" />
+          <rich:select id="kernel" mode="client"
+            value="#{softwareController.kernel}"
+            disabled="#{empty softwareController.selectKernels}"
+            enableManualInput="true">
+            <f:selectItems value="#{softwareController.selectKernels}" />
+            <a4j:ajax event="selectitem" render="selectedSoftware" />
+          </rich:select>
+
+          <h:outputLabel for="selectedSoftware"
+            value="#{msg.selectedSoftware}" styleClass="labelname" />
+          <h:outputText id="selectedSoftware" styleClass="boldItalic"
+            value="#{softwareController.softwareToInstall}" />
+
+        </h:panelGrid>
+
+        <h:panelGrid columns="2" cellspacing="5" styleClass="center">
+          <a4j:commandButton value="#{msg.add}"
+            id="installSoftwareButton" action="#{actionInstall[method]}"
+            render="softwareList"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('installSoftwareModal')}.hide();
+            if (#{isPC and actionInstall.needToSetDefaultOS}) #{rich:component('changeDefaultOSModal')}
+            #{isPC ? '.show()' : 'return false'}" />
+          <a4j:commandButton id="cancelButton" value="#{msg.cancel}"
+            onclick="#{rich:component('installSoftwareModal')}.hide();return false;" />
+        </h:panelGrid>
+
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

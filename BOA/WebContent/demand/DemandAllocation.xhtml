@@ -1,0 +1,351 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <c:set var="isAuthorized"
+      value="#{logInController.isAuthorized('DemandAllocate')}" />
+    <c:set var="isKnowId" value="#{demandController.demand != null}" />
+
+    <h:outputText rendered="#{!isAuthorized}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <h:outputText value="#{msg.unknownId}" rendered="#{not isKnowId}"
+      styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized and isKnowId}">
+      <f:facet name="header">#{msg.demandPCAllocation}</f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="demandAllocationError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="allocationForm">
+
+        <div style="width: 80%">
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.businessActions}" />
+            </legend>
+            <h:panelGrid columns="2" cellspacing="10">
+              <a4j:commandButton id="allocateButton"
+                value="#{msg.allocateSelectedPC}"
+                oncomplete="#{rich:component('confirmationAllocationDemand')}.show();return false;" />
+              <a4j:commandButton id="cancelAllocation"
+                value="#{msg.cancel}"
+                action="#{demandController.doCancelAllocation}" />
+            </h:panelGrid>
+          </fieldset>
+        </div>
+
+        <div style="width: 80%">
+
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.identification}" />
+            </legend>
+
+            <h:panelGrid columns="6" cellpadding="10"
+              columClasses="alignright,alignleft">
+
+              <h:outputLabel for="demandNumber"
+                value="#{msg.demandNumber}" styleClass="labelName" />
+              <h:inputText id="demandNumber" styleClass="input20"
+                readonly="true" disabled="true"
+                value="#{demandController.demand.demandNumber}" />
+
+              <h:outputLabel for="demandStatus"
+                value="#{msg.demandStatus}" styleClass="labelName" />
+              <h:inputText id="demandStatus" styleClass="input30"
+                readonly="true" disabled="true"
+                value="#{demandController.demand.status}" />
+
+              <h:outputLabel for="requestNumber"
+                value="#{msg.requestNumber}" styleClass="labelname" />
+              <h:inputText id="requestNumber" styleClass="input40"
+                readonly="true"
+                value="#{demandController.demand.requestNumber}" />
+
+              <h:outputLabel for="issuer" value="#{msg.issuer}"
+                styleClass="labelName" />
+              <h:inputText id="issuer" styleClass="input40"
+                readonly="true" disabled="true"
+                value="#{demandController.demand.issuer.loginDetails}" />
+
+              <h:outputLabel for="needDate" value="#{msg.needDate}"
+                styleClass="labelName" />
+              <h:inputText id="needDate" styleClass="input20"
+                readonly="true"
+                value="#{demandController.demand.needDate}">
+                <f:convertDateTime
+                  pattern="#{PCDemandController.getDateFormat()}"
+                  timeZone="Europe/Paris" />
+              </h:inputText>
+
+            </h:panelGrid>
+
+          </fieldset>
+
+        </div>
+
+        <c:if
+          test="#{demandController.demand.PCToReplace != null or demandController.demand.allocatedPC != null}">
+          <div style="width: 80%">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.linkedPC}" />
+              </legend>
+
+              <h:panelGrid columns="7" cellpadding="10"
+                columnClasses="alignright,alignleft">
+
+                <c:if
+                  test="#{demandController.demand.PCToReplace != null}">
+                  <h:outputLabel value="#{msg.PCToReplace}" />
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.AirbusSN}: " />
+                    <h:outputLink
+                      value="${request.contextPath}/itemManagement/PCManagement.faces">
+                      <h:outputText
+                        value="#{demandController.demand.PCToReplace.airbusSN}" />
+                      <f:param name="id"
+                        value="#{demandController.demand.PCToReplace.id}" />
+                      <f:param name="mode" value="READ" />
+                    </h:outputLink>
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.ManufacturerSN}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.PCToReplace.manufacturerSN}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.ProductType}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.PCToReplace.productType.localeValue}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.TypeArticle}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.PCToReplace.typeArticle}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.operatingSystem}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.PCToReplace.operatingSystemsNames}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup />
+
+                </c:if>
+
+                <c:if
+                  test="#{demandController.demand.allocatedPC != null}">
+                  <h:outputLabel value="#{msg.allocatedPC}" />
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.AirbusSN}: " />
+                    <h:outputLink
+                      value="${request.contextPath}/itemManagement/PCManagement.faces">
+                      <h:outputText
+                        value="#{demandController.demand.allocatedPC.airbusSN}" />
+                      <f:param name="id"
+                        value="#{demandController.demand.allocatedPC.id}" />
+                      <f:param name="mode" value="READ" />
+                    </h:outputLink>
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.ManufacturerSN}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.allocatedPC.manufacturerSN}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.ProductType}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.allocatedPC.productType.localeValue}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.TypeArticle}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.allocatedPC.typeArticle}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.operatingSystem}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.allocatedPC.operatingSystemsNames}" />
+                  </h:panelGroup>
+
+                  <h:panelGroup>
+                    <h:outputLabel value="#{msg.availabilityDate}: " />
+                    <h:outputLabel
+                      value="#{demandController.demand.allocatedPC.availabilityDate}">
+                      <f:convertDateTime
+                        pattern="#{PCDemandController.getDateFormat()}"
+                        timeZone="Europe/Paris" />
+                    </h:outputLabel>
+                  </h:panelGroup>
+
+                </c:if>
+
+              </h:panelGrid>
+
+            </fieldset>
+          </div>
+        </c:if>
+
+        <div style="width: 80%">
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.PCNeeds}" />
+            </legend>
+
+            <h:panelGrid columns="4" cellpadding="10"
+              columClasses="alignright,alignleft">
+
+              <h:outputLabel for="ProductTypePC"
+                value="#{msg.ProductType} " styleClass="labelname" />
+              <h:inputText id="ProductTypePC" styleClass="input40"
+                readonly="true"
+                value="#{demandController.demand.productTypePC.localeValue}" />
+
+              <h:panelGroup />
+              <h:panelGroup />
+
+              <h:outputLabel for="typePC" value="#{msg.type} "
+                styleClass="labelname" />
+              <h:inputText id="typePC" styleClass="input40"
+                readonly="true"
+                value="#{demandController.demand.typePC}" />
+
+              <h:outputLabel for="operatingSystem"
+                value="#{msg.operatingSystem} " styleClass="labelname" />
+              <h:panelGroup>
+                <ui:include src="/software/InstalledSoftware.xhtml">
+                  <ui:param name="softwares"
+                    value="#{demandController.demand.softwares}" />
+                  <ui:param name="modifiable" value="false" />
+                  <ui:param name="OSonly" value="true" />
+                </ui:include>
+              </h:panelGroup>
+
+            </h:panelGrid>
+
+            <h:panelGrid columns="2" cellpadding="10"
+              columClasses="alignright,alignleft">
+              <h:outputLabel for="features" value="#{msg.features} "
+                styleClass="labelname" />
+              <h:inputText id="features" styleClass="input80"
+                readonly="true"
+                value="#{demandController.demand.features}" />
+            </h:panelGrid>
+
+            <h:panelGrid columns="2" cellpadding="10"
+              columClasses="alignright,alignleft">
+              <h:outputLabel for="additionalInformation"
+                value="#{msg.additionalInformation} "
+                styleClass="labelname" />
+              <h:inputTextarea id="additionalInformation" cols="80"
+                readonly="true" rows="4"
+                value="#{demandController.demand.additionalInformation}" />
+            </h:panelGrid>
+
+          </fieldset>
+
+        </div>
+
+        <div style="width: 80%">
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.selectedPC}" />
+            </legend>
+
+            <h:panelGrid id="selectedPCPanel" columns="6"
+              cellpadding="10" columnClasses="alignright,alignleft">
+
+              <h:panelGroup>
+                <h:outputLabel value="#{msg.AirbusSN}: " />
+                <h:outputLink
+                  value="${request.contextPath}/itemManagement/PCManagement.faces">
+                  <h:outputText
+                    value="#{demandController.selectedPC.airbusSN}" />
+                  <f:param name="id"
+                    value="#{demandController.selectedPC.id}" />
+                  <f:param name="mode" value="READ" />
+                </h:outputLink>
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel value="#{msg.ManufacturerSN}: " />
+                <h:outputLabel
+                  value="#{demandController.selectedPC.manufacturerSN}" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel value="#{msg.ProductType}: " />
+                <h:outputLabel
+                  value="#{demandController.selectedPC.productType.localeValue}" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel value="#{msg.TypeArticle}: " />
+                <h:outputLabel
+                  value="#{demandController.selectedPC.typeArticle}" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel value="#{msg.operatingSystem}: " />
+                <h:outputLabel
+                  value="#{demandController.selectedPC.operatingSystemsNames}" />
+              </h:panelGroup>
+
+              <h:panelGroup>
+                <h:outputLabel value="#{msg.availabilityDate}: " />
+                <h:outputLabel
+                  value="#{demandController.selectedPC.availabilityDate}">
+                  <f:convertDateTime
+                    pattern="#{demandController.getDateFormat()}"
+                    timeZone="Europe/Paris" />
+                </h:outputLabel>
+              </h:panelGroup>
+
+            </h:panelGrid>
+
+          </fieldset>
+        </div>
+
+      </h:form>
+
+      <ui:include src="/includes/confirmation.xhtml">
+        <ui:param name="confirmationId"
+          value="confirmationAllocationDemand" />
+        <ui:param name="controller" value="#{demandController}" />
+        <ui:param name="method" value="doAllocateSelectedPC" />
+        <ui:param name="confirmationText"
+          value="#{msg.confirmAllocationDemand}" />
+      </ui:include>
+
+      <h:inputHidden
+        value="#{PCDemandController.doListPCForAllocation()}" />
+      <ui:include src="/demand/PCListCommon.xhtml" />
+
+      <div align="right">
+        <a href="#top">#{msg.topPage}</a>
+      </div>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

@@ -1,0 +1,38 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+  <h:form>
+    <rich:popupPanel id="updateUserModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+      <f:facet name="controls">
+        <h:graphicImage id="closeButtonUser" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('updateUserModal')}.hide();return false;">
+        </h:graphicImage>
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/identity.png"
+            style="padding-right:5px;" />
+          <h:outputText value="#{userController.title}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <h:panelGroup style="display:inline-block;min-width:350px">
+        <ui:include src="/user/UserForm.xhtml">
+          <ui:param name="assignRole" value="true" />
+          <ui:param name="isModal" value="true" />
+          <ui:param name="modadPanelId" value="updateUserModal" />
+          <ui:param name="isDisplayRequired" value="true" />
+          <ui:param name="isDisplayPassRequired" value="false" />
+          <ui:param name="render" value="userTable@body" />
+        </ui:include>
+      </h:panelGroup>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

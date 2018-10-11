@@ -1,0 +1,94 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="AddNewTypeModalForm">
+    <rich:popupPanel id="addNewTypeModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closeButtonNewType" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('addNewTypeModal')}.hide();return false;" />
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/edit.gif"
+            style="padding-right:5px;" />
+          <h:outputText value="#{msg.addNewTypeTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="addNewTypeError" />
+      </ui:include>
+
+      <fieldset>
+
+        <h:outputText value="#{msg.requiredFields}" style="color:red" />
+
+        <h:panelGrid columns="4">
+          <h:outputLabel for="chooseFamily" value="#{msg.ClassTitle}" />
+          <span style="color: red;">*</span>
+          <rich:select id="chooseFamily"
+            value="#{typeController.newTypeClass}" required="true"
+            mode="client" defaultLabel="#{msg.chooseFamily}">
+            <f:selectItem itemLabel="#{msg.chooseFamily}" />
+            <f:selectItems value="#{typeController.listTypeFamily}" />
+            <a4j:ajax event="selectitem" render="createObsoSection"/>
+          </rich:select>
+          <rich:message for="chooseFamily" />
+
+          <h:outputLabel for="newTypeName" value="#{msg.name}" />
+          <span style="color: red;">*</span>
+          <h:inputText id="newTypeName" styleClass="input50"
+            value="#{typeController.newTypeName}" required="true"
+            validator="#{typeController.validateNewTypeName}">
+            <a4j:ajax event="change" execute="@this" />
+            <f:validateLength
+              maximum="#{DBConstants.typearticleLabelLength}" />
+          </h:inputText>
+          <rich:message for="newTypeName" />
+
+          <h:outputLabel for="newTypeManufacturer"
+            value="#{msg.manufacturer}" />
+          <h:panelGroup />
+          <h:inputText id="newTypeManufacturer" styleClass="input50"
+            value="#{typeController.newTypeManufacturer}">
+            <a4j:ajax event="change" execute="@this" />
+            <f:validateLength
+              maximum="#{DBConstants.typearticleManufacturerLength}" />
+          </h:inputText>
+          <rich:message for="newTypeManufacturer" />
+
+        </h:panelGrid>
+          
+        <h:panelGrid columns="2" columnClasses="alignright,alignleft"
+          id="createObsoSection">
+          <h:outputLabel value="#{msg.createObsoType}"
+            rendered="#{typeController.isPCTypeSelected()}"/>
+          <h:selectBooleanCheckbox id="createObso"
+            rendered="#{typeController.isPCTypeSelected()}"
+            value="#{typeController.createObso}"/>
+        </h:panelGrid>
+
+        <h:panelGrid columns="3" cellspacing="5" styleClass="center">
+          <a4j:commandButton id="confirm" value="#{msg.create}"
+            action="#{typeController.doCreateType}"
+            oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('addNewTypeModal')}.hide();"
+            render="gestionType">
+          </a4j:commandButton>
+          <h:commandButton value="#{msg.cancel}" immediate="true"
+            onclick="#{rich:component('addNewTypeModal')}.hide();return false;" />
+
+        </h:panelGrid>
+
+      </fieldset>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>

@@ -1,0 +1,175 @@
+
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:mj="http://mojarra.dev.java.net/mojarra_ext">
+
+  <fieldset>
+    <legend align="top">
+      <h:outputText value="#{msg.equipment}" />
+    </legend>
+
+    <h:panelGrid columns="2" cellspacing="5">
+      <a4j:commandButton value="#{msg.resetFilters}"
+        action="#{softwareController.doResetFilters}" execute="@this"
+        render="counts,equipmentTable,apn,asn,dsBottom,dsTop,family,mpn,msn,type" />
+      <a4j:commandButton value="#{msg.add}"
+        action="#{softwareController.resetFindField}"
+        oncomplete="#{rich:component('chooseEquipmentModal')}.show();return false;"
+        rendered="#{displayRemoveColumn}" execute="@this" />
+    </h:panelGrid>
+    <h:panelGrid columns="1" cellspacing="5">
+      <h:outputText id="counts" styleClass="labelName"
+        value="#{msg.countFiltered} : #{softwareController.countFilteredEquipment}" />
+    </h:panelGrid>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsTop" for="equipmentTable" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+    <rich:dataTable id="equipmentTable" layout="block"
+      render="dsBottom,dsTop,counts" sortMode="single"
+      ajaxKeys="#{softwareController.rowsToUpdate}" rowKeyVar="row"
+      rows="20" value="#{softwareController.equipments}" var="equipment"
+      onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+      onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+      rowClasses="oddRow, evenRow">
+
+      <f:facet name="header">
+        <h:outputText value="#{msg.equipment}" />
+      </f:facet>
+
+      <rich:column sortBy="#{msg[equipment.class.simpleName]}"
+        filterType="custom"
+        filter="#{softwareController.equipmentFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.ClassTitle}" />
+            <br />
+            <h:inputText id="family" styleClass="input10"
+              value="#{softwareController.filterValues['classe']}">
+              <a4j:ajax event="keyup"
+                render="equipmentTable@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{msg[equipment.class.simpleName]}" />
+      </rich:column>
+
+      <rich:column sortBy="#{equipment.airbusSN}" filterType="custom"
+        filter="#{softwareController.equipmentFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.airbusSN}" />
+            <br />
+            <h:inputText id="asn"
+              value="#{softwareController.filterValues['airbusSN']}">
+              <a4j:ajax event="keyup"
+                render="equipmentTable@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{equipment.airbusSN}" />
+      </rich:column>
+
+      <rich:column sortBy="#{equipment.manufacturerSN}"
+        filterType="custom"
+        filter="#{softwareController.equipmentFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.manufacturerSN}" />
+            <br />
+            <h:inputText id="msn"
+              value="#{softwareController.filterValues['manufacturerSN']}">
+              <a4j:ajax event="keyup"
+                render="equipmentTable@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{equipment.manufacturerSN}" />
+      </rich:column>
+
+
+      <rich:column sortBy="#{equipment.typeArticle.label}"
+        filterType="custom"
+        filter="#{softwareController.equipmentFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.type}" />
+            <br />
+            <h:inputText id="type"
+              value="#{softwareController.filterValues['type']}">
+              <a4j:ajax event="keyup"
+                render="equipmentTable@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{equipment.typeArticle.label}" />
+      </rich:column>
+
+      <rich:column sortBy="#{equipment.airbusPN.identifier}"
+        filterType="custom"
+        filter="#{softwareController.equipmentFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.airbusPN}" />
+            <br />
+            <h:inputText id="apn"
+              value="#{softwareController.filterValues['airbusPN']}">
+              <a4j:ajax event="keyup"
+                render="equipmentTable@body,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{equipment.airbusPN.identifier}" />
+      </rich:column>
+
+      <rich:column sortBy="#{equipment.manufacturerPN.identifier}"
+        filterType="custom"
+        filter="#{softwareController.equipmentFilter}">
+        <f:facet name="header">
+          <h:panelGroup>
+            <h:outputText value="#{msg.manufacturerPN}" />
+            <br />
+            <h:inputText id="mpn"
+              value="#{softwareController.filterValues['manufacturerPN']}">
+              <a4j:ajax event="keyup"
+                render="equipmentTable,dsTop,dsBottom,counts" />
+            </h:inputText>
+          </h:panelGroup>
+        </f:facet>
+        <h:outputText value="#{equipment.manufacturerPN.identifier}" />
+      </rich:column>
+
+      <rich:column rendered="#{displayRemoveColumn}">
+        <f:facet name="header">Action</f:facet>
+
+        <a4j:commandLink id="removeEquipmentLink"
+          action="#{softwareController.doRemoveEquipment}"
+          render="equipmentTable,counts,dsTop,dsBottom">
+
+          <h:graphicImage value="/resources/images/icons/delete.gif"
+            style="border:0" />
+          <f:setPropertyActionListener value="#{equipment}"
+            target="#{softwareController.selectedEquipment}" />
+          <f:setPropertyActionListener value="#{row}"
+            target="#{softwareController.currentRow}" />
+        </a4j:commandLink>
+
+        <boa:tooltip target="removeEquipmentLink" value="#{msg.remove}" />
+      </rich:column>
+    </rich:dataTable>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsBottom" for="equipmentTable"
+        maxPages="10" fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+  </fieldset>
+
+</ui:composition>

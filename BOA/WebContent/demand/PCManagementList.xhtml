@@ -1,0 +1,29 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:c="http://java.sun.com/jstl/core"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:inputHidden value="#{PCDemandController.doListPCManagement()}" />
+
+    <c:set var="isAuthorized"
+      value="#{(logInController.userLogged != null and logInController.isAuthorized('ArticleCRUD','CRUD_Read'))}" />
+
+    <h:outputText rendered="#{!isAuthorized}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel rendered="#{isAuthorized}">
+      <f:facet name="header">
+        <h:outputText value="#{msg.PCManagementTitle}" />
+      </f:facet>
+
+      <ui:include src="/demand/PCListCommon.xhtml" />
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

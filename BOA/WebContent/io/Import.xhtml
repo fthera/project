@@ -1,0 +1,100 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  template="/templates/template.xhtml">
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('Import'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel rendered="#{logInController.isAuthorized('Import')}">
+      <f:facet name="header">#{msg.importExcelFile}
+		</f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="importExcelError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form>
+        <rich:fileUpload id="uploadImport"
+          fileUploadListener="#{importExcelController.fileUploadListener}"
+          autoClear="false" immediateUpload="false"
+          acceptedTypes=".xls, .xlsx" allowFlash="false" execute="@this"
+          ontyperejected="alert('Only XLS and XLSX files are accepted');">
+          <f:facet name="label">
+            <h:outputText
+              value="{_KB}KB from {KB}KB uploaded --- {mm}:{ss}" />
+          </f:facet>
+          <a4j:ajax event="uploadcomplete"
+            render="uploadImport,tableImport" />
+        </rich:fileUpload>
+
+        <rich:dataTable id="tableImport" var="file"
+          style="margin-top:5px"
+          value="#{importExcelController.importFiles}">
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="#{msg.filename}" />
+            </f:facet>
+            <h:outputText value="#{file.filename}" />
+          </rich:column>
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="Actions" />
+            </f:facet>
+            <h:panelGrid columns="2" cellspacing="5">
+              <a4j:commandLink id="removeFile"
+                action="#{importExcelController.removeImportFile}"
+                render="tableImport" execute="@this">
+                <h:graphicImage
+                  value="/resources/images/icons/delete.gif"
+                  style="border:0" />
+                <f:setPropertyActionListener value="#{file}"
+                  target="#{importExcelController.selectedImportFile}" />
+              </a4j:commandLink>
+              <a4j:commandLink id="doReadFile"
+                action="#{importExcelController.readFile}"
+                rendered="#{not file.processed}"
+                render="tableImport" execute="@this">
+                <h:graphicImage value="/resources/images/icons/gear.png"
+                  style="border:0" />
+                <f:setPropertyActionListener value="#{file}"
+                  target="#{importExcelController.selectedImportFile}" />
+              </a4j:commandLink>
+            </h:panelGrid>
+            <boa:tooltip target="doReadFile" value="#{msg.launchImport}" />
+            <boa:tooltip target="removeFile" value="#{msg.delete}" />
+
+          </rich:column>
+          <rich:column>
+            <f:facet name="header">
+              <h:outputText value="#{msg.importStatus}" />
+            </f:facet>
+            <h:outputText value="#{msg.importNotProcessed}" rendered="#{!file.processed}" styleClass="warning"/>
+            <h:outputText value="#{msg.importNoSheetFound}" rendered="#{file.processed and !file.sheetFound}" styleClass="error"/>
+            <h:outputText value="#{msg.importSuccessful}" rendered="#{file.processed and file.sheetFound and file.successful}" styleClass="info"/>
+            <h:outputText value="#{msg.importErrors}" rendered="#{file.processed and file.sheetFound and !file.successful}" styleClass="error"/>
+            <h:commandButton value="#{msg.download}"
+              action="#{importExcelController.doDownloadRejectFile}"
+              rendered="#{file.processed and !file.successful and file.sheetFound}" execute="@this">
+              <f:setPropertyActionListener value="#{file}"
+                target="#{importExcelController.selectedImportFile}" />
+            </h:commandButton>
+          </rich:column>
+
+          <f:facet name="footer">
+            <h:outputText
+              value="#{msg.importedFileCount} : #{importExcelController.importFiles.size()}" />
+          </f:facet>
+
+        </rich:dataTable>
+      </h:form>
+    </rich:panel>
+  </ui:define>
+</ui:composition>

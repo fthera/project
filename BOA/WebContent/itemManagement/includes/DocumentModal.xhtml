@@ -1,0 +1,23 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Include of upload file modal for documents -->
+
+  <ui:include src="/includes/uploadFileModal.xhtml">
+    <ui:param name="modalId" value="uploadFileModal" />
+    <ui:param name="modalTitle" value="#{msg.uploadFile}" />
+    <ui:param name="uploadText" value="#{msg.SelectDocumentToLink}" />
+    <ui:param name="controller" value="#{documentController}" />
+    <ui:param name="validateMethod" value="addUploadedFile" />
+    <ui:param name="fileUploadListener" value="fileUploadListener" />
+    <ui:param name="validateButtonId" value="uploadButton" />
+    <ui:param name="cancelButtonId" value="cancelUploadButton" />
+    <ui:param name="immediateUpload" value="#{true}" />
+    <ui:param name="render" value="documentsList,countDocuments" />
+  </ui:include>
+
+</ui:composition>

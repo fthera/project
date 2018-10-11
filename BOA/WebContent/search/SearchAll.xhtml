@@ -1,0 +1,205 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:a4j="http://richfaces.org/a4j"
+  template="/templates/template.xhtml">
+
+  <ui:define name="content">
+
+    <h:outputText
+      rendered="#{not (logInController.isAuthorized('AdvancedSearchAll'))}"
+      value="#{msg.notEnoughRightsForPage}" styleClass="warning-block" />
+
+    <rich:panel
+      rendered="#{logInController.isAuthorized('AdvancedSearchAll')}">
+
+      <f:facet name="header">
+        <h:outputText value="#{msg.searchAllTitle}" />
+      </f:facet>
+
+      <ui:include src="/error/errorMessages.xhtml">
+        <ui:param name="id" value="searchAllError" />
+        <ui:param name="globalOnly" value="true" />
+      </ui:include>
+
+      <h:form id="searchForm">
+
+        <div style="width: 40%">
+          <fieldset>
+            <legend align="top">
+              <h:outputText value="#{msg.searchCriteria}" />
+            </legend>
+            <h:panelGrid columns="2" cellspacing="5"
+              columnClasses="alignright,alignleft">
+
+              <h:outputLabel value="#{msg.searchedText}" />
+              <h:inputText id="searchedText"
+                value="#{searchAllController.inputText}" required="true"
+                requiredMessage="#{msg.valueRequiredMsg}" />
+
+              <!-- blank in panelGrid -->
+              <rich:message for="searchedText" />
+
+            </h:panelGrid>
+          </fieldset>
+        </div>
+
+        <h:panelGrid columns="3" cellspacing="5">
+          <a4j:commandButton id="searchBtn" value="#{msg.search}"
+            action="#{searchAllController.doSearch}"
+            render="mainContent" oncomplete="patchModal();">
+          </a4j:commandButton>
+          <a4j:commandButton id="resetBtn" value="#{msg.reset}"
+            execute="@this" render="mainContent" oncomplete="patchModal();"
+            action="#{searchAllController.doResetCriteria}" />
+          <a4j:commandButton id="cancelBtn" value="#{msg.cancel}"
+            execute="@this" action="Main" />
+        </h:panelGrid>
+
+        <div style="width: 40%">
+          <h:panelGroup
+            rendered="#{searchAllController.displayResultsPanel}">
+            <fieldset>
+              <legend align="top">
+                <h:outputText value="#{msg.foundResults}" />
+              </legend>
+
+              <h:panelGrid columns="3" cellspacing="5">
+
+                <c:set var="installationsFound"
+                  value="#{searchAllController.nbFoundInstallations > 0}" />
+                <c:set var="articlesFound"
+                  value="#{searchController.articleDataModel.rowCount > 0}" />
+                <c:set var="softwaresFound"
+                  value="#{searchAllController.nbFoundSoftwares > 0}" />
+                <c:set var="toolsFound"
+                  value="#{searchAllController.nbFoundTools > 0}" />
+
+                <c:if test="#{installationsFound}">
+
+                  <h:graphicImage
+                    value="/resources/images/icons/locations/installation32x32.png"
+                    style="border:0;width:16px;height:16px" />
+
+                  <h:outputLabel
+                    value="#{searchAllController.nbFoundInstallations} #{msg.advancedSearchNbInstallationFound}" />
+
+                  <h:commandLink value="#{msg.showFoundInstallations}"
+                    action="#{searchAllController.doDisplayInstallations}">
+                    <f:setPropertyActionListener
+                      target="#{searchController.installationsToDisplay}"
+                      value="#{searchAllController.foundInstallations}" />
+                  </h:commandLink>
+
+                </c:if>
+
+                <c:if test="#{articlesFound}">
+
+                  <h:graphicImage
+                    value="/resources/images/icons/articles/article.png"
+                    style="border:0;width:16px;height:16px" />
+
+                  <h:outputLabel
+                    value="#{searchController.articleDataModel.rowCount} #{msg.advancedSearchNbArticleFound}" />
+
+                  <h:commandLink value="#{msg.showFoundArticles}"
+                    action="#{searchAllController.doDisplayArticles}" />
+
+                </c:if>
+
+                <c:if test="#{softwaresFound}">
+
+                  <h:graphicImage
+                    value="/resources/images/icons/articles/16x16/software0_16x16.png"
+                    style="border:0;width:16px;height:16px" />
+
+                  <h:outputLabel
+                    value="#{searchAllController.nbFoundSoftwares} #{msg.advancedSearchNbSoftwareFound}" />
+
+                  <h:commandLink value="#{msg.showFoundSoftwares}"
+                    action="#{searchAllController.doDisplaySoftwares}">
+                    <f:setPropertyActionListener
+                      target="#{searchSoftwareController.softwaresToDisplay}"
+                      value="#{searchAllController.foundSoftwares}" />
+                  </h:commandLink>
+
+                </c:if>
+
+                <c:if test="#{toolsFound}">
+
+                  <h:graphicImage
+                    value="/resources/images/icons/locations/Tool32x32.png"
+                    style="border:0;width:16px;height:16px" />
+
+                  <h:outputLabel
+                    value="#{searchAllController.nbFoundTools} #{msg.advancedSearchNbToolFound}" />
+
+                  <h:commandLink value="#{msg.showFoundTools}"
+                    action="#{searchAllController.doDisplayTools}">
+                    <f:setPropertyActionListener
+                      target="#{searchController.toolsToDisplay}"
+                      value="#{searchAllController.foundTools}" />
+                  </h:commandLink>
+
+                </c:if>
+
+              </h:panelGrid>
+
+              <c:if
+                test="#{!(installationsFound or articlesFound or softwaresFound or toolsFound)}">
+
+                <h:outputText value="#{msg.advancedSearchNoResult}"
+                  style="color:red;" />
+
+              </c:if>
+
+            </fieldset>
+          </h:panelGroup>
+        </div>
+
+      </h:form>
+
+      <rich:panel
+        rendered="#{searchAllController.displayInstallationsPanel}">
+        <f:facet name="header">
+          <h:outputText value="#{msg.displayInstallationResultsTitle}" />
+        </f:facet>
+
+        <ui:include src="/itemList/common/InstallationListCommon.xhtml" />
+
+      </rich:panel>
+
+      <rich:panel rendered="#{searchAllController.displayArticlesPanel}">
+        <f:facet name="header">
+          <h:outputText value="#{msg.displayArticleResultsTitle}" />
+        </f:facet>
+
+        <ui:include src="/itemList/common/ArticleListCommon.xhtml" />
+
+      </rich:panel>
+
+      <rich:panel
+        rendered="#{searchAllController.displaySoftwaresPanel}">
+        <f:facet name="header">
+          <h:outputText value="#{msg.displaySoftwareResultsTitle}" />
+        </f:facet>
+
+        <ui:include src="/itemList/common/SoftwareListCommon.xhtml" />
+
+      </rich:panel>
+
+      <rich:panel rendered="#{searchAllController.displayToolsPanel}">
+        <f:facet name="header">
+          <h:outputText value="#{msg.displayToolsResultsTitle}" />
+        </f:facet>
+
+        <ui:include src="/itemList/common/ToolListCommon.xhtml" />
+
+      </rich:panel>
+
+    </rich:panel>
+  </ui:define>
+</ui:composition>

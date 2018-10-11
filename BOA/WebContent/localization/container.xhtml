@@ -1,0 +1,96 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:c="http://java.sun.com/jstl/core"
+  xmlns:boa="com/airbus/boa/BoaComponents"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- Part containing the display of the container
+     and the button allowing to change it. -->
+  <!--
+     readonly = [optional, default= true]
+                  boolean indicating if the container is in read only mode
+     
+     Remark:
+     - When readonly is false, the modal named 'changeContainerModal' must
+         exist in the page.
+  -->
+
+  <div style="width: 100%">
+    <a4j:region renderRegionOnly="false">
+
+      <c:if test="#{empty readonly}">
+        <c:set var="readonly" value="true" />
+      </c:if>
+
+      <h:panelGroup id="containerInPage">
+        <fieldset>
+          <legend align="top">
+            <h:outputText value="#{msg.container}" />
+          </legend>
+
+          <a4j:commandButton value="#{msg.changeContainer}"
+            style="margin-bottom:5" render="changeContainerModal"
+            oncomplete="#{rich:component('changeContainerModal')}.show();return false;"
+            rendered="#{not readonly}" execute="@this" />
+
+          <h:panelGrid columns="2" cellspacing="0">
+
+            <h:outputLabel value="#{msg.containerType}"
+              styleClass="labelName" />
+            <h:outputLabel
+              value="#{containerController.container.type.toString()}" />
+
+            <h:outputLabel value="#{msg.containerName}"
+              styleClass="labelname" />
+            <h:panelGroup>
+              <h:outputLink id="containerNameLink" style="vertical-align: middle"
+                value="${request.contextPath}/itemManagement/${containerController.container.containerItem.class.simpleName}Management.faces">
+                <h:outputText
+                  value="#{containerController.container.containerDetailedName}" />
+                <f:param name="id"
+                  value="#{containerController.container.containerItem.id}" />
+                <f:param name="mode" value="READ" />
+              </h:outputLink>
+              <h:graphicImage id="containerHelp"
+                styleClass="iconClass" style="margin-left:4px"
+                rendered="#{not empty containerController.container.toolTip}"
+                value="/resources/images/icons/help_tooltip.png" />
+              <boa:tooltip target="containerHelp"
+                value="#{containerController.container.toolTip}"
+                rendered="#{not empty containerController.container.toolTip}" />
+            </h:panelGroup>
+
+            <h:outputLabel value="#{containerController.precisionLabel}"
+              rendered="#{containerController.showPrecision}"
+              styleClass="labelname" />
+            <h:outputLabel
+              rendered="#{containerController.showPrecision}"
+              value="#{containerController.container.precision}" />
+
+            <h:outputLabel value="#{msg.masterContainer}"
+              styleClass="labelname" />
+            <h:outputLabel id="masterContainer"
+              value="#{containerController.masterContainerName}" />
+
+
+            <c:if
+              test="#{containerController.masterParentInstallation and containerController.masterContainer.containerItem.user != null}">
+              <h:outputLabel value="#{msg.InstallationUser}"
+                styleClass="labelname" />
+              <h:outputLabel id="InstallationUser"
+                value="#{containerController.masterContainer.containerItem.user}" />
+            </c:if>
+
+          </h:panelGrid>
+
+        </fieldset>
+      </h:panelGroup>
+
+    </a4j:region>
+
+  </div>
+
+</ui:composition>

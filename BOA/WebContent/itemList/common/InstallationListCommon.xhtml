@@ -1,0 +1,227 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <!-- List of the found installations included by other pages -->
+
+  <h:form id="InstallationListExport_form">
+    <h:panelGrid columns="2" cellspacing="5">
+      <h:commandButton id="export" value="#{msg.export}"
+        action="#{searchController.doExportInstallation}" />
+      <a4j:commandButton id="resetFilter" value="#{msg.resetFilters}"
+        execute="@this" action="#{searchController.doSimuResetFilters}"
+        render="Table,dsTop,dsBottom,counts,comments,name,location">
+      </a4j:commandButton>
+    </h:panelGrid>
+  </h:form>
+
+  <h:form id="InstallationList_form">
+
+    <ui:include src="/error/errorMessages.xhtml">
+      <ui:param name="id" value="installationListError" />
+      <ui:param name="globalOnly" value="true" />
+    </ui:include>
+
+    <h:panelGrid columns="1" cellspacing="5">
+      <h:outputText id="counts" styleClass="bigText"
+        value="#{msg.countFilteredSimu} : #{searchController.countFilteredSimu}" />
+    </h:panelGrid>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsTop" for="Table" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+    <div class="scroll-div" style="max-height: 65%; max-height: 65vh;">
+      <rich:dataTable id="Table" sortMode="single" rows="30"
+        value="#{searchController.foundInstallations}" var="simu"
+        onrowmouseover="this.style.backgroundColor='#B5CEFD'"
+        onrowmouseout="this.style.backgroundColor='#{org.richfaces.SKIN.tableBackgroundColor}'"
+        rowClasses="evenRow, oddRow">
+
+        <f:facet name="header">
+          <h:outputText value="#{msg.Installations}" />
+        </f:facet>
+
+        <rich:column
+          rendered="#{logInController.isAuthorized('InstallationCRUD','CRUD_Update') and searchController.displayEditionColumn}">
+          <f:facet name="header">
+            <h:outputText value="#{msg.actions}" />
+          </f:facet>
+          <h:outputLink id="editLabel"
+            rendered="#{logInController.isAuthorized('InstallationCRUD','CRUD_Update')}"
+            value="${request.contextPath}/itemManagement/InstallationManagement.faces">
+            <h:graphicImage value="/resources/images/icons/edit.gif"
+              style="border:0" />
+            <f:param name="id" value="#{simu.id}" />
+            <f:param name="mode" value="UPDATE" />
+            <f:param name="ret" value="LIST" />
+          </h:outputLink>
+        </rich:column>
+
+        <rich:column sortBy="#{simu.name}" filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.name}" />
+              <br />
+              <h:inputText id="name"
+                value="#{searchController.simuFilterValues['name']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputLink id="infoSimuCmd"
+            value="${request.contextPath}/itemManagement/InstallationManagement.faces">
+            <h:outputText value="#{simu.name}" />
+            <f:param name="id" value="#{simu.id}" />
+            <f:param name="mode" value="READ" />
+          </h:outputLink>
+        </rich:column>
+
+
+        <rich:column sortBy="#{simu.comments}" filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.comments}" />
+              <br />
+              <h:inputText id="comments"
+                value="#{searchController.simuFilterValues['comments']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tComments" value="#{simu.comments}" />
+        </rich:column>
+
+        <rich:column sortBy="#{simu.businessSiglum}" filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.businessSiglum}" />
+              <br />
+              <h:inputText id="businessSiglum"
+                value="#{searchController.simuFilterValues['businessSiglum']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tBusinessSiglum"
+            value="#{simu.businessSiglum}" />
+        </rich:column>
+
+        <rich:column sortBy="#{simu.aircraftProgram.defaultValue}"
+          filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.program}" />
+              <br />
+              <h:inputText id="aircraftProgram"
+                value="#{searchController.simuFilterValues['aircraftProgram']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tAircraftProgram"
+            value="#{simu.aircraftProgram.defaultValue}" />
+        </rich:column>
+
+        <rich:column sortBy="#{simu.personInCharge.loginDetails}"
+          filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.technicalContact}" />
+              <br />
+              <h:inputText id="personInCharge"
+                value="#{searchController.simuFilterValues['personInCharge']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tPersonInCharge"
+            value="#{simu.personInCharge.loginDetails}" />
+        </rich:column>
+
+        <rich:column sortBy="#{simu.startingDate}" filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.startingDate}" />
+              <br />
+              <h:inputText id="startingDate"
+                value="#{searchController.simuFilterValues['startingDate']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tStartingDate" value="#{simu.startingDate}">
+            <f:convertDateTime
+              pattern="#{searchController.getDateFormat()}"
+              timeZone="Europe/Paris" />
+          </h:outputText>
+        </rich:column>
+
+        <rich:column sortBy="#{simu.location.locationName}"
+          filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.location}" />
+              <br />
+              <h:inputText styleClass="input20" id="location"
+                value="#{searchController.simuFilterValues['locationName']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tLocation"
+            value="#{simu.location.locationName}" />
+        </rich:column>
+
+
+        <rich:column sortBy="#{simu.user}" filterType="custom"
+          filter="#{searchController.installationFilter}">
+          <f:facet name="header">
+            <h:panelGroup>
+              <h:outputText value="#{msg.InstallationUser}" />
+              <br />
+              <h:inputText id="installationUser"
+                value="#{searchController.simuFilterValues['installationUser']}">
+                <a4j:ajax event="keyup"
+                  render="Table@body,dsTop,dsBottom,counts" />
+              </h:inputText>
+            </h:panelGroup>
+          </f:facet>
+          <h:outputText id="tinstallationUser" value="#{simu.user}" />
+        </rich:column>
+
+
+        <f:facet name="footer">
+          <h:outputText
+            value="#{(empty searchController.foundInstallations? msg.noInstallations:'')}" />
+        </f:facet>
+
+      </rich:dataTable>
+    </div>
+
+    <h:panelGroup style="display:block;text-align:center">
+      <rich:dataScroller id="dsBottom" for="Table" maxPages="10"
+        fastControls="hide" renderIfSinglePage="false" />
+    </h:panelGroup>
+
+  </h:form>
+
+</ui:composition>

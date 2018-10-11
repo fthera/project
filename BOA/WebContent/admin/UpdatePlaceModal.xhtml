@@ -1,0 +1,69 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+  xmlns:ui="http://java.sun.com/jsf/facelets"
+  xmlns:rich="http://richfaces.org/rich"
+  xmlns:f="http://java.sun.com/jsf/core"
+  xmlns:h="http://java.sun.com/jsf/html"
+  xmlns:a4j="http://richfaces.org/a4j">
+
+  <h:form id="UpdatePlaceModalForm">
+    <rich:popupPanel id="updatePlaceModal" autosized="true" modal="true"
+      domElementAttachment="parent">
+
+      <f:facet name="controls">
+        <h:graphicImage id="closeButtonUpdatePlace" alt="#{msg.close}"
+          class="hidelink" value="/resources/images/icons/close.png"
+          style="cursor:pointer"
+          onclick="#{rich:component('updatePlaceModal')}.hide();return false;">
+        </h:graphicImage>
+      </f:facet>
+      <f:facet name="header">
+        <h:panelGroup>
+          <h:graphicImage value="/resources/images/icons/edit.gif"
+            style="padding-right:5px;" />
+          <h:outputText value="#{msg.updatePlaceTitle}"
+            style="vertical-align:bottom;" />
+        </h:panelGroup>
+      </f:facet>
+
+      <a4j:outputPanel ajaxRendered="true">
+        <ui:include src="/error/errorMessages.xhtml">
+          <ui:param name="id" value="updatePlaceError" />
+        </ui:include>
+
+        <h:panelGrid columns="3" cellspacing="5">
+
+          <h:outputLabel for="placeName" value="#{msg.name}" />
+          <h:panelGroup>
+            <h:inputText id="placeName" styleClass="input20"
+              value="#{buildingController.placeName}" required="true"
+              validator="#{buildingController.validatePlaceName}">
+              <f:validateLength maximum="#{DBConstants.placeNameLength}" />
+            </h:inputText>
+
+          </h:panelGroup>
+          <rich:message id="placeNameError" for="placeName" />
+
+          <h:outputLabel for="placeType" value="#{msg.type}" />
+          <h:selectOneMenu id="placeType"
+            value="#{buildingController.placeType}">
+            <f:selectItems
+              value="#{buildingController.getPlaceTypeList()}" />
+          </h:selectOneMenu>
+          <rich:message id="placeTypeError" for="placeType" />
+
+        </h:panelGrid>
+      </a4j:outputPanel>
+      <h:panelGrid columns="2" cellspacing="5">
+        <a4j:commandButton id="updatePlaceBtn" value="#{msg.save}"
+          action="#{buildingController.doUpdatePlace}"
+          oncomplete="if (#{facesContext.maximumSeverity==null}) #{rich:component('updatePlaceModal')}.hide();return false"
+          render="placeTable,dsTop,dsBottom">
+        </a4j:commandButton>
+
+        <h:commandButton value="#{msg.cancel}" immediate="true"
+          onclick="#{rich:component('updatePlaceModal')}.hide();return false;" />
+
+      </h:panelGrid>
+    </rich:popupPanel>
+  </h:form>
+</ui:composition>
